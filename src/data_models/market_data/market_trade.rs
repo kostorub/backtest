@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::be_bytes::ToFromBytes;
+use crate::data_models::be_bytes::ToFromBytes;
 
 pub const MARKET_TRADE_SIZE: usize = 5 * 8;
 

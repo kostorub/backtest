@@ -1,3 +1,2 @@
 pub mod be_bytes;
-pub mod candle;
-pub mod market_trade;
+pub mod market_data;

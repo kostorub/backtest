@@ -5,7 +5,7 @@ use serde::de::DeserializeOwned;
 
 use crate::{
     data_handlers::bin_files::{append_to_file, create_and_write_to_file},
-    data_handlers::csv_files::load_data_from_csv,
+    data_handlers::{bin_files::bin_file_name, csv_files::load_data_from_csv},
     data_models::be_bytes::ToFromBytes,
 };
 
@@ -19,8 +19,9 @@ use super::{
 pub fn pipeline<T>(
     data_path: PathBuf,
     data_url: String,
+    exchange: String,
     symbol: String,
-    period: String,
+    market_data_type: String,
     start_date: u64,
     end_date: u64,
 ) where
@@ -31,11 +32,11 @@ pub fn pipeline<T>(
         data_path.clone(),
         data_url,
         symbol.clone(),
-        period.clone(),
+        market_data_type.clone(),
         start_date,
         end_date,
     );
-    process_archives::<T>(data_path.clone(), symbol);
+    process_archives::<T>(data_path.clone(), exchange, symbol, market_data_type);
     info!("Pipeline finished");
 }
 
@@ -43,52 +44,76 @@ fn download_archives(
     data_path: PathBuf,
     data_url: String,
     symbol: String,
-    period: String,
+    market_data_type: String,
     start_date: u64,
     end_date: u64,
 ) {
-    generate_archives_names(symbol.clone(), period.clone(), start_date, end_date)
-        .iter()
-        .for_each(|archive_name| {
-            let archive_url = get_archive_url(
-                data_url.clone(),
-                symbol.clone(),
-                period.clone(),
-                archive_name.clone(),
-            );
-            let archive_path = data_path.clone().join(archive_name.clone());
-            if !archive_path.exists() {
-                download_archive(archive_url.clone(), archive_path.clone());
-            }
-        });
+    generate_archives_names(
+        symbol.clone(),
+        market_data_type.clone(),
+        start_date,
+        end_date,
+    )
+    .iter()
+    .for_each(|archive_name| {
+        let archive_url = get_archive_url(
+            data_url.clone(),
+            symbol.clone(),
+            market_data_type.clone(),
+            archive_name.clone(),
+        );
+        let archive_path = data_path.clone().join(archive_name.clone());
+        if !archive_path.exists() {
+            download_archive(archive_url.clone(), archive_path.clone());
+        }
+    });
 }
 
-fn process_archives<T>(data_path: PathBuf, symbol: String)
-where
+fn process_archives<T>(
+    data_path: PathBuf,
+    exchange: String,
+    symbol: String,
+    market_data_type: String,
+) where
     T: DeserializeOwned + ToFromBytes,
 {
     let mut archives = get_filenames(data_path.clone(), "zip").unwrap();
     archives.sort();
     debug!("Found archives: {:?}", archives);
     archives.iter().for_each(|archive_path| {
-        process_one_archive::<T>(data_path.clone(), archive_path.clone(), symbol.clone());
+        process_one_archive::<T>(
+            data_path.clone(),
+            archive_path.clone(),
+            exchange.clone(),
+            symbol.clone(),
+            market_data_type.clone(),
+        );
+        remove_file(archive_path).unwrap();
     });
 }
 
-fn process_one_archive<T>(data_path: PathBuf, archive_path: PathBuf, symbol: String)
-where
+fn process_one_archive<T>(
+    data_path: PathBuf,
+    archive_path: PathBuf,
+    exchange: String,
+    symbol: String,
+    market_data_type: String,
+) where
     T: DeserializeOwned + ToFromBytes,
 {
     let file_name = extract_archive(data_path.clone(), archive_path.clone()).unwrap();
     let csv_path = data_path.clone().join(file_name.clone());
     let trades = load_data_from_csv::<T>(csv_path.clone());
-    let binary_path = data_path.clone().join(format!("{}.markettrades", symbol));
+    let binary_path = data_path.clone().join(bin_file_name(
+        exchange.clone(),
+        symbol.clone(),
+        market_data_type.clone(),
+    ));
     if !binary_path.clone().exists() {
         create_and_write_to_file(&trades, binary_path.clone()).unwrap();
     } else {
         append_to_file(&trades, binary_path.clone()).unwrap();
     }
-
     remove_file(csv_path).unwrap();
     info!(
         "Processed archive: {:?} into binary {:?} trades len: {:?}",

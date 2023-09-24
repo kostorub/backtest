@@ -82,13 +82,17 @@ pub fn get_filenames(data_path: PathBuf, extension: &str) -> io::Result<Vec<Path
     Ok(result)
 }
 
+pub fn bin_file_name(exchange: String, symbol: String, market_data_type: String) -> String {
+    format!("{}-{}-{}.markettrades", exchange, symbol, market_data_type).to_lowercase()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     use std::fs::remove_file;
 
-    use crate::{data_models::candle::Candle, tests::common::get_default_candles};
+    use crate::{data_models::market_data::kline::KLine, tests::common::get_default_candles};
 
     #[test]
     fn test_create_and_write_to_file() {
@@ -102,13 +106,13 @@ mod tests {
 
     #[test]
     fn test_append_to_file() {
-        let candles: Vec<Candle> = Vec::new();
+        let candles: Vec<KLine> = Vec::new();
         let file_path = PathBuf::from("test_2.bin");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
         let candles = get_default_candles();
         append_to_file(&candles, file_path.clone()).unwrap();
 
-        let new_candles: Vec<Candle> = get_values_from_file(file_path.clone()).unwrap();
+        let new_candles: Vec<KLine> = get_values_from_file(file_path.clone()).unwrap();
 
         assert_eq!(&candles[..], &new_candles[..]);
 
@@ -123,7 +127,7 @@ mod tests {
 
         assert!(file_path.exists());
 
-        let result: Vec<Candle> = get_values_from_file(file_path.clone()).unwrap();
+        let result: Vec<KLine> = get_values_from_file(file_path.clone()).unwrap();
 
         assert_eq!(&result, &candles);
         remove_file(file_path).unwrap();
@@ -135,7 +139,7 @@ mod tests {
         let file_path = PathBuf::from("test_4.bin");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
 
-        let candle: Candle = get_last_value_from_file(file_path.clone()).unwrap();
+        let candle: KLine = get_last_value_from_file(file_path.clone()).unwrap();
         let standart = get_default_candles();
         assert_eq!(Some(&candle), standart.last());
         remove_file(file_path).unwrap();

@@ -3,7 +3,7 @@ use log::debug;
 
 pub fn generate_archives_names(
     symbol: String,
-    period: String,
+    market_data_type: String,
     date_start: u64,
     date_end: u64,
 ) -> Vec<String> {
@@ -19,21 +19,28 @@ pub fn generate_archives_names(
     add_months(
         &mut result,
         symbol.clone(),
-        period.clone(),
+        market_data_type.clone(),
         date_start.year(),
         date_start.month(),
         month_end,
     );
     if date_end.year() - date_start.year() > 1 {
         for year in date_start.year() + 1..date_end.year() {
-            add_months(&mut result, symbol.clone(), period.clone(), year, 1, 12);
+            add_months(
+                &mut result,
+                symbol.clone(),
+                market_data_type.clone(),
+                year,
+                1,
+                12,
+            );
         }
     }
     if date_end.year() - date_start.year() > 0 {
         add_months(
             &mut result,
             symbol.clone(),
-            period.clone(),
+            market_data_type.clone(),
             date_end.year(),
             1,
             date_end.month(),
@@ -48,7 +55,7 @@ pub fn generate_archives_names(
 fn add_months(
     result: &mut Vec<String>,
     symbol: String,
-    period: String,
+    market_data_type: String,
     year: i32,
     month_start: u32,
     month_end: u32,
@@ -57,7 +64,7 @@ fn add_months(
         result.push(format!(
             "{}-{}-{}-{:02}.zip",
             symbol.to_uppercase(),
-            period.to_lowercase(),
+            market_data_type.to_lowercase(),
             year,
             month
         ));
