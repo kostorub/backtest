@@ -1,5 +1,7 @@
-#[derive(Debug, Clone, Default)]
-pub struct SettingsStart {
+use serde::Deserialize;
+
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct StartSettings {
     pub symbols: Vec<String>,
     pub exchange: String,
     pub market_data_type: String,

@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use log::{debug, info, warn};
 
 pub fn download_archive(archive_url: String, archive_path: PathBuf) {
-    info!("Downloading archive: {:?} into: {:?}", archive_url, archive_path);
+    info!(
+        "Downloading archive: {:?} into: {:?}",
+        archive_url, archive_path
+    );
     check_path_and_create(archive_path.parent().unwrap().to_path_buf().clone());
     let mut resp = reqwest::blocking::get(&archive_url).unwrap();
     match resp.status() {

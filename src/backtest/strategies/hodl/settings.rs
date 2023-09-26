@@ -1,4 +1,8 @@
-#[derive(Debug, Clone)]
+use serde::Deserialize;
+
+use crate::backtest::settings::StartSettings;
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettings {
     pub symbol: Option<String>,
     pub budget: f64,
@@ -17,4 +21,10 @@ impl HodlSettings {
             commission,
         }
     }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct HodlSettingsRequest {
+    pub start_settings: StartSettings,
+    pub hodl_settings: HodlSettings,
 }

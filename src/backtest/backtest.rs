@@ -7,12 +7,13 @@ use crate::{
     data_handlers::bin_files::{bin_file_name, get_values_from_file},
     data_models::market_data::{
         kline::{market_data_type_to_seconds, KLine},
+        metrics::{self, Metrics},
         position::Position,
     },
 };
 
 use super::{
-    settings::SettingsStart,
+    settings::StartSettings,
     strategies::{
         self,
         hodl::{settings::HodlSettings, strategy::HodlStrategy},
@@ -21,14 +22,15 @@ use super::{
 
 pub struct Backtest {
     pub settings: Settings,
-    pub settings_start: SettingsStart,
+    pub settings_start: StartSettings,
     pub strategies: Vec<HodlStrategy>,
+    pub metrics: Option<Metrics>
 }
 
 impl Backtest {
     pub fn new(
         settings: Settings,
-        settings_start: SettingsStart,
+        settings_start: StartSettings,
         hodl_settings: HodlSettings,
     ) -> Backtest {
         let mut strategies = Vec::new();
@@ -48,6 +50,7 @@ impl Backtest {
             settings,
             settings_start,
             strategies,
+            metrics: None
         }
     }
 
@@ -61,12 +64,29 @@ impl Backtest {
                 strategy.run_kline(timestamp);
             }
         }
+        for strategy in &mut self.strategies {
+            strategy.close_all_positions(
+                strategy.klines.last().unwrap().date,
+                strategy.klines.last().unwrap().close,
+            )
+        }
 
-        dbg!(self.strategies[0].positions_opened.len());
-        dbg!(self.strategies[0].current_budget);
-        dbg!(self.strategies[0].current_qty);
+        let positions = self
+            .strategies
+            .iter()
+            .map(|strategy| strategy.positions_closed.clone())
+            .flatten()
+            .collect();
+
+        self.set_metrics(positions);
+    }
+
+    fn set_metrics(&mut self, positions: Vec<Position>) {
+        self.metrics = Some(Metrics::new(&positions, 1000.0));
     }
 }
+
+
 
 pub fn generate_time_period(period: String, date_start: u64, date_end: u64) -> Vec<u64> {
     (date_start..date_end)

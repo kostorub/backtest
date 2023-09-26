@@ -2,22 +2,22 @@ use super::enums::{OrderStatus, OrderType, Side};
 
 #[derive(Debug, Clone)]
 pub struct Order {
-    date: u64,
-    price: f64,
-    qty: f64,
-    qty_raw: f64,
-    order_type: OrderType,
-    side: Side,
-    status: OrderStatus,
+    pub date: u64,
+    pub price: f64,
+    pub qty: f64,
+    pub commission_usd: f64,
+    pub order_type: OrderType,
+    pub side: Side,
+    pub status: OrderStatus,
 }
 
 impl Order {
-    pub fn new(date: u64, price: f64, qty: f64, qty_raw: f64, side: Side) -> Self {
+    pub fn new(date: u64, price: f64, qty: f64, commission_usd: f64, side: Side) -> Self {
         Self {
             date,
             price,
             qty,
-            qty_raw,
+            commission_usd,
             side,
             status: OrderStatus::default(),
             order_type: OrderType::default(),
