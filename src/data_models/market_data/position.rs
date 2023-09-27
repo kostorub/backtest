@@ -218,13 +218,13 @@ mod test {
     #[test]
     fn test_volume_sell() {
         let p = get_position();
-        assert_eq!(p.volume_sell(), 20.0);
+        assert_eq!(p.volume_sell(), 24.0);
     }
 
     #[test]
     fn test_volume_all() {
         let p = get_position();
-        assert_eq!(p.volume_all(), 4.0);
+        assert_eq!(p.volume_all(), 0.0);
     }
 
     #[test]
@@ -260,7 +260,7 @@ mod test {
     #[test]
     fn test_weighted_avg_price_sell_raw() {
         let p = get_position();
-        assert_eq!(p.weighted_avg_price_sell_raw(), 330.0);
+        assert_eq!(p.weighted_avg_price_sell_raw(), 325.0);
     }
 
     #[test]

@@ -34,15 +34,16 @@ mod tests {
 
     #[test]
     fn test_extract_archive() {
-        let file_path = PathBuf::from("test.zip");
-        let file = File::create(&file_path).unwrap();
+        let archive_path = PathBuf::from("test.zip");
+        let file = File::create(&archive_path).unwrap();
         let mut archive = ZipWriter::new(file);
         archive.start_file("test.csv", Default::default()).unwrap();
         archive.write_all("test".as_bytes()).unwrap();
         archive.finish().unwrap();
         let data_path = PathBuf::from("./");
-        let file_path = extract_archive(data_path, file_path).unwrap();
+        let file_path = extract_archive(data_path, archive_path.clone()).unwrap();
         assert_eq!(&file_path, &file_path.with_extension("csv"));
+        remove_file(archive_path).unwrap();
         remove_file(file_path).unwrap();
     }
 }
