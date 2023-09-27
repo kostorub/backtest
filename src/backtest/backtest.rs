@@ -24,7 +24,7 @@ pub struct Backtest {
     pub settings: Settings,
     pub settings_start: StartSettings,
     pub strategies: Vec<HodlStrategy>,
-    pub metrics: Option<Metrics>
+    pub metrics: Option<Metrics>,
 }
 
 impl Backtest {
@@ -50,7 +50,7 @@ impl Backtest {
             settings,
             settings_start,
             strategies,
-            metrics: None
+            metrics: None,
         }
     }
 
@@ -85,8 +85,6 @@ impl Backtest {
         self.metrics = Some(Metrics::new(&positions, 1000.0));
     }
 }
-
-
 
 pub fn generate_time_period(period: String, date_start: u64, date_end: u64) -> Vec<u64> {
     (date_start..date_end)

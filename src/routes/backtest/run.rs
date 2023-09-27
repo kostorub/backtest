@@ -12,10 +12,13 @@ pub async fn run(
     hodl_data: web::Json<HodlSettingsRequest>,
     data: web::Data<AppState>,
 ) -> Either<Result<impl Responder>, HttpResponse> {
-    
     let data_path = PathBuf::from(data.settings.data_path.clone());
 
-    let mut backtest = Backtest::new(data.settings.as_ref().clone(), hodl_data.start_settings.clone(), hodl_data.hodl_settings.clone());
+    let mut backtest = Backtest::new(
+        data.settings.as_ref().clone(),
+        hodl_data.start_settings.clone(),
+        hodl_data.hodl_settings.clone(),
+    );
     backtest.run_sequentially();
 
     Either::Left(Ok(web::Json(backtest.metrics)))
