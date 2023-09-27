@@ -54,22 +54,16 @@ impl HodlStrategy {
         match self.bot.run(kline.date, self.current_budget) {
             Some(action) => match action {
                 Action::Buy(size) => {
-                    let mut position = Position::new(
-                        self.settings.symbol.clone().unwrap(),
-                        kline.date,
-                        kline.close,
-                    );
-                    let qty = size / kline.close * self.commission_multiplier;
-                    let qty_raw = size / kline.close;
+                    let mut position = Position::new(self.settings.symbol.clone().unwrap());
                     position.orders.push(Order::new(
                         kline.date,
                         kline.close,
-                        qty,
-                        qty_raw,
+                        size / kline.close * self.commission_multiplier,
+                        size / kline.close,
                         Side::Buy,
                     ));
-                    self.positions_opened.push(position);
-                    self.update_strategy_data(-size, qty);
+                    self.positions_opened.push(position.clone());
+                    self.update_strategy_data(-size, position.orders.last().unwrap().qty);
                 }
                 _ => (),
             },
@@ -87,7 +81,7 @@ impl HodlStrategy {
             position.close_at = Some(date);
             position.close_price = Some(price);
             position.status = PositionStatus::Closed;
-            position.set_pnl(price, self.commission_multiplier);
+            position.calculate_pnl();
             self.positions_closed.push(position.clone());
         }
         self.positions_opened.clear();
