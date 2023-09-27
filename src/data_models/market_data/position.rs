@@ -8,14 +8,6 @@ pub struct Position {
     pub status: PositionStatus,
     pub orders: Vec<Order>,
     pub pnl: Option<f64>,
-
-    pub open_at: u64,
-    pub open_price: f64,
-    pub close_at: Option<u64>,
-    pub close_price: Option<f64>,
-    pub qty: f64,
-    // pub qty_usd: f64,
-    pub budget_delta: f64,
 }
 
 impl Position {
@@ -25,12 +17,6 @@ impl Position {
             status: PositionStatus::Opened,
             orders: Vec::new(),
             pnl: None,
-            open_at: 0,
-            open_price: 0.0,
-            close_at: None,
-            close_price: None,
-            qty: 0.0,
-            budget_delta: 0.0,
         }
     }
 
@@ -67,14 +53,16 @@ impl Position {
     }
 
     pub fn volume_all(&self) -> f64 {
-        self.orders.iter().map(|order| {
-            if order.side == Side::Sell {
-                order.qty * -1.0
-            } else {
-                order.qty
-            }
-        }
-        ).sum()
+        self.orders
+            .iter()
+            .map(|order| {
+                if order.side == Side::Sell {
+                    order.qty * -1.0
+                } else {
+                    order.qty
+                }
+            })
+            .sum()
     }
 
     pub fn commission_buy(&self) -> f64 {
@@ -97,7 +85,7 @@ impl Position {
         self.orders
             .iter()
             .filter(|order| order.side == Side::Buy)
-            .map(|order| (order.qty * order.price) / self.volume_buy() )
+            .map(|order| (order.qty * order.price) / self.volume_buy())
             .sum::<f64>()
     }
 
@@ -140,10 +128,12 @@ impl Position {
         avg_price * (1.0 + price_percent / 100.0)
     }
 
-    pub fn calculate_pnl(&self) -> f64 {
-        (self.weighted_avg_price_sell() - self.weighted_avg_price_buy())
-            * self.volume_buy()
-            - self.commission_buy() -self.commission_sell()
+    pub fn calculate_pnl(&mut self) {
+        self.pnl = Some(
+            (self.weighted_avg_price_sell() - self.weighted_avg_price_buy()) * self.volume_buy()
+                - self.commission_buy()
+                - self.commission_sell(),
+        )
     }
 }
 
@@ -164,35 +154,34 @@ mod test {
         // Commission - 10%
         let mut p = Position::new("BTCUSDT".to_string());
         p.orders.extend(vec![
-                Order {
-                    date: 60000,
-                    price: 100.00,
-                    qty: 8.0,
-                    commission: 80.0,
-                    order_type: OrderType::default(),
-                    side: Side::Buy,
-                    status: OrderStatus::Filled,
-                },
-                Order {
-                    date: 120000,
-                    price: 200.00,
-                    qty: 16.0,
-                    commission: 320.0,
-                    order_type: OrderType::default(),
-                    side: Side::Buy,
-                    status: OrderStatus::Filled,
-                },
-                Order {
-                    date: 180000,
-                    price: 300.00,
-                    qty: 24.0,
-                    commission: 600.0,
-                    order_type: OrderType::default(),
-                    side: Side::Sell,
-                    status: OrderStatus::Filled,
-                }
-            ]
-            );
+            Order {
+                date: 60000,
+                price: 100.00,
+                qty: 8.0,
+                commission: 80.0,
+                order_type: OrderType::default(),
+                side: Side::Buy,
+                status: OrderStatus::Filled,
+            },
+            Order {
+                date: 120000,
+                price: 200.00,
+                qty: 16.0,
+                commission: 320.0,
+                order_type: OrderType::default(),
+                side: Side::Buy,
+                status: OrderStatus::Filled,
+            },
+            Order {
+                date: 180000,
+                price: 300.00,
+                qty: 24.0,
+                commission: 600.0,
+                order_type: OrderType::default(),
+                side: Side::Sell,
+                status: OrderStatus::Filled,
+            },
+        ]);
         p
     }
 
@@ -297,8 +286,8 @@ mod test {
 
     #[test]
     fn test_calculate_pnl() {
-        let p = get_position();
-        assert_eq!(p.calculate_pnl(), 2199.9999999999995);
+        let mut p = get_position();
+        p.calculate_pnl();
+        assert_eq!(p.pnl.unwrap(), 2199.9999999999995);
     }
-
 }

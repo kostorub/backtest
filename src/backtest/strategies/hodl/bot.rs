@@ -2,6 +2,7 @@ use crate::backtest::action::Action;
 
 use super::settings::HodlSettings;
 
+#[derive(Debug, Clone)]
 pub struct HodlBot {
     pub settings: HodlSettings,
     pub last_purchase_ts: u64,

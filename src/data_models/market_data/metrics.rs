@@ -31,7 +31,7 @@ pub struct Metrics {
 }
 
 impl Metrics {
-    pub fn new(positions: &Vec<Position>, start_deposit: f64) -> Self {
+    pub fn new(positions: &Vec<Position>, start_deposit: f64, finish_deposit: f64) -> Self {
         let positions_number = positions.len() as u64;
         if positions_number == 0 {
             return Metrics::default();
@@ -73,7 +73,6 @@ impl Metrics {
         let sortino = Self::get_sortino(positions);
 
         let average_position_size = Self::get_average_position_size(positions);
-        let finish_deposit = positions.last().unwrap().budget_delta;
         let total_profit = Self::get_total_profit(finish_deposit, start_deposit);
         let total_profit_percent = Self::get_total_profit_percent(finish_deposit, start_deposit);
         let max_deposit = 0.0;
@@ -160,7 +159,7 @@ impl Metrics {
         if profit_positions_number != 0 && average_profit_position != 0.0 {
             positions
                 .iter()
-                .map(|position| position.budget_delta)
+                .map(|p| p.volume_buy() * p.weighted_avg_price_buy())
                 .sum::<f64>()
                 / profit_positions_number as f64
                 / average_profit_position
@@ -208,7 +207,11 @@ impl Metrics {
     }
 
     fn get_average_position_size(positions: &Vec<Position>) -> f64 {
-        positions.iter().map(|t| t.budget_delta).sum::<f64>() / positions.len() as f64
+        positions
+            .iter()
+            .map(|p| p.volume_buy() * p.weighted_avg_price_buy())
+            .sum::<f64>()
+            / positions.len() as f64
     }
 
     fn get_total_profit(finish_deposit: f64, start_deposit: f64) -> f64 {
@@ -222,7 +225,7 @@ impl Metrics {
     fn get_max_use_of_funds(positions: &Vec<Position>) -> f64 {
         positions
             .iter()
-            .map(|t| t.budget_delta)
+            .map(|p| p.volume_buy() * p.weighted_avg_price_buy())
             .reduce(f64::max)
             .unwrap()
     }
@@ -231,60 +234,48 @@ impl Metrics {
 #[cfg(test)]
 mod test {
 
-    use crate::data_models::market_data::position::PositionStatus;
+    use crate::data_models::market_data::{enums::Side, order::Order, position::PositionStatus};
 
     use super::*;
 
+    #[rustfmt::skip]
     fn get_positions_info() -> Vec<Position> {
         vec![
             Position {
                 symbol: "USD_BTC".into(),
-                open_at: 1502942400,
-                open_price: 100.0,
-                close_at: Some(1502942400 + 3600),
-                close_price: Some(120.0),
                 pnl: Some(20.0),
                 status: PositionStatus::Closed,
-                qty: 1.0,
-                budget_delta: 100.0,
-                orders: Vec::new(),
+                orders: vec![
+                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
+                    Order::new(1502942400 + 3600, 120.0, 1.0, 0.0, Side::Sell),
+                ],
             },
             Position {
                 symbol: "USD_ETH".into(),
-                open_at: 1502942400,
-                open_price: 100.0,
-                close_at: Some(1502942400 + 3600),
-                close_price: Some(120.0),
                 pnl: Some(20.0),
                 status: PositionStatus::Closed,
-                qty: 1.0,
-                budget_delta: 100.0,
-                orders: Vec::new(),
+                orders: vec![
+                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
+                    Order::new(1502942400 + 3600, 120.0, 1.0, 0.0, Side::Sell),
+                ],
             },
             Position {
                 symbol: "USD_ETH".into(),
-                open_at: 1502942400,
-                open_price: 100.0,
-                close_at: Some(1502942400 + 3600),
-                close_price: Some(80.0),
                 pnl: Some(-20.0),
                 status: PositionStatus::Closed,
-                qty: 1.0,
-                budget_delta: 100.0,
-                orders: Vec::new(),
+                orders: vec![
+                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
+                    Order::new(1502942400 + 3600, 80.0, 1.0, 0.0, Side::Sell),
+                ],
             },
             Position {
                 symbol: "USD_ETH".into(),
-                open_at: 1502942400,
-                open_price: 100.0,
-                close_at: Some(1502942400 + 3600),
-                close_price: Some(60.0),
                 pnl: Some(-40.0),
                 status: PositionStatus::Closed,
-                qty: 1.0,
-                budget_delta: 100.0,
-                orders: Vec::new(),
-            },
+                orders: vec![
+                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
+                    Order::new(1502942400 + 3600, 60.0, 1.0, 0.0, Side::Sell),
+                ],            },
         ]
     }
 

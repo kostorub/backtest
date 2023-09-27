@@ -78,11 +78,15 @@ impl Backtest {
             .flatten()
             .collect();
 
-        self.set_metrics(positions);
+        self.set_metrics(positions, self.strategies[0].settings.deposit, self.strategies[0].current_budget);
     }
 
-    fn set_metrics(&mut self, positions: Vec<Position>) {
-        self.metrics = Some(Metrics::new(&positions, 1000.0));
+    fn set_metrics(&mut self, positions: Vec<Position>, start_deposit: f64, finish_deposit: f64) {
+        self.metrics = Some(Metrics::new(
+            &positions,
+            start_deposit,
+            finish_deposit
+        ));
     }
 }
 
