@@ -3,17 +3,17 @@ use std::path::PathBuf;
 use log::info;
 
 use crate::{
-    config::Settings,
+    config::AppSettings,
     data_handlers::bin_files::{bin_file_name, get_values_from_file},
     data_models::market_data::{
         kline::{market_data_type_to_seconds, KLine},
         metrics::{self, Metrics},
         position::Position,
-    },
+    }, backtest::strategies::grid::strategy,
 };
 
 use super::{
-    settings::StartSettings,
+    settings::{StartSettings, StrategySettings},
     strategies::{
         self,
         hodl::{settings::HodlSettings, strategy::HodlStrategy},
@@ -21,7 +21,7 @@ use super::{
 };
 
 pub struct Backtest {
-    pub settings: Settings,
+    pub settings: AppSettings,
     pub start_settings: StartSettings,
     pub strategies: Vec<HodlStrategy>,
     pub metrics: Option<Metrics>,
@@ -29,26 +29,27 @@ pub struct Backtest {
 
 impl Backtest {
     pub fn new(
-        settings: Settings,
-        settings_start: StartSettings,
+        app_settings: AppSettings,
+        start_settings: StartSettings,
+        strategy_settings: StrategySettings,
         hodl_settings: HodlSettings,
     ) -> Backtest {
         let mut strategies = Vec::new();
-        for symbol in settings_start.symbols.clone() {
-            let mut hodl_settings = hodl_settings.clone();
-            hodl_settings.symbol = Some(symbol.clone());
-            let file_path = PathBuf::from(settings.data_path.clone()).join(bin_file_name(
-                settings_start.exchange.clone(),
+        for symbol in start_settings.symbols.clone() {
+            let mut strategy_settings = strategy_settings.clone();
+            strategy_settings.symbol = Some(symbol.clone());
+            let file_path = PathBuf::from(app_settings.data_path.clone()).join(bin_file_name(
+                start_settings.exchange.clone(),
                 symbol.clone(),
-                settings_start.market_data_type.clone(),
+                start_settings.market_data_type.clone(),
             ));
             info!("Loading data from file: {:?}", file_path);
             let klines = get_values_from_file::<KLine>(file_path).unwrap();
-            strategies.push(HodlStrategy::new(hodl_settings, klines));
+            strategies.push(HodlStrategy::new(strategy_settings, hodl_settings.clone(), klines));
         }
         Backtest {
-            settings,
-            start_settings: settings_start,
+            settings: app_settings,
+            start_settings,
             strategies,
             metrics: None,
         }
@@ -80,7 +81,7 @@ impl Backtest {
 
         self.set_metrics(
             positions,
-            self.strategies[0].settings.deposit,
+            self.strategies[0].strategy_settings.deposit,
             self.strategies[0].current_budget,
         );
     }

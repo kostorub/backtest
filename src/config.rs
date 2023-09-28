@@ -3,12 +3,12 @@ use log::debug;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct Settings {
+pub struct AppSettings {
     pub data_path: String,
     pub binance_data_url: String,
 }
 
-impl Settings {
+impl AppSettings {
     pub fn new() -> Result<Self, ConfigError> {
         let s = Config::builder()
             .add_source(File::with_name("config/local").required(true))

@@ -1,24 +1,18 @@
 use serde::Deserialize;
 
-use crate::backtest::settings::StartSettings;
+use crate::backtest::settings::{StartSettings, StrategySettings};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettings {
-    pub symbol: Option<String>,
-    pub deposit: f64,
     pub purchase_period: u64,
     pub purchase_size: f64,
-    pub commission: f64,
 }
 
 impl HodlSettings {
-    pub fn new(budget: f64, purchase_period: u64, purchase_size: f64, commission: f64) -> Self {
+    pub fn new(purchase_period: u64, purchase_size: f64) -> Self {
         Self {
-            symbol: None,
-            deposit: budget,
             purchase_period,
             purchase_size,
-            commission,
         }
     }
 }
@@ -26,5 +20,6 @@ impl HodlSettings {
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettingsRequest {
     pub start_settings: StartSettings,
+    pub strategy_settings: StrategySettings,
     pub hodl_settings: HodlSettings,
 }

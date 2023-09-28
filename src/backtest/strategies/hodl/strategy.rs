@@ -1,5 +1,5 @@
 use crate::{
-    backtest::{action::Action, strategy_utils::comission},
+    backtest::{action::Action, strategies::strategy_utils::comission, settings::StrategySettings},
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -12,6 +12,7 @@ use super::{bot::HodlBot, settings::HodlSettings};
 
 #[derive(Debug, Clone)]
 pub struct HodlStrategy {
+    pub strategy_settings: StrategySettings,
     pub settings: HodlSettings,
     pub bot: HodlBot,
     pub klines: Vec<KLine>,
@@ -23,14 +24,15 @@ pub struct HodlStrategy {
 }
 
 impl HodlStrategy {
-    pub fn new(settings: HodlSettings, klines: Vec<KLine>) -> Self {
+    pub fn new(strategy_settings: StrategySettings, settings: HodlSettings, klines: Vec<KLine>) -> Self {
         Self {
+            strategy_settings: strategy_settings.clone(),
             settings: settings.clone(),
             bot: HodlBot::new(settings.clone()),
             klines,
             positions_opened: Vec::new(),
             positions_closed: Vec::new(),
-            current_budget: settings.deposit,
+            current_budget: strategy_settings.deposit,
             current_qty: 0.0,
             current_kline_position: 0,
         }
@@ -51,12 +53,12 @@ impl HodlStrategy {
         match self.bot.run(kline.date, self.current_budget) {
             Some(action) => match action {
                 Action::Buy(size) => {
-                    let mut position = Position::new(self.settings.symbol.clone().unwrap());
+                    let mut position = Position::new(self.strategy_settings.symbol.clone().unwrap());
                     position.orders.push(Order::new(
                         kline.date,
                         kline.close,
                         size / kline.close,
-                        comission(kline.close, size / kline.close, self.settings.commission),
+                        comission(kline.close, size / kline.close, self.strategy_settings.commission),
                         Side::Buy,
                     ));
                     self.positions_opened.push(position.clone());
@@ -79,7 +81,7 @@ impl HodlStrategy {
                 date,
                 price,
                 position.volume_buy(),
-                comission(price, position.volume_buy(), self.settings.commission),
+                comission(price, position.volume_buy(), self.strategy_settings.commission),
                 Side::Sell,
             ));
             position.status = PositionStatus::Closed;

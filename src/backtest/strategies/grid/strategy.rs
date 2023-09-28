@@ -1,5 +1,5 @@
 use crate::{
-    backtest::{action::Action, strategy_utils::comission, settings::StrategySettings},
+    backtest::{action::Action, settings::StrategySettings, strategies::strategy_utils::comission},
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -24,11 +24,11 @@ pub struct GridStrategy {
 
 impl GridStrategy {
     pub fn new(
-        settings_strategy: StrategySettings,
+        strategy_settings: StrategySettings,
         settings_bot: GridSettings, 
         klines: Vec<KLine>) -> Self {
         Self {
-            strategy_settings: settings_strategy,
+            strategy_settings,
             bot: GridBot::new(settings_bot.clone(), klines[0].close),
             klines,
             positions_opened: Vec::new(),

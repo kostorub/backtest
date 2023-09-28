@@ -5,7 +5,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::{app_state::AppState, config::Settings, routes::backtest::run::run};
+use crate::{app_state::AppState, config::AppSettings, routes::backtest::run::run_hodl};
 
 use actix_web::{rt, web, App, HttpServer, Responder, Result};
 
@@ -13,7 +13,7 @@ pub async fn start_server() -> std::io::Result<()> {
     let mut builder = Builder::from_env("RUST_LOG");
     builder.init();
 
-    let settings = Settings::new().expect("Couldn't load config.");
+    let settings = AppSettings::new().expect("Couldn't load config.");
 
     let app_data = web::Data::new(AppState {
         settings: Arc::new(settings),
@@ -23,7 +23,7 @@ pub async fn start_server() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .app_data(app_data.clone())
-            .route("/backtest/run", web::post().to(run))
+            .route("/backtest/hodl/run", web::post().to(run_hodl))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
