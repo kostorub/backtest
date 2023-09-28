@@ -11,7 +11,7 @@ pub struct GridBot {
     pub current_price: f64,
     pub order_size: f64,
     pub triggers: Vec<GridTrigger>,
-    pub orders_stack: u32
+    pub orders_stack: u32,
 }
 
 impl GridBot {
@@ -26,7 +26,7 @@ impl GridBot {
                 settings.grids_count,
                 start_price,
             ),
-            orders_stack: 0
+            orders_stack: 0,
         }
     }
 

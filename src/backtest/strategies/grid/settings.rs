@@ -1,4 +1,8 @@
-#[derive(Debug, Clone)]
+use serde::Deserialize;
+
+use crate::backtest::settings::{StartSettings, StrategySettings};
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct GridSettings {
     pub price_low: f64,
     pub price_high: f64,
@@ -32,4 +36,11 @@ impl GridSettings {
             sell_all,
         }
     }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GridSettingsRequest {
+    pub start_settings: StartSettings,
+    pub strategy_settings: StrategySettings,
+    pub grid_settings: GridSettings,
 }

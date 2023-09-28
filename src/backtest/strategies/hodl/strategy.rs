@@ -1,5 +1,5 @@
 use crate::{
-    backtest::{action::Action, strategies::strategy_utils::comission, settings::StrategySettings},
+    backtest::{action::Action, settings::StrategySettings, strategies::strategy_utils::comission},
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -24,7 +24,11 @@ pub struct HodlStrategy {
 }
 
 impl HodlStrategy {
-    pub fn new(strategy_settings: StrategySettings, settings: HodlSettings, klines: Vec<KLine>) -> Self {
+    pub fn new(
+        strategy_settings: StrategySettings,
+        settings: HodlSettings,
+        klines: Vec<KLine>,
+    ) -> Self {
         Self {
             strategy_settings: strategy_settings.clone(),
             settings: settings.clone(),
@@ -53,12 +57,17 @@ impl HodlStrategy {
         match self.bot.run(kline.date, self.current_budget) {
             Some(action) => match action {
                 Action::Buy(size) => {
-                    let mut position = Position::new(self.strategy_settings.symbol.clone().unwrap());
+                    let mut position =
+                        Position::new(self.strategy_settings.symbol.clone().unwrap());
                     position.orders.push(Order::new(
                         kline.date,
                         kline.close,
                         size / kline.close,
-                        comission(kline.close, size / kline.close, self.strategy_settings.commission),
+                        comission(
+                            kline.close,
+                            size / kline.close,
+                            self.strategy_settings.commission,
+                        ),
                         Side::Buy,
                     ));
                     self.positions_opened.push(position.clone());
@@ -81,7 +90,11 @@ impl HodlStrategy {
                 date,
                 price,
                 position.volume_buy(),
-                comission(price, position.volume_buy(), self.strategy_settings.commission),
+                comission(
+                    price,
+                    position.volume_buy(),
+                    self.strategy_settings.commission,
+                ),
                 Side::Sell,
             ));
             position.status = PositionStatus::Closed;

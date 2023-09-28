@@ -24,6 +24,7 @@ pub async fn start_server() -> std::io::Result<()> {
             .wrap(Logger::default())
             .app_data(app_data.clone())
             .route("/backtest/hodl/run", web::post().to(run_hodl))
+            .route("/backtest/grid/run", web::post().to(run_hodl))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

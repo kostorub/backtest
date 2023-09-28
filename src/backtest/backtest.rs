@@ -3,13 +3,14 @@ use std::path::PathBuf;
 use log::info;
 
 use crate::{
+    backtest::strategies::grid::strategy,
     config::AppSettings,
     data_handlers::bin_files::{bin_file_name, get_values_from_file},
     data_models::market_data::{
         kline::{market_data_type_to_seconds, KLine},
         metrics::{self, Metrics},
         position::Position,
-    }, backtest::strategies::grid::strategy,
+    },
 };
 
 use super::{
@@ -19,6 +20,20 @@ use super::{
         hodl::{settings::HodlSettings, strategy::HodlStrategy},
     },
 };
+
+pub trait BacktestCommon {
+    type Strategy;
+    type BotSettings;
+
+    fn new(
+        app_settings: AppSettings,
+        start_settings: StartSettings,
+        strategy_settings: StrategySettings,
+        bot_settings: Self::BotSettings,
+    ) -> Self;
+    fn run_sequentially(&mut self);
+    fn set_metrics(&mut self, positions: Vec<Position>, start_deposit: f64, finish_deposit: f64);
+}
 
 pub struct Backtest {
     pub settings: AppSettings,
@@ -45,7 +60,11 @@ impl Backtest {
             ));
             info!("Loading data from file: {:?}", file_path);
             let klines = get_values_from_file::<KLine>(file_path).unwrap();
-            strategies.push(HodlStrategy::new(strategy_settings, hodl_settings.clone(), klines));
+            strategies.push(HodlStrategy::new(
+                strategy_settings,
+                hodl_settings.clone(),
+                klines,
+            ));
         }
         Backtest {
             settings: app_settings,

@@ -25,8 +25,9 @@ pub struct GridStrategy {
 impl GridStrategy {
     pub fn new(
         strategy_settings: StrategySettings,
-        settings_bot: GridSettings, 
-        klines: Vec<KLine>) -> Self {
+        settings_bot: GridSettings,
+        klines: Vec<KLine>,
+    ) -> Self {
         Self {
             strategy_settings,
             bot: GridBot::new(settings_bot.clone(), klines[0].close),
@@ -62,12 +63,16 @@ impl GridStrategy {
                         kline.date,
                         kline.close,
                         size / kline.close,
-                        comission(kline.close, size / kline.close, self.strategy_settings.commission),
+                        comission(
+                            kline.close,
+                            size / kline.close,
+                            self.strategy_settings.commission,
+                        ),
                         Side::Buy,
                     ));
                     self.update_strategy_data(-size, position.orders.last().unwrap().qty);
                     self.positions_opened.push(position);
-                },
+                }
                 Action::Sell(size) => {
                     let mut position = match self.positions_opened.pop() {
                         Some(position) => position,
@@ -77,7 +82,11 @@ impl GridStrategy {
                         kline.date,
                         kline.close,
                         size / kline.close,
-                        comission(kline.close, size / kline.close, self.strategy_settings.commission),
+                        comission(
+                            kline.close,
+                            size / kline.close,
+                            self.strategy_settings.commission,
+                        ),
                         Side::Sell,
                     ));
                     self.update_strategy_data(size, -position.orders.last().unwrap().qty);
@@ -85,8 +94,7 @@ impl GridStrategy {
                         position.status = PositionStatus::Closed;
                         position.calculate_pnl();
                         self.positions_closed.push(position.clone());
-                    }
-                    else {
+                    } else {
                         self.positions_opened.push(position);
                     }
                 }
@@ -108,7 +116,11 @@ impl GridStrategy {
                 date,
                 price,
                 position.volume_buy(),
-                comission(price, position.volume_buy(), self.strategy_settings.commission),
+                comission(
+                    price,
+                    position.volume_buy(),
+                    self.strategy_settings.commission,
+                ),
                 Side::Sell,
             ));
             position.status = PositionStatus::Closed;
