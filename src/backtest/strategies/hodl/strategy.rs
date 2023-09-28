@@ -1,5 +1,5 @@
 use crate::{
-    backtest::action::Action,
+    backtest::{action::Action, strategy_utils::comission},
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -45,7 +45,6 @@ impl HodlStrategy {
             self.run(&kline);
             self.current_kline_position += 1;
         }
-        // dbg!(self.klines[0].date);
     }
 
     pub fn run(&mut self, kline: &KLine) {
@@ -57,7 +56,7 @@ impl HodlStrategy {
                         kline.date,
                         kline.close,
                         size / kline.close,
-                        self.comission(kline.close, size / kline.close),
+                        comission(kline.close, size / kline.close, self.settings.commission),
                         Side::Buy,
                     ));
                     self.positions_opened.push(position.clone());
@@ -70,10 +69,8 @@ impl HodlStrategy {
     }
 
     pub fn update_strategy_data(&mut self, budget: f64, qty: f64) {
-        dbg!("w", self.current_budget, self.current_qty);
         self.current_budget += budget;
         self.current_qty += qty;
-        dbg!("b", self.current_budget, self.current_qty);
     }
 
     pub fn close_all_positions(&mut self, date: u64, price: f64) {
@@ -82,7 +79,7 @@ impl HodlStrategy {
                 date,
                 price,
                 position.volume_buy(),
-                self.comission(price, position.volume_buy()),
+                comission(price, position.volume_buy(), self.settings.commission),
                 Side::Sell,
             ));
             position.status = PositionStatus::Closed;
@@ -95,9 +92,5 @@ impl HodlStrategy {
         }
         self.positions_opened.clear();
         dbg!(self.positions_closed.last().unwrap());
-    }
-
-    fn comission(&self, price: f64, qty: f64) -> f64 {
-        price * qty * self.settings.commission / 100.0
     }
 }
