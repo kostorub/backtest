@@ -22,7 +22,7 @@ use super::{
 
 pub struct Backtest {
     pub settings: Settings,
-    pub settings_start: StartSettings,
+    pub start_settings: StartSettings,
     pub strategies: Vec<HodlStrategy>,
     pub metrics: Option<Metrics>,
 }
@@ -48,7 +48,7 @@ impl Backtest {
         }
         Backtest {
             settings,
-            settings_start,
+            start_settings: settings_start,
             strategies,
             metrics: None,
         }
@@ -56,9 +56,9 @@ impl Backtest {
 
     pub fn run_sequentially(&mut self) {
         for timestamp in generate_time_period(
-            self.settings_start.market_data_type.clone(),
-            self.settings_start.date_start,
-            self.settings_start.date_end,
+            self.start_settings.market_data_type.clone(),
+            self.start_settings.date_start,
+            self.start_settings.date_end,
         ) {
             for strategy in &mut self.strategies {
                 strategy.run_kline(timestamp);
@@ -78,15 +78,15 @@ impl Backtest {
             .flatten()
             .collect();
 
-        self.set_metrics(positions, self.strategies[0].settings.deposit, self.strategies[0].current_budget);
+        self.set_metrics(
+            positions,
+            self.strategies[0].settings.deposit,
+            self.strategies[0].current_budget,
+        );
     }
 
     fn set_metrics(&mut self, positions: Vec<Position>, start_deposit: f64, finish_deposit: f64) {
-        self.metrics = Some(Metrics::new(
-            &positions,
-            start_deposit,
-            finish_deposit
-        ));
+        self.metrics = Some(Metrics::new(&positions, start_deposit, finish_deposit));
     }
 }
 

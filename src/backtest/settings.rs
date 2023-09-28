@@ -8,3 +8,10 @@ pub struct StartSettings {
     pub date_start: u64,
     pub date_end: u64,
 }
+
+#[derive(Debug, Clone, Deserialize, Default)]
+pub struct StrategySettings {
+    pub symbol: Option<String>,
+    pub deposit: f64,
+    pub commission: f64,
+}
