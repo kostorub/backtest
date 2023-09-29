@@ -7,11 +7,9 @@ use crate::app_state::AppState;
 use crate::backtest::backtest::{
     self, get_metrics, get_positions_from_strategies, strategies_settings,
 };
-use crate::backtest::strategies::grid::backtest::GridBacktest;
 use crate::backtest::strategies::grid::bot::GridBot;
 use crate::backtest::strategies::grid::settings::GridSettingsRequest;
 use crate::backtest::strategies::grid::strategy::GridStrategy;
-use crate::backtest::strategies::hodl::backtest::HodlBacktest;
 use crate::backtest::strategies::hodl::bot::HodlBot;
 use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
 use crate::backtest::strategies::hodl::strategy::HodlStrategy;
@@ -28,7 +26,7 @@ pub async fn run_hodl(
 
     let hodl_bot = HodlBot::new(hodl_settings.clone());
     let strategies_settings = strategies_settings(backtest_settings.clone());
-    let strategies: Vec<HodlStrategy> = strategies_settings
+    let mut strategies: Vec<HodlStrategy> = strategies_settings
         .iter()
         .map(|s| {
             HodlStrategy::new(
@@ -44,12 +42,11 @@ pub async fn run_hodl(
         })
         .collect();
 
-    let mut backtest = HodlBacktest::new(backtest_settings.clone(), strategies);
-    backtest::run_sequentially(backtest_settings.clone(), &mut backtest.strategies);
+    backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
     let metrics = get_metrics(
-        get_positions_from_strategies(backtest.strategies.clone()),
-        backtest.strategies[0].strategy_settings.deposit,
-        backtest.strategies[0].current_budget,
+        get_positions_from_strategies(strategies.clone()),
+        strategies[0].strategy_settings.deposit,
+        strategies[0].current_budget,
     );
 
     Either::Left(Ok(web::Json(metrics)))
@@ -66,7 +63,7 @@ pub async fn run_grid(
 
     let grid_bot = GridBot::new(grid_settings.clone(), 0.0);
     let strategies_settings = strategies_settings(backtest_settings.clone());
-    let strategies: Vec<GridStrategy> = strategies_settings
+    let mut strategies: Vec<GridStrategy> = strategies_settings
         .iter()
         .map(|s| {
             GridStrategy::new(
@@ -82,12 +79,12 @@ pub async fn run_grid(
         })
         .collect();
 
-    let mut backtest = GridBacktest::new(backtest_settings.clone(), strategies);
-    backtest::run_sequentially(backtest_settings.clone(), &mut backtest.strategies);
+    // let mut backtest = GridBacktest::new(backtest_settings.clone(), strategies);
+    backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
     let metrics = get_metrics(
-        get_positions_from_strategies(backtest.strategies.clone()),
-        backtest.strategies[0].strategy_settings.deposit,
-        backtest.strategies[0].current_budget,
+        get_positions_from_strategies(strategies.clone()),
+        strategies[0].strategy_settings.deposit,
+        strategies[0].current_budget,
     );
 
     Either::Left(Ok(web::Json(metrics)))
