@@ -1,5 +1,9 @@
 use crate::{
-    backtest::{action::Action, settings::StrategySettings, strategies::{strategy_utils::comission, strategy_trait::Strategy}},
+    backtest::{
+        action::Action,
+        settings::StrategySettings,
+        strategies::{strategy_trait::Strategy, strategy_utils::comission},
+    },
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -8,7 +12,7 @@ use crate::{
     },
 };
 
-use super::{bot::GridBot, settings::GridSettings};
+use super::bot::GridBot;
 
 #[derive(Debug, Clone)]
 pub struct GridStrategy {
@@ -23,11 +27,7 @@ pub struct GridStrategy {
 }
 
 impl GridStrategy {
-    pub fn new(
-        strategy_settings: StrategySettings,
-        bot: GridBot,
-        klines: Vec<KLine>,
-    ) -> Self {
+    pub fn new(strategy_settings: StrategySettings, bot: GridBot, klines: Vec<KLine>) -> Self {
         Self {
             strategy_settings: strategy_settings.clone(),
             bot,
@@ -107,7 +107,7 @@ impl Strategy for GridStrategy {
     fn klines(&self) -> Vec<KLine> {
         self.klines.clone()
     }
-    fn set_klines(&mut self, klines: Vec<KLine>){
+    fn set_klines(&mut self, klines: Vec<KLine>) {
         self.klines = klines;
     }
     fn run_kline(&mut self, timestamp: u64) {

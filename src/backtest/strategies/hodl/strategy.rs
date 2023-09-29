@@ -1,5 +1,9 @@
 use crate::{
-    backtest::{action::Action, settings::StrategySettings, strategies::{strategy_utils::comission, strategy_trait::Strategy}},
+    backtest::{
+        action::Action,
+        settings::StrategySettings,
+        strategies::{strategy_trait::Strategy, strategy_utils::comission},
+    },
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -23,11 +27,7 @@ pub struct HodlStrategy {
 }
 
 impl HodlStrategy {
-    pub fn new(
-        strategy_settings: StrategySettings,
-        bot: HodlBot,
-        klines: Vec<KLine>,
-    ) -> Self {
+    pub fn new(strategy_settings: StrategySettings, bot: HodlBot, klines: Vec<KLine>) -> Self {
         Self {
             strategy_settings: strategy_settings.clone(),
             bot,
@@ -40,23 +40,11 @@ impl HodlStrategy {
         }
     }
 
-    pub fn run_kline(&mut self, timestamp: u64) {
-        if self.klines.len() <= self.current_kline_position {
-            return;
-        }
-        if self.klines[self.current_kline_position].date == timestamp {
-            let kline = self.klines[self.current_kline_position];
-            self.run(&kline);
-            self.current_kline_position += 1;
-        }
-    }
-
     pub fn run(&mut self, kline: &KLine) {
         match self.bot.run(kline.date, self.current_budget) {
             Some(action) => match action {
                 Action::Buy(size) => {
-                    let mut position =
-                        Position::new(self.strategy_settings.symbol.clone());
+                    let mut position = Position::new(self.strategy_settings.symbol.clone());
                     position.orders.push(Order::new(
                         kline.date,
                         kline.close,
@@ -115,7 +103,7 @@ impl Strategy for HodlStrategy {
     fn klines(&self) -> Vec<KLine> {
         self.klines.clone()
     }
-    fn set_klines(&mut self, klines: Vec<KLine>){
+    fn set_klines(&mut self, klines: Vec<KLine>) {
         self.klines = klines;
     }
     fn run_kline(&mut self, timestamp: u64) {
@@ -153,4 +141,3 @@ impl Strategy for HodlStrategy {
         dbg!(self.positions_closed.last().unwrap());
     }
 }
-

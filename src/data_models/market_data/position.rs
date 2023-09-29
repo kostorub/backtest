@@ -1,5 +1,3 @@
-use serde::Serialize;
-
 use super::{enums::Side, order::Order};
 
 #[derive(Debug, Clone)]
@@ -10,6 +8,7 @@ pub struct Position {
     pub pnl: Option<f64>,
 }
 
+#[allow(dead_code)]
 impl Position {
     pub fn new(symbol: String) -> Self {
         Self {

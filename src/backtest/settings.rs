@@ -1,7 +1,5 @@
 use serde::Deserialize;
 
-use crate::data_models::market_data::kline::KLine;
-
 #[derive(Debug, Clone, Deserialize, Default)]
 pub struct BacktesttSettings {
     pub symbols: Vec<String>,

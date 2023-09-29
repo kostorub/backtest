@@ -1,27 +1,18 @@
-use std::path::PathBuf;
-
-use log::info;
-
-use crate::{
-    backtest::strategies::grid::strategy,
-    config::AppSettings,
-    data_handlers::bin_files::{bin_file_name, get_values_from_file},
-    data_models::market_data::{
-        kline::{market_data_type_to_seconds, KLine},
-        metrics::{self, Metrics},
-        position::Position,
-    },
+use crate::data_models::market_data::{
+    kline::{market_data_type_to_seconds, KLine},
+    metrics::{self, Metrics},
+    position::Position,
 };
 
 use super::{
     settings::{BacktesttSettings, StrategySettings},
-    strategies::{
-        self,
-        hodl::{settings::HodlSettings, strategy::HodlStrategy}, strategy_trait::Strategy,
-    },
+    strategies::{self, strategy_trait::Strategy},
 };
 
-pub fn run_sequentially<S: Strategy>(backtest_settings: BacktesttSettings, strategies: &mut Vec<S>) {
+pub fn run_sequentially<S: Strategy>(
+    backtest_settings: BacktesttSettings,
+    strategies: &mut Vec<S>,
+) {
     for timestamp in generate_time_period(
         backtest_settings.market_data_type.clone(),
         backtest_settings.date_start,
@@ -40,17 +31,19 @@ pub fn run_sequentially<S: Strategy>(backtest_settings: BacktesttSettings, strat
 }
 
 pub fn strategies_settings(backtest_settings: BacktesttSettings) -> Vec<StrategySettings> {
-    backtest_settings.symbols.iter().map(|s| {
-        StrategySettings {
+    backtest_settings
+        .symbols
+        .iter()
+        .map(|s| StrategySettings {
             symbol: s.clone(),
             exchange: backtest_settings.exchange.clone(),
             market_data_type: backtest_settings.market_data_type.clone(),
             deposit: backtest_settings.deposit,
             commission: backtest_settings.commission,
             date_start: backtest_settings.date_start,
-            date_end: backtest_settings.date_end
-        }
-    }).collect()
+            date_end: backtest_settings.date_end,
+        })
+        .collect()
 }
 
 pub fn get_positions_from_strategies<T: Strategy>(strategies: Vec<T>) -> Vec<Position> {

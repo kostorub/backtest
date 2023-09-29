@@ -1,6 +1,6 @@
-use std::{collections::HashSet, sync::Arc};
+use std::collections::HashSet;
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 use statistical::standard_deviation;
 
 use super::position::Position;

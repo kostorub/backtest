@@ -1,7 +1,7 @@
 use crate::{backtest::action::Action, data_models::market_data::enums::Side};
 
 use super::{
-    grid_trigger::{generate_grid_triggers, generate_trigger_prices, GridTrigger},
+    grid_trigger::{generate_grid_triggers, GridTrigger},
     settings::GridSettings,
 };
 

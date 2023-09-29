@@ -1,4 +1,4 @@
-use crate::{data_models::market_data::{position::Position, kline::KLine}, backtest::settings::StrategySettings};
+use crate::data_models::market_data::{kline::KLine, position::Position};
 
 pub trait Strategy {
     fn positions(&self) -> Vec<Position>;
@@ -7,4 +7,3 @@ pub trait Strategy {
     fn run_kline(&mut self, timestamp: u64);
     fn close_all_positions(&mut self, timestamp: u64, price: f64);
 }
-

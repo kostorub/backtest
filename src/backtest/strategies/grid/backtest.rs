@@ -1,4 +1,4 @@
-use crate::backtest::{settings::BacktesttSettings, self, backtest::generate_time_period};
+use crate::backtest::settings::BacktesttSettings;
 
 use super::strategy::GridStrategy;
 
