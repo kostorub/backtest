@@ -4,10 +4,10 @@ use log::info;
 
 use crate::{
     data_handlers::bin_files::{bin_file_name, get_values_from_file},
-    data_models::market_data::kline::KLine,
+    data_models::market_data::{kline::KLine, order::Order, position::Position},
 };
 
-pub fn comission(price: f64, qty: f64, commission: f64) -> f64 {
+pub fn commission(price: f64, qty: f64, commission: f64) -> f64 {
     // commission is in percents like 1% or 0.5%
     price * qty * commission / 100.0
 }

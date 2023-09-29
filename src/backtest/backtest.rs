@@ -49,7 +49,7 @@ pub fn strategies_settings(backtest_settings: BacktesttSettings) -> Vec<Strategy
 pub fn get_positions_from_strategies<T: Strategy>(strategies: Vec<T>) -> Vec<Position> {
     strategies
         .iter()
-        .map(|strategy| strategy.positions())
+        .map(|strategy| strategy.positions_closed().clone())
         .flatten()
         .collect()
 }
