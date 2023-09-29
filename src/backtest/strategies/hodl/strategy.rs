@@ -1,5 +1,5 @@
 use crate::{
-    backtest::{action::Action, settings::StrategySettings, strategies::strategy_utils::comission},
+    backtest::{action::Action, settings::StrategySettings, strategies::{strategy_utils::comission, strategy_trait::Strategy}},
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -13,7 +13,6 @@ use super::{bot::HodlBot, settings::HodlSettings};
 #[derive(Debug, Clone)]
 pub struct HodlStrategy {
     pub strategy_settings: StrategySettings,
-    pub settings: HodlSettings,
     pub bot: HodlBot,
     pub klines: Vec<KLine>,
     pub positions_opened: Vec<Position>,
@@ -26,13 +25,12 @@ pub struct HodlStrategy {
 impl HodlStrategy {
     pub fn new(
         strategy_settings: StrategySettings,
-        settings: HodlSettings,
+        bot: HodlBot,
         klines: Vec<KLine>,
     ) -> Self {
         Self {
             strategy_settings: strategy_settings.clone(),
-            settings: settings.clone(),
-            bot: HodlBot::new(settings.clone()),
+            bot,
             klines,
             positions_opened: Vec::new(),
             positions_closed: Vec::new(),
@@ -58,7 +56,7 @@ impl HodlStrategy {
             Some(action) => match action {
                 Action::Buy(size) => {
                     let mut position =
-                        Position::new(self.strategy_settings.symbol.clone().unwrap());
+                        Position::new(self.strategy_settings.symbol.clone());
                     position.orders.push(Order::new(
                         kline.date,
                         kline.close,
@@ -109,3 +107,50 @@ impl HodlStrategy {
         dbg!(self.positions_closed.last().unwrap());
     }
 }
+
+impl Strategy for HodlStrategy {
+    fn positions(&self) -> Vec<Position> {
+        self.positions_closed.clone()
+    }
+    fn klines(&self) -> Vec<KLine> {
+        self.klines.clone()
+    }
+    fn set_klines(&mut self, klines: Vec<KLine>){
+        self.klines = klines;
+    }
+    fn run_kline(&mut self, timestamp: u64) {
+        if self.klines.len() <= self.current_kline_position {
+            return;
+        }
+        if self.klines[self.current_kline_position].date == timestamp {
+            let kline = self.klines[self.current_kline_position];
+            self.run(&kline);
+            self.current_kline_position += 1;
+        }
+    }
+    fn close_all_positions(&mut self, date: u64, price: f64) {
+        for position in &mut self.positions_opened.clone() {
+            position.orders.push(Order::new(
+                date,
+                price,
+                position.volume_buy(),
+                comission(
+                    price,
+                    position.volume_buy(),
+                    self.strategy_settings.commission,
+                ),
+                Side::Sell,
+            ));
+            position.status = PositionStatus::Closed;
+            position.calculate_pnl();
+            self.update_strategy_data(
+                position.volume_sell() * position.weighted_avg_price_sell(),
+                -position.volume_sell(),
+            );
+            self.positions_closed.push(position.clone());
+        }
+        self.positions_opened.clear();
+        dbg!(self.positions_closed.last().unwrap());
+    }
+}
+

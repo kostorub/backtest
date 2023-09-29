@@ -16,7 +16,7 @@ pub async fn start_server() -> std::io::Result<()> {
     let settings = AppSettings::new().expect("Couldn't load config.");
 
     let app_data = web::Data::new(AppState {
-        settings: Arc::new(settings),
+        app_settings: Arc::new(settings),
     });
 
     HttpServer::new(move || {

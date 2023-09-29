@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::backtest::settings::{StartSettings, StrategySettings};
+use crate::backtest::settings::{BacktesttSettings, StrategySettings};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettings {
@@ -19,7 +19,7 @@ impl HodlSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettingsRequest {
-    pub start_settings: StartSettings,
+    pub start_settings: BacktesttSettings,
     pub strategy_settings: StrategySettings,
     pub hodl_settings: HodlSettings,
 }

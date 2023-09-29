@@ -1,12 +1,3 @@
-use std::path::PathBuf;
-
-use backtest::{
-    backtest::Backtest, settings::StartSettings, strategies::hodl::settings::HodlSettings,
-};
-use data_handlers::pipeline::pipeline;
-use data_models::market_data::kline::KLine;
-use env_logger::Builder;
-
 mod app_state;
 mod backtest;
 mod config;

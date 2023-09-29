@@ -1,5 +1,5 @@
 use crate::{
-    backtest::{action::Action, settings::StrategySettings, strategies::strategy_utils::comission},
+    backtest::{action::Action, settings::StrategySettings, strategies::{strategy_utils::comission, strategy_trait::Strategy}},
     data_models::market_data::{
         enums::Side,
         kline::KLine,
@@ -25,29 +25,18 @@ pub struct GridStrategy {
 impl GridStrategy {
     pub fn new(
         strategy_settings: StrategySettings,
-        settings_bot: GridSettings,
+        bot: GridBot,
         klines: Vec<KLine>,
     ) -> Self {
         Self {
-            strategy_settings,
-            bot: GridBot::new(settings_bot.clone(), klines[0].close),
+            strategy_settings: strategy_settings.clone(),
+            bot,
             klines,
             positions_opened: Vec::new(),
             positions_closed: Vec::new(),
-            current_budget: settings_bot.deposit,
+            current_budget: strategy_settings.deposit,
             current_qty: 0.0,
             current_kline_position: 0,
-        }
-    }
-
-    pub fn run_kline(&mut self, timestamp: u64) {
-        if self.klines.len() <= self.current_kline_position {
-            return;
-        }
-        if self.klines[self.current_kline_position].date == timestamp {
-            let kline = self.klines[self.current_kline_position];
-            self.run(&kline);
-            self.current_kline_position += 1;
         }
     }
 
@@ -57,7 +46,7 @@ impl GridStrategy {
                 Action::Buy(size) => {
                     let mut position = match self.positions_opened.pop() {
                         Some(position) => position,
-                        None => Position::new(self.strategy_settings.symbol.clone().unwrap()),
+                        None => Position::new(self.strategy_settings.symbol.clone()),
                     };
                     position.orders.push(Order::new(
                         kline.date,
@@ -76,7 +65,7 @@ impl GridStrategy {
                 Action::Sell(size) => {
                     let mut position = match self.positions_opened.pop() {
                         Some(position) => position,
-                        None => Position::new(self.strategy_settings.symbol.clone().unwrap()),
+                        None => Position::new(self.strategy_settings.symbol.clone()),
                     };
                     position.orders.push(Order::new(
                         kline.date,
@@ -109,8 +98,29 @@ impl GridStrategy {
         self.current_budget += budget;
         self.current_qty += qty;
     }
+}
 
-    pub fn close_all_positions(&mut self, date: u64, price: f64) {
+impl Strategy for GridStrategy {
+    fn positions(&self) -> Vec<Position> {
+        self.positions_closed.clone()
+    }
+    fn klines(&self) -> Vec<KLine> {
+        self.klines.clone()
+    }
+    fn set_klines(&mut self, klines: Vec<KLine>){
+        self.klines = klines;
+    }
+    fn run_kline(&mut self, timestamp: u64) {
+        if self.klines.len() <= self.current_kline_position {
+            return;
+        }
+        if self.klines[self.current_kline_position].date == timestamp {
+            let kline = self.klines[self.current_kline_position];
+            self.run(&kline);
+            self.current_kline_position += 1;
+        }
+    }
+    fn close_all_positions(&mut self, date: u64, price: f64) {
         for position in &mut self.positions_opened.clone() {
             position.orders.push(Order::new(
                 date,

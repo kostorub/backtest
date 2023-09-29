@@ -4,5 +4,5 @@ use crate::config::AppSettings;
 
 #[derive(Debug)]
 pub struct AppState {
-    pub settings: Arc<AppSettings>,
+    pub app_settings: Arc<AppSettings>,
 }

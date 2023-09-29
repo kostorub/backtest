@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::backtest::settings::{StartSettings, StrategySettings};
+use crate::backtest::settings::{BacktesttSettings, StrategySettings};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettings {
@@ -40,7 +40,6 @@ impl GridSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettingsRequest {
-    pub start_settings: StartSettings,
-    pub strategy_settings: StrategySettings,
+    pub start_settings: BacktesttSettings,
     pub grid_settings: GridSettings,
 }
