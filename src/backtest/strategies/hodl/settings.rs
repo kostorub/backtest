@@ -19,7 +19,6 @@ impl HodlSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettingsRequest {
-    pub start_settings: BacktesttSettings,
-    pub strategy_settings: StrategySettings,
+    pub backtest_settings: BacktesttSettings,
     pub hodl_settings: HodlSettings,
 }

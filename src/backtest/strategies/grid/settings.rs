@@ -40,6 +40,6 @@ impl GridSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettingsRequest {
-    pub start_settings: BacktesttSettings,
+    pub backtest_settings: BacktesttSettings,
     pub grid_settings: GridSettings,
 }

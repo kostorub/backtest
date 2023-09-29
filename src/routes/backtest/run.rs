@@ -23,7 +23,7 @@ pub async fn run_hodl(
 ) -> Either<Result<impl Responder>, HttpResponse> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
-    let backtest_settings = hodl_data.start_settings.clone();
+    let backtest_settings = hodl_data.backtest_settings.clone();
     let hodl_settings = hodl_data.hodl_settings.clone();
 
     let hodl_bot = HodlBot::new(hodl_settings.clone());
@@ -61,7 +61,7 @@ pub async fn run_grid(
 ) -> Either<Result<impl Responder>, HttpResponse> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
-    let backtest_settings = grid_data.start_settings.clone();
+    let backtest_settings = grid_data.backtest_settings.clone();
     let grid_settings = grid_data.grid_settings.clone();
 
     let grid_bot = GridBot::new(grid_settings.clone(), 0.0);
