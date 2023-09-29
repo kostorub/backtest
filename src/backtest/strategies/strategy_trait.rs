@@ -1,4 +1,12 @@
-use crate::{data_models::market_data::{kline::KLine, position::{Position, PositionStatus}, order::Order, enums::Side}, backtest::{strategies::strategy_utils::commission, settings::StrategySettings}};
+use crate::{
+    backtest::{settings::StrategySettings, strategies::strategy_utils::commission},
+    data_models::market_data::{
+        enums::Side,
+        kline::KLine,
+        order::Order,
+        position::{Position, PositionStatus},
+    },
+};
 
 pub trait Strategy {
     fn strategy_settings(&self) -> StrategySettings;
@@ -42,11 +50,7 @@ pub trait Strategy {
                 timestamp,
                 price,
                 position.volume_buy(),
-                commission(
-                    price,
-                    position.volume_buy(),
-                    strategy_comission,
-                ),
+                commission(price, position.volume_buy(), strategy_comission),
                 Side::Sell,
             ));
             position.status = PositionStatus::Closed;
