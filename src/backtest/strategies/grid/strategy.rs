@@ -101,7 +101,7 @@ impl Strategy for GridStrategy {
         if !closed_positions.is_empty() {
             for pos in closed_positions {
                 self.update_strategy_data(
-                    dbg!(pos.volume_buy()) * dbg!(pos.weighted_avg_price_sell()),
+                    pos.volume_buy() * pos.weighted_avg_price_sell(),
                     -pos.volume_buy(),
                 );
                 self.positions_closed.push(pos);
