@@ -1,7 +1,7 @@
 use crate::{
-    backtest::{settings::StrategySettings, strategies::strategy_utils::commission},
+    backtest::settings::StrategySettings,
     data_models::market_data::{
-        enums::Side,
+        enums::{OrderType, Side},
         kline::KLine,
         order::Order,
         position::{Position, PositionStatus},
@@ -46,13 +46,11 @@ pub trait Strategy {
     fn close_all_positions(&mut self, timestamp: u64, price: f64) {
         let strategy_comission = self.strategy_settings().commission;
         for mut position in self.positions_opened_mut().clone() {
-            position.orders.push(Order::new(
-                timestamp,
-                price,
-                position.volume_buy(),
-                commission(price, position.volume_buy(), strategy_comission),
-                Side::Sell,
-            ));
+            position.orders.push(
+                Order::new(timestamp, price, Side::Sell, OrderType::Market)
+                    .with_qty(position.volume_buy())
+                    .with_commission(price, position.volume_buy(), strategy_comission),
+            );
             position.status = PositionStatus::Closed;
             position.calculate_pnl();
             self.update_strategy_data(

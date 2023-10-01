@@ -234,7 +234,11 @@ impl Metrics {
 #[cfg(test)]
 mod test {
 
-    use crate::data_models::market_data::{enums::Side, order::Order, position::PositionStatus};
+    use crate::data_models::market_data::{
+        enums::{OrderType, Side},
+        order::Order,
+        position::PositionStatus,
+    };
 
     use super::*;
 
@@ -246,8 +250,8 @@ mod test {
                 pnl: Some(20.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
-                    Order::new(1502942400 + 3600, 120.0, 1.0, 0.0, Side::Sell),
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400 + 3600, 120.0, Side::Sell, OrderType::Market).with_qty(1.0),
                 ],
             },
             Position {
@@ -255,8 +259,8 @@ mod test {
                 pnl: Some(20.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
-                    Order::new(1502942400 + 3600, 120.0, 1.0, 0.0, Side::Sell),
+                    Order::new(1502942400, 100., Side::Buy, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400 + 3600, 120.0, Side::Sell, OrderType::Market).with_qty(1.0),
                 ],
             },
             Position {
@@ -264,8 +268,8 @@ mod test {
                 pnl: Some(-20.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
-                    Order::new(1502942400 + 3600, 80.0, 1.0, 0.0, Side::Sell),
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400 + 3600, 80.0, Side::Sell, OrderType::Market).with_qty(1.0),
                 ],
             },
             Position {
@@ -273,8 +277,8 @@ mod test {
                 pnl: Some(-40.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, 1.0, 0.0, Side::Buy),
-                    Order::new(1502942400 + 3600, 60.0, 1.0, 0.0, Side::Sell),
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400 + 3600, 60.0, Side::Sell, OrderType::Market).with_qty(1.0),
                 ],            },
         ]
     }

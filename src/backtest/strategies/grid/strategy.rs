@@ -2,12 +2,15 @@ use crate::{
     backtest::{
         action::Action,
         settings::StrategySettings,
-        strategies::{strategy_trait::Strategy, strategy_utils::commission},
+        strategies::{
+            strategy_trait::Strategy,
+            strategy_utils::{check_tp_sl, remove_closed_positions},
+        },
     },
     data_models::market_data::{
-        enums::Side,
+        enums::{OrderStatus, OrderType, Side},
         kline::KLine,
-        order::Order,
+        order::{self, Order},
         position::{Position, PositionStatus},
     },
 };
@@ -89,56 +92,137 @@ impl Strategy for GridStrategy {
     }
 
     fn run(&mut self, kline: &KLine) {
-        match self.bot.run(kline.close) {
-            Some(action) => match action {
-                Action::Buy(size) => {
-                    let mut position = match self.positions_opened.pop() {
-                        Some(position) => position,
-                        None => Position::new(self.strategy_settings.symbol.clone()),
-                    };
-                    position.orders.push(Order::new(
-                        kline.date,
-                        kline.close,
-                        size / kline.close,
-                        commission(
-                            kline.close,
-                            size / kline.close,
-                            self.strategy_settings.commission,
-                        ),
-                        Side::Buy,
-                    ));
-                    self.update_strategy_data(-size, position.orders.last().unwrap().qty);
-                    self.positions_opened.push(position);
+        check_tp_sl(
+            kline,
+            &mut self.positions_opened,
+            self.strategy_settings.commission,
+        );
+        let closed_positions = remove_closed_positions(&mut self.positions_opened);
+        if !closed_positions.is_empty() {
+            for pos in closed_positions {
+                self.update_strategy_data(
+                    dbg!(pos.volume_buy()) * dbg!(pos.weighted_avg_price_sell()),
+                    -pos.volume_buy(),
+                );
+                self.positions_closed.push(pos);
+            }
+        }
+
+        match self.bot.run(kline) {
+            Some(orders) => {
+                if self.current_budget < self.bot.order_size {
+                    return;
                 }
-                Action::Sell(size) => {
-                    let mut position = match self.positions_opened.pop() {
-                        Some(position) => position,
-                        None => Position::new(self.strategy_settings.symbol.clone()),
-                    };
-                    position.orders.push(Order::new(
-                        kline.date,
-                        kline.close,
-                        size / kline.close,
-                        commission(
-                            kline.close,
-                            size / kline.close,
-                            self.strategy_settings.commission,
-                        ),
-                        Side::Sell,
-                    ));
-                    self.update_strategy_data(size, -position.orders.last().unwrap().qty);
-                    if position.volume_all() == 0.0 {
-                        position.status = PositionStatus::Closed;
-                        position.calculate_pnl();
-                        self.positions_closed.push(position.clone());
-                    } else {
-                        self.positions_opened.push(position);
+                let mut position = Position::new(self.strategy_settings.symbol.clone());
+                for order in orders {
+                    if order.status == OrderStatus::Filled {
+                        self.update_strategy_data(
+                            -1.0 * order.qty.unwrap() * order.price,
+                            order.qty.unwrap(),
+                        );
                     }
+                    position.orders.push(order);
                 }
 
-                _ => (),
-            },
+                self.positions_opened.push(position);
+            }
             None => (),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::backtest::strategies::grid::settings::GridSettings;
+
+    use super::*;
+
+    fn get_grid_settings() -> GridSettings {
+        GridSettings::new(0.0, 100.0, 10, 100.0, 0.0, None, None, false)
+    }
+
+    fn get_grid_bot() -> GridBot {
+        GridBot::new(get_grid_settings())
+    }
+
+    fn get_grid_strategy_settings() -> StrategySettings {
+        StrategySettings {
+            symbol: "BTCUSDT".to_string(),
+            exchange: "binance".to_string(),
+            market_data_type: "1s".to_string(),
+            date_start: 0,
+            date_end: 10,
+            deposit: 100.0,
+            commission: 0.0,
+        }
+    }
+
+    #[rustfmt::skip]
+    #[test]
+    fn test_run() {
+        let bot = get_grid_bot();
+        let strategy_settings = get_grid_strategy_settings();
+        let mut strategy = GridStrategy::new(
+            strategy_settings.clone(),
+            bot,
+            vec![
+                KLine::blank().with_date(0).with_close(50.0),
+                KLine::blank().with_date(1).with_close(59.0),
+                KLine::blank().with_date(2).with_close(61.0),
+                KLine::blank().with_date(3).with_close(49.0),
+                KLine::blank().with_date(4).with_close(39.0),
+                KLine::blank().with_date(5).with_close(51.0),
+                KLine::blank().with_date(6).with_close(61.0),
+                KLine::blank().with_date(7).with_close(00.0),
+                KLine::blank().with_date(8).with_close(00.0),
+                KLine::blank().with_date(9).with_close(00.0),
+                KLine::blank().with_date(10).with_close(00.0),
+            ]
+        );
+
+        strategy.run_kline(0);
+        assert_eq!(strategy.current_budget, 100.0);
+        assert_eq!(strategy.current_qty, 0.0);
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.positions_closed.len(), 0);
+        assert_eq!(strategy.current_kline_position, 1);
+        strategy.run_kline(1);
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.current_kline_position, 2);
+        strategy.run_kline(2);
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.current_kline_position, 3);
+        strategy.run_kline(3);
+        assert_eq!(strategy.current_budget, 90.0);
+        assert_eq!(strategy.current_qty, 10.0 / 49.0);
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.len(), 2);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.first().unwrap().side, Side::Buy);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.first().unwrap().order_type, OrderType::Market);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.last().unwrap().side, Side::Sell);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.last().unwrap().order_type, OrderType::Take_profit_market);
+        assert_eq!(strategy.positions_closed.len(), 0);
+        assert_eq!(strategy.current_kline_position, 4);
+        strategy.run_kline(4);
+        assert_eq!(strategy.current_budget, 80.0);
+        assert_eq!(strategy.current_qty, 10.0 / 49.0 + 10.0 / 39.0);
+        assert_eq!(strategy.positions_opened.len(), 2);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.len(), 2);
+        assert_eq!(strategy.positions_closed.len(), 0);
+        assert_eq!(strategy.current_kline_position, 5);
+        strategy.run_kline(5);
+        assert_eq!(strategy.current_budget, 80.0 + 10.0 / 39.0 * 51.0);
+        assert_eq!(strategy.current_qty, 10.0 / 49.0);
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.len(), 2);
+        assert_eq!(strategy.positions_closed.len(), 1);
+        assert_eq!(strategy.current_kline_position, 6);
+        strategy.run_kline(6);
+        assert_eq!(strategy.current_budget, 80.0 + 10.0 / 39.0 * 51.0 + 10.0 / 49.0 * 61.0);
+        assert_eq!(strategy.current_qty, 0.0);
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.positions_closed.len(), 2);
+        assert_eq!(strategy.current_kline_position, 7);
+        
     }
 }

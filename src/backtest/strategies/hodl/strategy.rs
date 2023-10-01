@@ -1,11 +1,7 @@
 use crate::{
-    backtest::{
-        action::Action,
-        settings::StrategySettings,
-        strategies::{strategy_trait::Strategy, strategy_utils::commission},
-    },
+    backtest::{action::Action, settings::StrategySettings, strategies::strategy_trait::Strategy},
     data_models::market_data::{
-        enums::Side,
+        enums::{OrderType, Side},
         kline::KLine,
         order::Order,
         position::{Position, PositionStatus},
@@ -93,19 +89,17 @@ impl Strategy for HodlStrategy {
             Some(action) => match action {
                 Action::Buy(size) => {
                     let mut position = Position::new(self.strategy_settings.symbol.clone());
-                    position.orders.push(Order::new(
-                        kline.date,
-                        kline.close,
-                        size / kline.close,
-                        commission(
-                            kline.close,
-                            size / kline.close,
-                            self.strategy_settings.commission,
-                        ),
-                        Side::Buy,
-                    ));
+                    position.orders.push(
+                        Order::new(kline.date, kline.close, Side::Buy, OrderType::Market)
+                            .with_qty(size / kline.close)
+                            .with_commission(
+                                kline.close,
+                                size / kline.close,
+                                self.strategy_settings.commission,
+                            ),
+                    );
                     self.positions_opened.push(position.clone());
-                    self.update_strategy_data(-size, position.orders.last().unwrap().qty);
+                    self.update_strategy_data(-size, position.orders.last().unwrap().qty.unwrap());
                 }
                 _ => (),
             },

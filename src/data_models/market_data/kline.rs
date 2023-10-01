@@ -15,6 +15,29 @@ pub struct KLine {
     pub volume: f64,
 }
 
+impl KLine {
+    pub fn blank() -> Self {
+        Self {
+            date: 0,
+            open: 0.0,
+            high: 0.0,
+            low: 0.0,
+            close: 0.0,
+            volume: 0.0,
+        }
+    }
+
+    pub fn with_date(mut self, value: u64) -> Self {
+        self.date = value;
+        self
+    }
+
+    pub fn with_close(mut self, value: f64) -> Self {
+        self.close = value;
+        self
+    }
+}
+
 fn f64_to_u64<'de, D>(deserializer: D) -> Result<u64, D::Error>
 where
     D: Deserializer<'de>,

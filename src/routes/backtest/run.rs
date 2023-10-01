@@ -61,7 +61,7 @@ pub async fn run_grid(
     let backtest_settings = grid_data.backtest_settings.clone();
     let grid_settings = grid_data.grid_settings.clone();
 
-    let grid_bot = GridBot::new(grid_settings.clone(), 0.0);
+    let grid_bot = GridBot::new(grid_settings.clone());
     let strategies_settings = strategies_settings(backtest_settings.clone());
     let mut strategies: Vec<GridStrategy> = strategies_settings
         .iter()

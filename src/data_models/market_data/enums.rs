@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OrderType {
     Limit,
     Market,
@@ -21,15 +21,16 @@ pub enum Side {
     Sell,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OrderStatus {
     New,
     Filled,
+    Cancelled,
     Expired,
 }
 
 impl Default for OrderStatus {
     fn default() -> Self {
-        Self::Filled
+        Self::New
     }
 }

@@ -1,4 +1,7 @@
-use super::{enums::Side, order::Order};
+use super::{
+    enums::{OrderStatus, Side},
+    order::Order,
+};
 
 #[derive(Debug, Clone)]
 pub struct Position {
@@ -17,6 +20,11 @@ impl Position {
             orders: Vec::new(),
             pnl: None,
         }
+    }
+
+    pub fn with_order(mut self, order: Order) -> Self {
+        self.orders.push(order);
+        self
     }
 
     pub fn open_price(&self) -> f64 {
@@ -38,16 +46,16 @@ impl Position {
     pub fn volume_buy(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Buy)
-            .map(|order| order.qty)
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Buy)
+            .map(|order| order.qty.unwrap())
             .sum()
     }
 
     pub fn volume_sell(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Sell)
-            .map(|order| order.qty)
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Sell)
+            .map(|order| order.qty.unwrap())
             .sum()
     }
 
@@ -55,10 +63,14 @@ impl Position {
         self.orders
             .iter()
             .map(|order| {
-                if order.side == Side::Sell {
-                    order.qty * -1.0
+                if order.status == OrderStatus::Filled {
+                    if order.side == Side::Sell {
+                        order.qty.unwrap() * -1.0
+                    } else {
+                        order.qty.unwrap()
+                    }
                 } else {
-                    order.qty
+                    0.0
                 }
             })
             .sum()
@@ -67,48 +79,54 @@ impl Position {
     pub fn commission_buy(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Buy)
-            .map(|order| order.commission)
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Buy)
+            .map(|order| order.commission.unwrap())
             .sum()
     }
 
     pub fn commission_sell(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Sell)
-            .map(|order| order.commission)
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Sell)
+            .map(|order| order.commission.unwrap())
             .sum()
     }
 
     pub fn weighted_avg_price_buy(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Buy)
-            .map(|order| (order.qty * order.price) / self.volume_buy())
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Buy)
+            .map(|order| (order.qty.unwrap() * order.price_executed.unwrap()) / self.volume_buy())
             .sum::<f64>()
     }
 
     pub fn weighted_avg_price_buy_raw(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Buy)
-            .map(|order| (order.qty * order.price + order.commission) / self.volume_buy())
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Buy)
+            .map(|order| {
+                (order.qty.unwrap() * order.price_executed.unwrap() + order.commission.unwrap())
+                    / self.volume_buy()
+            })
             .sum::<f64>()
     }
 
     pub fn weighted_avg_price_sell(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Sell)
-            .map(|order| (order.qty * order.price) / self.volume_sell())
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Sell)
+            .map(|order| (order.qty.unwrap() * order.price_executed.unwrap()) / self.volume_sell())
             .sum::<f64>()
     }
 
     pub fn weighted_avg_price_sell_raw(&self) -> f64 {
         self.orders
             .iter()
-            .filter(|order| order.side == Side::Sell)
-            .map(|order| (order.qty * order.price + order.commission) / self.volume_sell())
+            .filter(|order| order.status == OrderStatus::Filled && order.side == Side::Sell)
+            .map(|order| {
+                (order.qty.unwrap() * order.price_executed.unwrap() + order.commission.unwrap())
+                    / self.volume_sell()
+            })
             .sum::<f64>()
     }
 
@@ -134,6 +152,15 @@ impl Position {
                 - self.commission_sell(),
         )
     }
+
+    pub fn cancel_new_orders(&mut self, date: u64) {
+        for order in self.orders.iter_mut() {
+            if order.status == OrderStatus::New {
+                order.status = OrderStatus::Cancelled;
+                order.date_update = Some(date);
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -145,7 +172,7 @@ pub enum PositionStatus {
 
 #[cfg(test)]
 mod test {
-    use crate::data_models::market_data::enums::{OrderStatus, OrderType};
+    use crate::data_models::market_data::enums::OrderType;
 
     use super::*;
 
@@ -155,27 +182,33 @@ mod test {
         p.orders.extend(vec![
             Order {
                 date: 60000,
+                date_update: Some(180000 + 1),
                 price: 100.00,
-                qty: 8.0,
-                commission: 80.0,
+                price_executed: Some(100.00),
+                qty: Some(8.0),
+                commission: Some(80.0),
                 order_type: OrderType::default(),
                 side: Side::Buy,
                 status: OrderStatus::Filled,
             },
             Order {
                 date: 120000,
+                date_update: Some(180000 + 1),
                 price: 200.00,
-                qty: 16.0,
-                commission: 320.0,
+                price_executed: Some(200.00),
+                qty: Some(16.0),
+                commission: Some(320.0),
                 order_type: OrderType::default(),
                 side: Side::Buy,
                 status: OrderStatus::Filled,
             },
             Order {
                 date: 180000,
+                date_update: Some(180000 + 1),
                 price: 300.00,
-                qty: 24.0,
-                commission: 600.0,
+                price_executed: Some(300.00),
+                qty: Some(24.0),
+                commission: Some(600.0),
                 order_type: OrderType::default(),
                 side: Side::Sell,
                 status: OrderStatus::Filled,
@@ -288,5 +321,25 @@ mod test {
         let mut p = get_position();
         p.calculate_pnl();
         assert_eq!(p.pnl.unwrap(), 2199.9999999999995);
+    }
+
+    #[test]
+    fn test_cancel_new_orders() {
+        let mut p = get_position();
+        p.orders.push(
+            Order::new(240000, 400.00, Side::Buy, OrderType::Market)
+                .with_qty(32.0)
+                .with_commission(400.0, 32.0, 4.0),
+        );
+        p.orders.push(
+            Order::new(300000, 500.00, Side::Buy, OrderType::Market)
+                .with_qty(40.0)
+                .with_commission(500.0, 40.0, 4.0),
+        );
+        p.cancel_new_orders(300000);
+        assert_eq!(p.orders[3].status, OrderStatus::Cancelled);
+        assert_eq!(p.orders[3].date_update, Some(300000));
+        assert_eq!(p.orders[4].status, OrderStatus::Cancelled);
+        assert_eq!(p.orders[4].date_update, Some(300000));
     }
 }
