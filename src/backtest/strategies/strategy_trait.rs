@@ -46,10 +46,14 @@ pub trait Strategy {
     fn close_all_positions(&mut self, timestamp: u64, price: f64) {
         let strategy_comission = self.strategy_settings().commission;
         for mut position in self.positions_opened_mut().clone() {
+            position.cancel_new_orders(timestamp);
             position.orders.push(
                 Order::new(timestamp, price, Side::Sell, OrderType::Market)
+                    .updated(timestamp)
+                    .with_price_executed(price)
                     .with_qty(position.volume_buy())
-                    .with_commission(price, position.volume_buy(), strategy_comission),
+                    .with_commission(price, position.volume_buy(), strategy_comission)
+                    .filled(),
             );
             position.status = PositionStatus::Closed;
             position.calculate_pnl();

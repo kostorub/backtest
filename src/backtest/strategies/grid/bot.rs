@@ -47,6 +47,7 @@ impl GridBot {
                 return Some(vec![
                     Order::new(kline.date, kline.close, Side::Buy, OrderType::Market)
                         .updated(kline.date)
+                        .with_price_executed(kline.close)
                         .with_qty(self.order_size / kline.close)
                         .filled(),
                     Order::new(

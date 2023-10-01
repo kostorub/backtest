@@ -97,31 +97,33 @@ impl Strategy for GridStrategy {
             &mut self.positions_opened,
             self.strategy_settings.commission,
         );
-        let closed_positions = remove_closed_positions(&mut self.positions_opened);
+        let mut closed_positions = remove_closed_positions(&mut self.positions_opened);
         if !closed_positions.is_empty() {
-            for pos in closed_positions {
+            for pos in closed_positions.iter_mut() {
                 self.update_strategy_data(
                     pos.volume_buy() * pos.weighted_avg_price_sell(),
                     -pos.volume_buy(),
                 );
-                self.positions_closed.push(pos);
+                pos.calculate_pnl();
+                self.positions_closed.push(pos.clone());
             }
         }
 
         match self.bot.run(kline) {
-            Some(orders) => {
+            Some(mut orders) => {
                 if self.current_budget < self.bot.order_size {
                     return;
                 }
                 let mut position = Position::new(self.strategy_settings.symbol.clone());
-                for order in orders {
+                for order in orders.iter_mut() {
                     if order.status == OrderStatus::Filled {
                         self.update_strategy_data(
                             -1.0 * order.qty.unwrap() * order.price,
                             order.qty.unwrap(),
                         );
+                        order.set_commission(order.price_executed.unwrap(), order.qty.unwrap(), self.strategy_settings.commission);
                     }
-                    position.orders.push(order);
+                    position.orders.push(order.clone());
                 }
 
                 self.positions_opened.push(position);
