@@ -1,5 +1,6 @@
 mod app_state;
 mod backtest;
+mod chart;
 mod config;
 mod data_handlers;
 mod data_models;
