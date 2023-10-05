@@ -64,6 +64,8 @@ pub trait Strategy {
             self.positions_closed_mut().push(position.clone());
         }
         self.positions_opened_mut().clear();
-        dbg!(self.positions_closed().last().unwrap());
+        if !self.positions_closed().is_empty() {
+            dbg!(self.positions_closed().last().unwrap());
+        }
     }
 }

@@ -140,7 +140,7 @@ mod test {
     use super::*;
 
     fn get_grid_settings() -> GridSettings {
-        GridSettings::new(0.0, 100.0, 10, 100.0, 0.0, None, None, false)
+        GridSettings::new(0.0, 100.0, 10, 100.0, 0.0, None, None, None)
     }
 
     fn get_grid_bot() -> GridBot {

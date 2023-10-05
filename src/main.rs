@@ -6,6 +6,7 @@ mod data_models;
 mod routes;
 mod server;
 mod tests;
+mod web;
 
 #[actix_web::main]
 async fn main() {

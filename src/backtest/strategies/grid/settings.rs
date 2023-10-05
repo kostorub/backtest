@@ -1,6 +1,7 @@
 use serde::Deserialize;
 
 use crate::backtest::settings::BacktesttSettings;
+use serde_aux::field_attributes::{deserialize_number_from_string, deserialize_option_number_from_string};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettings {
@@ -11,7 +12,7 @@ pub struct GridSettings {
     pub grid_trigger: f64,
     pub grid_sl: Option<f64>,
     pub grid_tp: Option<f64>,
-    pub sell_all: bool, // true by default
+    pub sell_all: Option<bool>, // true by default
 }
 
 impl GridSettings {
@@ -23,7 +24,7 @@ impl GridSettings {
         grid_trigger: f64,
         grid_sl: Option<f64>,
         grid_tp: Option<f64>,
-        sell_all: bool,
+        sell_all: Option<bool>,
     ) -> Self {
         Self {
             price_low,
@@ -40,6 +41,26 @@ impl GridSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettingsRequest {
-    pub backtest_settings: BacktesttSettings,
-    pub grid_settings: GridSettings,
+    pub symbols: Vec<String>,
+    pub exchange: String,
+    pub market_data_type: String,
+    pub date_start: String,
+    pub date_end: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub deposit: f64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub commission: f64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub price_low: f64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub price_high: f64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub grids_count: u64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub grid_trigger: f64,
+    #[serde(deserialize_with = "deserialize_option_number_from_string")]
+    pub grid_sl: Option<f64>,
+    #[serde(deserialize_with = "deserialize_option_number_from_string")]
+    pub grid_tp: Option<f64>,
+    pub sell_all: Option<bool>, // true by default
 }
