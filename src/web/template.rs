@@ -1,17 +1,20 @@
 use tera::Tera;
 
-
 pub fn template() -> Tera {
     let mut tera = Tera::new("src/web/html/*").unwrap();
     tera.full_reload().unwrap();
 
-    tera.add_raw_template("select_options", 
-    "{% for value in values %}
+    tera.add_raw_template(
+        "select_options",
+        "{% for value in values %}
                 <option value='{{ value }}'>{{ value }}</option>
-            {% endfor %}").unwrap();
+            {% endfor %}",
+    )
+    .unwrap();
 
-    tera.add_raw_template("metrics",
-    r#"
+    tera.add_raw_template(
+        "metrics",
+        r#"
     <table class="table">
         <thead>
             <tr>
@@ -28,8 +31,9 @@ pub fn template() -> Tera {
             {% endfor %}
         </tbody>
         </table>
-    "#
-    ).unwrap();
+    "#,
+    )
+    .unwrap();
 
     tera
 }

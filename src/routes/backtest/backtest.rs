@@ -11,7 +11,7 @@ use crate::backtest::backtest::{
 };
 use crate::backtest::settings::BacktesttSettings;
 use crate::backtest::strategies::grid::bot::GridBot;
-use crate::backtest::strategies::grid::settings::{GridSettingsRequest, GridSettings};
+use crate::backtest::strategies::grid::settings::{GridSettings, GridSettingsRequest};
 use crate::backtest::strategies::grid::strategy::GridStrategy;
 use crate::backtest::strategies::hodl::bot::HodlBot;
 use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
@@ -58,17 +58,28 @@ pub async fn run_hodl(
 pub async fn run_grid(
     request_settings: web::Json<GridSettingsRequest>,
     data: web::Data<AppState>,
-// ) -> Either<Result<impl Responder>, HttpResponse> {
+    // ) -> Either<Result<impl Responder>, HttpResponse> {
 ) -> HttpResponse {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
     let request_settings = request_settings.clone();
 
     let backtest_settings = BacktesttSettings {
-        symbols: request_settings.symbols.clone().iter().map(|s| s.to_lowercase()).collect(),
+        symbols: request_settings
+            .symbols
+            .clone()
+            .iter()
+            .map(|s| s.to_lowercase())
+            .collect(),
         exchange: request_settings.exchange.clone().to_lowercase(),
-        date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d").unwrap().and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()).timestamp_millis() as u64,
-        date_end: NaiveDate::parse_from_str(request_settings.date_end.as_str(), "%Y-%m-%d").unwrap().and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()).timestamp_millis() as u64,
+        date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d")
+            .unwrap()
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+            .timestamp_millis() as u64,
+        date_end: NaiveDate::parse_from_str(request_settings.date_end.as_str(), "%Y-%m-%d")
+            .unwrap()
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+            .timestamp_millis() as u64,
         deposit: request_settings.deposit,
         commission: request_settings.commission,
         market_data_type: request_settings.market_data_type.clone(),
@@ -116,7 +127,6 @@ pub async fn run_grid(
     let tera = data.tera.clone();
     let body = tera.render("metrics", &context).unwrap();
 
-    
     HttpResponse::Ok().body(body)
 
     // Either::Right(HttpResponse::InternalServerError().body(format!("Internal server error. Details: {}", e)));

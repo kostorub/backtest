@@ -1,7 +1,8 @@
 use serde::Deserialize;
 
-use crate::backtest::settings::BacktesttSettings;
-use serde_aux::field_attributes::{deserialize_number_from_string, deserialize_option_number_from_string};
+use serde_aux::field_attributes::{
+    deserialize_number_from_string, deserialize_option_number_from_string,
+};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettings {
@@ -16,6 +17,7 @@ pub struct GridSettings {
 }
 
 impl GridSettings {
+    #[allow(dead_code)]
     pub fn new(
         price_low: f64,
         price_high: f64,

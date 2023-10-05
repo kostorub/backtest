@@ -1,18 +1,12 @@
 use crate::{
     backtest::{
-        action::Action,
         settings::StrategySettings,
         strategies::{
             strategy_trait::Strategy,
             strategy_utils::{check_tp_sl, remove_closed_positions},
         },
     },
-    data_models::market_data::{
-        enums::{OrderStatus, OrderType, Side},
-        kline::KLine,
-        order::{self, Order},
-        position::{Position, PositionStatus},
-    },
+    data_models::market_data::{enums::OrderStatus, kline::KLine, position::Position},
 };
 
 use super::bot::GridBot;
@@ -121,7 +115,11 @@ impl Strategy for GridStrategy {
                             -1.0 * order.qty.unwrap() * order.price,
                             order.qty.unwrap(),
                         );
-                        order.set_commission(order.price_executed.unwrap(), order.qty.unwrap(), self.strategy_settings.commission);
+                        order.set_commission(
+                            order.price_executed.unwrap(),
+                            order.qty.unwrap(),
+                            self.strategy_settings.commission,
+                        );
                     }
                     position.orders.push(order.clone());
                 }
@@ -135,7 +133,10 @@ impl Strategy for GridStrategy {
 
 #[cfg(test)]
 mod test {
-    use crate::backtest::strategies::grid::settings::GridSettings;
+    use crate::{
+        backtest::strategies::grid::settings::GridSettings,
+        data_models::market_data::enums::{OrderType, Side},
+    };
 
     use super::*;
 
@@ -202,7 +203,7 @@ mod test {
         assert_eq!(strategy.positions_opened.last().unwrap().orders.first().unwrap().side, Side::Buy);
         assert_eq!(strategy.positions_opened.last().unwrap().orders.first().unwrap().order_type, OrderType::Market);
         assert_eq!(strategy.positions_opened.last().unwrap().orders.last().unwrap().side, Side::Sell);
-        assert_eq!(strategy.positions_opened.last().unwrap().orders.last().unwrap().order_type, OrderType::Take_profit_market);
+        assert_eq!(strategy.positions_opened.last().unwrap().orders.last().unwrap().order_type, OrderType::TakeProfitMarket);
         assert_eq!(strategy.positions_closed.len(), 0);
         assert_eq!(strategy.current_kline_position, 4);
         strategy.run_kline(4);

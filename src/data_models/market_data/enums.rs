@@ -1,12 +1,13 @@
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrderType {
     Limit,
     Market,
     Stop,
-    Stop_market,
-    Take_profit,
-    Take_profit_market,
-    Trailing_stop_market,
+    StopMarket,
+    TakeProfit,
+    TakeProfitMarket,
+    TrailingStopMarket,
 }
 
 impl Default for OrderType {
@@ -21,6 +22,7 @@ pub enum Side {
     Sell,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum OrderStatus {
     New,

@@ -15,6 +15,7 @@ pub struct KLine {
     pub volume: f64,
 }
 
+#[allow(dead_code)]
 impl KLine {
     pub fn blank() -> Self {
         Self {

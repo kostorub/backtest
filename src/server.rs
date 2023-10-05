@@ -1,12 +1,17 @@
+use actix_files::Files;
 use actix_web::middleware::Logger;
 use env_logger::Builder;
 use std::sync::Arc;
-use actix_files::Files;
 
 use crate::{
     app_state::AppState,
     config::AppSettings,
-    routes::backtest::{backtest::{run_grid, run_hodl}, index::index, exchange::{symbols, exchanges, market_data_types}}, web::template::template,
+    routes::backtest::{
+        backtest::{run_grid, run_hodl},
+        exchange::{exchanges, market_data_types, symbols},
+        index::index,
+    },
+    web::template::template,
 };
 
 use actix_web::{web, App, HttpServer};
@@ -19,7 +24,7 @@ pub async fn start_server() -> std::io::Result<()> {
 
     let app_data = web::Data::new(AppState {
         app_settings: Arc::new(settings),
-        tera: Arc::new(template())
+        tera: Arc::new(template()),
     });
 
     HttpServer::new(move || {
@@ -30,7 +35,10 @@ pub async fn start_server() -> std::io::Result<()> {
             .route("/", web::get().to(index))
             .route("/exchange/symbols", web::get().to(symbols))
             .route("/exchange/exchanges", web::get().to(exchanges))
-            .route("/exchange/market_data_types", web::get().to(market_data_types))
+            .route(
+                "/exchange/market_data_types",
+                web::get().to(market_data_types),
+            )
             .route("/backtest/hodl/run", web::post().to(run_hodl))
             .route("/backtest/grid/run", web::post().to(run_grid))
     })

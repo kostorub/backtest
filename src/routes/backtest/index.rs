@@ -1,8 +1,10 @@
-use actix_web::{web::{self}, HttpResponse};
+use actix_web::{
+    web::{self},
+    HttpResponse,
+};
 use tera::Context;
 
 use crate::app_state::AppState;
-
 
 pub async fn index(data: web::Data<AppState>) -> HttpResponse {
     let context = Context::new();

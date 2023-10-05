@@ -1,11 +1,9 @@
-use actix_web::{web, Responder, Result, HttpResponse};
-use tera::{Tera, Context};
 use crate::app_state::AppState;
+use actix_web::{web, HttpResponse};
+use tera::Context;
 
 pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
-    let exchanges: Vec<String> = vec![
-        "Binance".into(),
-    ];
+    let exchanges: Vec<String> = vec!["Binance".into()];
 
     let mut context = Context::new();
     context.insert("values", &exchanges);
@@ -40,10 +38,7 @@ pub async fn symbols(data: web::Data<AppState>) -> HttpResponse {
 }
 
 pub async fn market_data_types(data: web::Data<AppState>) -> HttpResponse {
-    let symbols: Vec<String> = vec![
-        "1s".into(),
-        "1m".into(),
-    ];
+    let symbols: Vec<String> = vec!["1s".into(), "1m".into()];
 
     let mut context = Context::new();
     context.insert("values", &symbols);

@@ -163,11 +163,11 @@ impl Position {
     }
 }
 
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum PositionStatus {
     Opened,
-    Closed,
-    Expired,
+    Closed
 }
 
 #[cfg(test)]

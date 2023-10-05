@@ -7,8 +7,7 @@ use crate::{
     data_models::market_data::{
         enums::{OrderStatus, OrderType, Side},
         kline::KLine,
-        order::Order,
-        position::{Position, PositionStatus},
+        position::Position,
     },
 };
 
@@ -32,10 +31,10 @@ pub fn check_tp_sl(kline: &KLine, positions_opened: &mut Vec<Position>, commissi
         for order in pos.orders.iter_mut() {
             if order.status == OrderStatus::New {
                 if (order.side == Side::Sell
-                    && order.order_type == OrderType::Take_profit_market
+                    && order.order_type == OrderType::TakeProfitMarket
                     && kline.close >= order.price)
                     || (order.side == Side::Sell
-                        && order.order_type == OrderType::Stop_market
+                        && order.order_type == OrderType::StopMarket
                         && kline.close <= order.price)
                 {
                     let qty = order.qty.unwrap();
@@ -69,6 +68,8 @@ pub fn remove_closed_positions(positions_opened: &mut Vec<Position>) -> Vec<Posi
 
 #[cfg(test)]
 mod tests {
+    use crate::data_models::market_data::order::Order;
+
     use super::*;
 
     fn get_positions_opened() -> Vec<Position> {
@@ -83,7 +84,7 @@ mod tests {
                         .filled(),
                 )
                 .with_order(
-                    Order::new(2, 200.0, Side::Sell, OrderType::Take_profit_market).with_qty(1.0),
+                    Order::new(2, 200.0, Side::Sell, OrderType::TakeProfitMarket).with_qty(1.0),
                 ),
             Position::new("BTCUSDT".to_string())
                 .with_order(
@@ -94,7 +95,7 @@ mod tests {
                         .with_commission(400.0, 1.0, 0.0)
                         .filled(),
                 )
-                .with_order(Order::new(4, 50.0, Side::Sell, OrderType::Stop_market).with_qty(1.0)),
+                .with_order(Order::new(4, 50.0, Side::Sell, OrderType::StopMarket).with_qty(1.0)),
             Position::new("BTCUSDT".to_string())
                 .with_order(
                     Order::new(5, 100.0, Side::Buy, OrderType::Market)
@@ -105,7 +106,7 @@ mod tests {
                         .filled(),
                 )
                 .with_order(
-                    Order::new(6, 150.0, Side::Sell, OrderType::Take_profit_market)
+                    Order::new(6, 150.0, Side::Sell, OrderType::TakeProfitMarket)
                         .updated(6)
                         .with_price_executed(150.0)
                         .with_qty(1.0)

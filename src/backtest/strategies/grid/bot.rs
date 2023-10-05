@@ -1,10 +1,7 @@
-use crate::{
-    backtest::action::Action,
-    data_models::market_data::{
-        enums::{OrderType, Side},
-        kline::KLine,
-        order::Order,
-    },
+use crate::data_models::market_data::{
+    enums::{OrderType, Side},
+    kline::KLine,
+    order::Order,
 };
 
 use super::{
@@ -54,7 +51,7 @@ impl GridBot {
                         kline.date,
                         self.triggers[i + 1].price,
                         Side::Sell,
-                        OrderType::Take_profit_market,
+                        OrderType::TakeProfitMarket,
                     )
                     .with_qty(self.order_size / kline.close),
                 ]);
@@ -99,7 +96,7 @@ mod test {
                 .updated(0)
                 .with_qty(qty)
                 .filled(),
-            Order::new(0, tp_price, Side::Sell, OrderType::Take_profit_market).with_qty(qty),
+            Order::new(0, tp_price, Side::Sell, OrderType::TakeProfitMarket).with_qty(qty),
         ])
     }
 

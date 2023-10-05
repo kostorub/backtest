@@ -1,3 +1,3 @@
 pub mod backtest;
-pub mod index;
 pub mod exchange;
+pub mod index;

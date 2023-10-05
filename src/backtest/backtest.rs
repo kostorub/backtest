@@ -1,12 +1,10 @@
 use crate::data_models::market_data::{
-    kline::{market_data_type_to_seconds, KLine},
-    metrics::{self, Metrics},
-    position::Position,
+    kline::market_data_type_to_seconds, metrics::Metrics, position::Position,
 };
 
 use super::{
     settings::{BacktesttSettings, StrategySettings},
-    strategies::{self, strategy_trait::Strategy},
+    strategies::strategy_trait::Strategy,
 };
 
 pub fn run_sequentially<S: Strategy>(
