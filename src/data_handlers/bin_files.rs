@@ -57,6 +57,12 @@ pub fn get_values_from_file<T: ToFromBytes>(file_path: PathBuf) -> io::Result<Ve
     Ok(result)
 }
 
+pub fn get_first_value_from_file<T: ToFromBytes>(file_path: PathBuf) -> io::Result<T> {
+    let mmap = memmap_for_file(file_path)?;
+
+    Ok(T::from_be_bytes(&mmap[0..T::size()]))
+}
+
 pub fn get_last_value_from_file<T: ToFromBytes>(file_path: PathBuf) -> io::Result<T> {
     let mmap = memmap_for_file(file_path)?;
 
@@ -134,9 +140,21 @@ mod tests {
     }
 
     #[test]
-    fn test_get_last_candle_from_file() {
+    fn test_get_first_value_from_file() {
         let candles = get_default_candles();
         let file_path = PathBuf::from("test_4.bin");
+        create_and_write_to_file(&candles, file_path.clone()).unwrap();
+
+        let candle: KLine = get_first_value_from_file(file_path.clone()).unwrap();
+        let standart = get_default_candles();
+        assert_eq!(Some(&candle), standart.first());
+        remove_file(file_path).unwrap();
+    }
+
+    #[test]
+    fn test_get_last_value_from_file() {
+        let candles = get_default_candles();
+        let file_path = PathBuf::from("test_5.bin");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
 
         let candle: KLine = get_last_value_from_file(file_path.clone()).unwrap();
@@ -148,7 +166,7 @@ mod tests {
     #[test]
     fn test_get_filenames() {
         let candles = get_default_candles();
-        let file_path = PathBuf::from("./test_5.binspecial");
+        let file_path = PathBuf::from("./test_6.binspecial");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
 
         assert!(file_path.exists());
