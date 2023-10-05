@@ -8,10 +8,10 @@ fn parse_time(t: u64) -> DateTime<Utc> {
     Utc.timestamp_opt(t as i64, 0).unwrap()
 }
 
-const OUT_FILE_NAME: &'static str = "stock.png";
+const OUT_FILE_NAME: &'static str = "stock.svg";
 
 pub fn build_chart(klines: Vec<KLine>) -> Result<(), Box<dyn std::error::Error>> {
-    let root = BitMapBackend::new(OUT_FILE_NAME, (4096, 2160)).into_drawing_area();
+    let root = SVGBackend::new(OUT_FILE_NAME, (4096 * 4, 2160)).into_drawing_area();
     root.fill(&WHITE)?;
 
     let (to_date, from_date) = (
@@ -23,7 +23,7 @@ pub fn build_chart(klines: Vec<KLine>) -> Result<(), Box<dyn std::error::Error>>
         .x_label_area_size(40)
         .y_label_area_size(40)
         .caption("KLines", ("sans-serif", 50.0).into_font())
-        .build_cartesian_2d(from_date..to_date, 0f64..40000f64)?;
+        .build_cartesian_2d(to_date..from_date, 10000f64..40000f64)?;
 
     chart.configure_mesh().light_line_style(&WHITE).draw()?;
 
