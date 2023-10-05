@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use handlebars::Handlebars;
 use tera::Tera;
 
 use crate::config::AppSettings;
