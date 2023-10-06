@@ -8,8 +8,9 @@ use crate::{
     config::AppSettings,
     routes::backtest::{
         backtest::{run_grid, run_hodl},
-        exchange::{exchanges, market_data_types, symbols},
-        index::index,
+        exchange::{exchange_symbols, exchanges, market_data_types, symbols},
+        market_data::{download_market_data, downloaded_market_data},
+        pages::{index, page},
     },
     web::template::template,
 };
@@ -33,11 +34,25 @@ pub async fn start_server() -> std::io::Result<()> {
             .app_data(app_data.clone())
             .service(Files::new("/static", "src/web/static/").show_files_listing())
             .route("/", web::get().to(index))
+            .route("/pages/{page}", web::get().to(page))
+            .route("/pages/{page}", web::get().to(page))
             .route("/exchange/symbols", web::get().to(symbols))
+            .route(
+                "/exchange/symbols/{exchange}",
+                web::get().to(exchange_symbols),
+            )
             .route("/exchange/exchanges", web::get().to(exchanges))
             .route(
                 "/exchange/market_data_types",
                 web::get().to(market_data_types),
+            )
+            .route(
+                "/market-data/downloaded",
+                web::get().to(downloaded_market_data),
+            )
+            .route(
+                "/market-data/download",
+                web::post().to(download_market_data),
             )
             .route("/backtest/hodl/run", web::post().to(run_hodl))
             .route("/backtest/grid/run", web::post().to(run_grid))

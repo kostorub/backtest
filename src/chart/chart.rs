@@ -1,4 +1,4 @@
-use chrono::offset::{Local, TimeZone};
+use chrono::offset::TimeZone;
 use chrono::{DateTime, Duration, Utc};
 use plotters::prelude::*;
 

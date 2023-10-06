@@ -1,0 +1,22 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Exchange</th>
+            <th scope="col">Symbol</th>
+            <th scope="col">Market data type</th>
+            <th scope="col">Date start</th>
+            <th scope="col">Date end</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for value in market_data %}
+            <tr>
+                <td>{{ value.0 }}</td>
+                <td>{{ value.1 }}</td>
+                <td>{{ value.2 }}</td>
+                <td>{{ value.3 }}</td>
+                <td>{{ value.4 }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

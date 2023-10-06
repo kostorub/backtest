@@ -89,7 +89,7 @@ pub fn get_filenames(data_path: PathBuf, extension: &str) -> io::Result<Vec<Path
 }
 
 pub fn bin_file_name(exchange: String, symbol: String, market_data_type: String) -> String {
-    format!("{}-{}-{}.markettrades", exchange, symbol, market_data_type).to_lowercase()
+    format!("{}-{}-{}.marketdata", exchange, symbol, market_data_type).to_lowercase()
 }
 
 #[cfg(test)]

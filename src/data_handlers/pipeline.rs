@@ -9,6 +9,8 @@ use crate::{
     data_models::be_bytes::ToFromBytes,
 };
 
+use futures::future::join_all;
+
 use super::{
     bin_files::get_filenames,
     binance_files::generate_archives_names,
@@ -16,14 +18,14 @@ use super::{
     zip_files::extract_archive,
 };
 
-pub fn pipeline<T>(
+pub async fn pipeline<T>(
     data_path: PathBuf,
     data_url: String,
     exchange: String,
     symbol: String,
     market_data_type: String,
-    start_date: u64,
-    end_date: u64,
+    date_start: u64,
+    date_end: u64,
 ) where
     T: DeserializeOwned + ToFromBytes,
 {
@@ -33,40 +35,56 @@ pub fn pipeline<T>(
         data_url,
         symbol.clone(),
         market_data_type.clone(),
-        start_date,
-        end_date,
-    );
+        date_start,
+        date_end,
+    )
+    .await;
+    let binary_path = data_path.clone().join(bin_file_name(
+        exchange.clone(),
+        symbol.clone(),
+        market_data_type.clone(),
+    ));
+    if binary_path.clone().exists() {
+        remove_file(binary_path.clone()).unwrap();
+    }
     process_archives::<T>(data_path.clone(), exchange, symbol, market_data_type);
     info!("Pipeline finished");
 }
 
-fn download_archives(
+async fn download_archives(
     data_path: PathBuf,
     data_url: String,
     symbol: String,
     market_data_type: String,
-    start_date: u64,
-    end_date: u64,
+    date_start: u64,
+    date_end: u64,
 ) {
-    generate_archives_names(
+    let archive_names = generate_archives_names(
         symbol.clone(),
         market_data_type.clone(),
-        start_date,
-        end_date,
-    )
-    .iter()
-    .for_each(|archive_name| {
-        let archive_url = get_archive_url(
-            data_url.clone(),
-            symbol.clone(),
-            market_data_type.clone(),
-            archive_name.clone(),
-        );
-        let archive_path = data_path.clone().join(archive_name.clone());
-        if !archive_path.exists() {
-            download_archive(archive_url.clone(), archive_path.clone());
-        }
-    });
+        date_start,
+        date_end,
+    );
+    let archive_url_path: Vec<(String, PathBuf)> = archive_names
+        .iter()
+        .map(|archive_name| {
+            let archive_url = get_archive_url(
+                data_url.clone(),
+                symbol.clone(),
+                market_data_type.clone(),
+                archive_name.clone(),
+            );
+            let archive_path = data_path.clone().join(archive_name.clone());
+            (archive_url, archive_path)
+        })
+        .collect();
+    let tasks: Vec<_> = archive_url_path
+        .iter()
+        .map(|(archive_url, archive_path)| {
+            download_archive(archive_url.clone(), archive_path.clone())
+        })
+        .collect();
+    join_all(tasks).await;
 }
 
 fn process_archives<T>(

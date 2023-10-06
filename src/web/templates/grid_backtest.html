@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <form id="backtest-data">
+                <table class="table">
+                    <tbody id="tbody">
+                        <tr>
+                            <td><label>choose symbols</label></td>
+                            <td>
+                                <select name="symbols" hx-get="/exchange/symbols" hx-trigger="load"
+                                    hx-indicator=".htmx-indicator" class="form-select" size="3" multiple
+                                    aria-label="Multiple select Size 3">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label>exchange</label></td>
+                            <td>
+                                <select name="exchange" hx-get="/exchange/exchanges" hx-trigger="load"
+                                    hx-indicator=".htmx-indicator">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label>market_data_type</label></td>
+                            <td>
+                                <select name="market_data_type" hx-get="/exchange/market_data_types"
+                                    hx-trigger="load" hx-indicator=".htmx-indicator">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label>date_start</label></td>
+                            <td><input type="date" name="date_start" placeholder="date_start"></td>
+                        </tr>
+                        <tr>
+                            <td><label>date_end</label></td>
+                            <td><input type="date" name="date_end" placeholder="date_end"></td>
+                        </tr>
+                        <tr>
+                            <td><label>deposit</label></td>
+                            <td><input type="number" min="0" step="0.01" value="1000.0" name="deposit"
+                                    placeholder="deposit">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label>commission</label></td>
+                            <td><input type="number" min="0" max="100.0" step="0.01" value="0.0" name="commission"
+                                    placeholder="commission"></td>
+                        </tr>
+                        <tr>
+                            <td><label>price_low</label></td>
+                            <td><input type="number" min="0" name="price_low" placeholder="price_low"></td>
+                        </tr>
+                        <tr>
+                            <td><label>price_high</label></td>
+                            <td><input type="number" min="0" name="price_high" placeholder="price_high"></td>
+                        </tr>
+                        <tr>
+                            <td><label>grids_count</label></td>
+                            <td><input type="number" min="0" step="1" name="grids_count" placeholder="grids_count">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label>grid_trigger</label></td>
+                            <td><input type="number" min="0" name="grid_trigger" placeholder="grid_trigger"></td>
+                        </tr>
+                        <tr>
+                            <td><label>grid_sl</label></td>
+                            <td><input type="number" min="0" name="grid_sl" placeholder="grid_sl"></td>
+                        </tr>
+                        <tr>
+                            <td><label>grid_tp</label></td>
+                            <td><input type="number" min="0" name="grid_tp" placeholder="grid_tp"></td>
+                        </tr>
+                        <tr>
+                            <td><label>sell_all</label></td>
+                            <td><input type="checkbox" name="sell_all" placeholder="sell_all"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+            <button type="button" class="btn btn-primary" hx-post="/backtest/grid/run"
+                hx-include="#backtest-data" hx-target="#metrics" hx-ext="json-enc"
+                hx-indicator="#run-spinner" _="on click toggle @disabled until htmx:afterOnLoad">
+                Run Grid Backtest
+            </button>
+            <div id="run-spinner" class="spinner-border htmx-indicator spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+                
+        </div>
+        <div id="metrics" class="col-md-4">
+        </div>
+    </div>
+</div>
+{% endblock content %}
