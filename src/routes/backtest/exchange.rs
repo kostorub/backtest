@@ -53,12 +53,14 @@ pub async fn exchange_symbols(data: web::Data<AppState>, path: Path<(String,)>) 
 
     let json_body: serde_json::Value = serde_json::from_str(&body).unwrap();
 
-    let symbols: Vec<String> = json_body["symbols"]
+    let mut symbols: Vec<String> = json_body["symbols"]
         .as_array()
         .unwrap()
         .iter()
         .map(|s| s["symbol"].as_str().unwrap().to_string())
         .collect();
+
+    symbols.sort();
 
     let mut context = Context::new();
     context.insert("values", &symbols);
