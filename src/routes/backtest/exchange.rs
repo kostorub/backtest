@@ -72,7 +72,19 @@ pub async fn exchange_symbols(data: web::Data<AppState>, path: Path<(String,)>) 
 }
 
 pub async fn market_data_types(data: web::Data<AppState>) -> HttpResponse {
-    let symbols: Vec<String> = vec!["1s".into(), "1m".into()];
+    let symbols: Vec<String> = vec![
+        "1s".into(), 
+        "1m".into(),
+        "3m".into(),
+        "5m".into(),
+        "15m".into(),
+        "30m".into(),
+        "1h".into(),
+        "2h".into(),
+        "4h".into(),
+        "6h".into(),
+        "8h".into(),
+        ];
 
     let mut context = Context::new();
     context.insert("values", &symbols);

@@ -46,6 +46,7 @@ pub struct GridSettingsRequest {
     pub symbols: Vec<String>,
     pub exchange: String,
     pub market_data_type: String,
+    pub chart_market_data_type: String,
     pub date_start: String,
     pub date_end: String,
     #[serde(deserialize_with = "deserialize_number_from_string")]

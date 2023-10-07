@@ -17,6 +17,7 @@ use crate::backtest::strategies::hodl::bot::HodlBot;
 use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
 use crate::backtest::strategies::hodl::strategy::HodlStrategy;
 use crate::backtest::strategies::strategy_utils::get_klines;
+use crate::chart::chart::build_chart;
 
 pub async fn run_hodl(
     hodl_data: web::Json<HodlSettingsRequest>,
@@ -120,6 +121,12 @@ pub async fn run_grid(
         strategies[0].strategy_settings.deposit,
         strategies[0].current_budget,
     );
+
+    build_chart(get_klines(
+        data_path.clone(),
+        request_settings.exchange.clone(),
+        request_settings.symbols[0].clone(),
+        request_settings.chart_market_data_type.clone())).unwrap();
 
     let mut context = Context::new();
     context.insert("values", &metrics);
