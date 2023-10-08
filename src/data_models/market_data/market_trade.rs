@@ -2,6 +2,8 @@ use serde::Deserialize;
 
 use crate::data_models::be_bytes::ToFromBytes;
 
+use super::kline_trait::KLineTrait;
+
 pub const MARKET_TRADE_SIZE: usize = 5 * 8;
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
@@ -38,5 +40,31 @@ impl ToFromBytes for MarketTrade {
             base_qty: f64::from_be_bytes(b[24..32].try_into().unwrap()),
             timestamp: u64::from_be_bytes(b[32..40].try_into().unwrap()),
         }
+    }
+}
+
+impl KLineTrait for MarketTrade {
+    fn date(&self) -> u64 {
+        self.timestamp
+    }
+
+    fn open(&self) -> f64 {
+        self.price
+    }
+
+    fn high(&self) -> f64 {
+        self.price
+    }
+
+    fn low(&self) -> f64 {
+        self.price
+    }
+
+    fn close(&self) -> f64 {
+        self.price
+    }
+
+    fn qty(&self) -> f64 {
+        self.qty
     }
 }

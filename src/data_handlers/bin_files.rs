@@ -10,6 +10,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use crate::data_models::be_bytes::ToFromBytes;
+use crate::data_models::market_data::kline_trait::KLineTrait;
 
 pub fn create_and_write_to_file<T: ToFromBytes>(
     values: &Vec<T>,
@@ -47,12 +48,19 @@ fn memmap_for_file(file_path: PathBuf) -> io::Result<Mmap> {
     unsafe { Mmap::map(&file) }
 }
 
-pub fn get_values_from_file<T: ToFromBytes>(file_path: PathBuf) -> io::Result<Vec<T>> {
+pub fn get_values_from_file<T: ToFromBytes + KLineTrait>(
+    file_path: PathBuf,
+    date_start: u64,
+    date_end: u64,
+) -> io::Result<Vec<T>> {
     let mmap = memmap_for_file(file_path)?;
     let mut result = Vec::new();
     let len = mmap.len() / T::size();
     for i in 0..len {
-        result.push(T::from_be_bytes(&mmap[i * T::size()..(i + 1) * T::size()]));
+        let v = T::from_be_bytes(&mmap[i * T::size()..(i + 1) * T::size()]);
+        if v.date() >= date_start && v.date() <= date_end {
+            result.push(v);
+        }
     }
     Ok(result)
 }
@@ -118,7 +126,7 @@ mod tests {
         let candles = get_default_candles();
         append_to_file(&candles, file_path.clone()).unwrap();
 
-        let new_candles: Vec<KLine> = get_values_from_file(file_path.clone()).unwrap();
+        let new_candles: Vec<KLine> = get_values_from_file(file_path.clone(), 0, u64::MAX).unwrap();
 
         assert_eq!(&candles[..], &new_candles[..]);
 
@@ -133,7 +141,7 @@ mod tests {
 
         assert!(file_path.exists());
 
-        let result: Vec<KLine> = get_values_from_file(file_path.clone()).unwrap();
+        let result: Vec<KLine> = get_values_from_file(file_path.clone(), 0, u64::MAX).unwrap();
 
         assert_eq!(&result, &candles);
         remove_file(file_path).unwrap();

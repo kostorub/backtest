@@ -7,7 +7,7 @@ use crate::{
     data_models::market_data::{
         enums::{OrderStatus, OrderType, Side},
         kline::KLine,
-        position::Position,
+        position::{Position, PositionStatus},
     },
 };
 
@@ -16,6 +16,8 @@ pub fn get_klines(
     exchange: String,
     symbol: String,
     market_data_type: String,
+    date_start: u64,
+    date_end: u64,
 ) -> Vec<KLine> {
     let file_path = PathBuf::from(data_path.clone()).join(bin_file_name(
         exchange.clone(),
@@ -23,7 +25,7 @@ pub fn get_klines(
         market_data_type.clone(),
     ));
     info!("Loading data from file: {:?}", file_path);
-    get_values_from_file::<KLine>(file_path).unwrap()
+    get_values_from_file::<KLine>(file_path, date_start, date_end).unwrap()
 }
 
 pub fn check_tp_sl(kline: &KLine, positions_opened: &mut Vec<Position>, commission: f64) {
@@ -58,6 +60,7 @@ pub fn remove_closed_positions(positions_opened: &mut Vec<Position>) -> Vec<Posi
         while i < positions_opened.len() {
             if positions_opened[i].volume_all() == 0.0 {
                 result.push(positions_opened.remove(i));
+                result.last_mut().unwrap().status = PositionStatus::Closed;
             } else {
                 i += 1;
             }

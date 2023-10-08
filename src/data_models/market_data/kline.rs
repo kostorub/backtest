@@ -2,6 +2,8 @@ use serde::{Deserialize, Deserializer};
 
 use crate::data_models::be_bytes::ToFromBytes;
 
+use super::kline_trait::KLineTrait;
+
 pub const KLINE_SIZE: usize = 6 * 8;
 
 #[derive(Debug, Deserialize, PartialEq, Clone, Copy)]
@@ -72,6 +74,27 @@ impl ToFromBytes for KLine {
             close: f64::from_be_bytes(b[32..40].try_into().unwrap()),
             volume: f64::from_be_bytes(b[40..48].try_into().unwrap()),
         }
+    }
+}
+
+impl KLineTrait for KLine {
+    fn date(&self) -> u64 {
+        self.date
+    }
+    fn open(&self) -> f64 {
+        self.open
+    }
+    fn high(&self) -> f64 {
+        self.high
+    }
+    fn low(&self) -> f64 {
+        self.low
+    }
+    fn close(&self) -> f64 {
+        self.close
+    }
+    fn qty(&self) -> f64 {
+        self.volume
     }
 }
 

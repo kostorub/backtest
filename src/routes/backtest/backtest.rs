@@ -41,14 +41,17 @@ pub async fn run_hodl(
                     backtest_settings.exchange.clone(),
                     s.symbol.clone(),
                     s.market_data_type.clone(),
+                    backtest_settings.date_start,
+                    backtest_settings.date_end,
                 ),
             )
         })
         .collect();
 
     backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
+    let positions = get_positions_from_strategies(strategies.clone());
     let metrics = get_metrics(
-        get_positions_from_strategies(strategies.clone()),
+        &positions,
         strategies[0].strategy_settings.deposit,
         strategies[0].current_budget,
     );
@@ -109,6 +112,8 @@ pub async fn run_grid(
                     backtest_settings.exchange.clone(),
                     s.symbol.clone(),
                     s.market_data_type.clone(),
+                    s.date_start,
+                    s.date_end,
                 ),
             )
         })
@@ -126,9 +131,9 @@ pub async fn run_grid(
     build_chart(
         &request_settings,
         get_klines(
-        data_path.clone(),
-        request_settings.exchange.clone(),
-        request_settings.symbols[0].clone(),
+            data_path.clone(),
+            request_settings.exchange.clone(),
+            request_settings.symbols[0].clone(),
             request_settings.chart_market_data_type.clone(),
             backtest_settings.date_start,
             backtest_settings.date_end,
@@ -141,9 +146,11 @@ pub async fn run_grid(
     context.insert("values", &metrics);
 
     let tera = data.tera.clone();
-    let body = tera.render("metrics", &context).unwrap();
+    let body = tera.render("metrics.html", &context).unwrap();
 
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok()
+        .append_header(("HX-Trigger", "backtestFinished"))
+        .body(body)
 
     // Either::Right(HttpResponse::InternalServerError().body(format!("Internal server error. Details: {}", e)));
 }
