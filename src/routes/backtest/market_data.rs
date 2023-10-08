@@ -16,7 +16,7 @@ use crate::{
         pipeline,
         utils::datetime_str_to_u64,
     },
-    data_models::market_data::kline::KLine,
+    data_models::market_data::{kline::KLine, enums::MarketDataType},
 };
 
 pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
@@ -62,7 +62,7 @@ pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
 pub struct MarketDataRequest {
     pub exchange: String,
     pub symbol: String,
-    pub market_data_type: String,
+    pub market_data_type: MarketDataType,
     pub date_start: String,
     pub date_end: String,
 }
@@ -78,7 +78,7 @@ pub async fn download_market_data(
         data.app_settings.binance_data_url.clone(),
         r.exchange.to_lowercase().clone(),
         r.symbol.to_lowercase().clone(),
-        r.market_data_type.to_lowercase().clone(),
+        r.market_data_type.clone(),
         datetime_str_to_u64(r.date_start.clone()),
         datetime_str_to_u64(r.date_end.clone()),
     )
