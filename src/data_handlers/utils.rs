@@ -48,7 +48,6 @@ pub fn get_archive_url(
             other.value().0,
             archive_name
         ),
-        _ => panic!("Unexpected period: {:?}", mdt),
     }
     .to_string()
 }

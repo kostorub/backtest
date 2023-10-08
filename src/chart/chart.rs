@@ -1,18 +1,16 @@
 use std::path::PathBuf;
 
 use chrono::offset::TimeZone;
-use chrono::{DateTime, Duration, Utc};
+use chrono::Utc;
 
 use plotly::color::NamedColor;
-use plotly::common::{Line, TickFormatStop, Title};
-use plotly::layout::{Axis, RangeSelector, RangeSlider, SelectorButton, SelectorStep, StepMode};
-use plotly::{Candlestick, Layout, Ohlc, Plot, Scatter};
-use serde::Deserialize;
-use std::{env, fs};
+use plotly::common::Line;
+use plotly::{Candlestick, Layout, Plot, Scatter};
+use std::fs;
 
 use crate::backtest::strategies::grid::settings::GridSettingsRequest;
 use crate::data_models::market_data::enums::MarketDataType;
-use crate::data_models::market_data::kline::{self, KLine};
+use crate::data_models::market_data::kline::KLine;
 use crate::data_models::market_data::position::Position;
 
 fn parse_time(t: u64, mdt: MarketDataType) -> String {

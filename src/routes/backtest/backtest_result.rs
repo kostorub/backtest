@@ -10,7 +10,7 @@ pub struct ChartFile {
     backtest_uuid: String,
 }
 
-pub async fn chart(data: web::Data<AppState>, r: web::Query<ChartFile>) -> HttpResponse {
+pub async fn chart(_data: web::Data<AppState>, r: web::Query<ChartFile>) -> HttpResponse {
     let filename = format!("{}.html", r.backtest_uuid);
     let webpath = PathBuf::from("src/web/static/charts").join(&filename);
 

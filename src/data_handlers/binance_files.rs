@@ -75,8 +75,6 @@ fn add_months(
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use super::*;
 
     #[test]

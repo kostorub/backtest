@@ -16,7 +16,7 @@ use crate::{
         pipeline,
         utils::datetime_str_to_u64,
     },
-    data_models::market_data::{kline::KLine, enums::MarketDataType},
+    data_models::market_data::{enums::MarketDataType, kline::KLine},
 };
 
 pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
