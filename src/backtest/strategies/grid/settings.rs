@@ -46,7 +46,7 @@ impl GridSettings {
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettingsRequest {
     pub backtest_uuid: String,
-    pub symbols: Vec<String>,
+    pub symbol: String,
     pub exchange: String,
     pub market_data_type: MarketDataType,
     pub chart_market_data_type: MarketDataType,

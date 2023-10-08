@@ -69,12 +69,7 @@ pub async fn run_grid(
     let request_settings = request_settings.clone();
 
     let backtest_settings = BacktesttSettings {
-        symbols: request_settings
-            .symbols
-            .clone()
-            .iter()
-            .map(|s| s.to_lowercase())
-            .collect(),
+        symbols: vec![request_settings.symbol.to_lowercase()],
         exchange: request_settings.exchange.clone().to_lowercase(),
         date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d")
             .unwrap()
@@ -133,7 +128,7 @@ pub async fn run_grid(
         get_klines(
             data_path.clone(),
             request_settings.exchange.clone(),
-            request_settings.symbols[0].clone(),
+            request_settings.symbol.clone(),
             request_settings.chart_market_data_type.clone(),
             backtest_settings.date_start,
             backtest_settings.date_end,
