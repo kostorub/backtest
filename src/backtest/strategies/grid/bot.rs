@@ -41,12 +41,13 @@ impl GridBot {
             self.current_price = kline.close;
             if let Some(i) = check_buy_action(&mut self.triggers, kline.close) {
                 self.triggers[i].trigger_type = Side::Sell;
+                let price = self.triggers[i].price;
                 return Some((
                     i,
                     vec![
-                        Order::new(kline.date, kline.close, Side::Buy, OrderType::Market)
+                        Order::new(kline.date, price, Side::Buy, OrderType::Market)
                             .updated(kline.date)
-                            .with_price_executed(kline.close)
+                            .with_price_executed(price)
                             .with_qty(self.order_size / kline.close)
                             .filled(),
                         Order::new(

@@ -40,9 +40,10 @@ pub fn check_tp_sl(kline: &KLine, positions_opened: &mut Vec<Position>, commissi
                         && kline.close <= order.price)
                 {
                     let qty = order.qty.unwrap();
+                    let price = order.price;
                     order
                         .update(kline.date)
-                        .set_executed_price(kline.close)
+                        .set_executed_price(price)
                         .set_qty(qty)
                         .set_commission(kline.close, qty, commission)
                         .fill();
