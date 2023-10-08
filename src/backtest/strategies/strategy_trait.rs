@@ -65,7 +65,7 @@ pub trait Strategy {
         }
         self.positions_opened_mut().clear();
         if !self.positions_closed().is_empty() {
-            dbg!(self.positions_closed().last().unwrap());
+            dbg!(self.positions_closed().clone());
         }
     }
 }

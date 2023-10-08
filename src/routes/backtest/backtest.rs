@@ -116,17 +116,26 @@ pub async fn run_grid(
 
     // let mut backtest = GridBacktest::new(backtest_settings.clone(), strategies);
     backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
+    let positions = get_positions_from_strategies(strategies.clone());
     let metrics = get_metrics(
-        get_positions_from_strategies(strategies.clone()),
+        &positions,
         strategies[0].strategy_settings.deposit,
         strategies[0].current_budget,
     );
 
-    build_chart(get_klines(
+    build_chart(
+        &request_settings,
+        get_klines(
         data_path.clone(),
         request_settings.exchange.clone(),
         request_settings.symbols[0].clone(),
-        request_settings.chart_market_data_type.clone())).unwrap();
+            request_settings.chart_market_data_type.clone(),
+            backtest_settings.date_start,
+            backtest_settings.date_end,
+        ),
+        &positions,
+    )
+    .unwrap();
 
     let mut context = Context::new();
     context.insert("values", &metrics);

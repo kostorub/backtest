@@ -52,7 +52,7 @@ pub fn get_positions_from_strategies<T: Strategy>(strategies: Vec<T>) -> Vec<Pos
         .collect()
 }
 
-pub fn get_metrics(positions: Vec<Position>, start_deposit: f64, finish_deposit: f64) -> Metrics {
+pub fn get_metrics(positions: &Vec<Position>, start_deposit: f64, finish_deposit: f64) -> Metrics {
     Metrics::new(&positions, start_deposit, finish_deposit)
 }
 

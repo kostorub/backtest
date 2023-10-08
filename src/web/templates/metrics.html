@@ -1,0 +1,16 @@
+<table class="table">
+    <thead>
+        <tr>
+        <th scope="col">Metric's name</th>
+        <th scope="col">Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for key, value in values %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ value }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

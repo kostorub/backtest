@@ -8,6 +8,7 @@ use crate::{
     config::AppSettings,
     routes::backtest::{
         backtest::{run_grid, run_hodl},
+        backtest_result::chart,
         exchange::{exchange_symbols, exchanges, market_data_types, symbols},
         market_data::{download_market_data, downloaded_market_data},
         pages::{index, page},
@@ -56,6 +57,7 @@ pub async fn start_server() -> std::io::Result<()> {
             )
             .route("/backtest/hodl/run", web::post().to(run_hodl))
             .route("/backtest/grid/run", web::post().to(run_grid))
+            .route("/backtest_result/chart", web::get().to(chart))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

@@ -12,7 +12,7 @@ pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
     context.insert("values", &exchanges);
 
     let tera = data.tera.clone();
-    let body = tera.render("select_options", &context).unwrap();
+    let body = tera.render("select_options.html", &context).unwrap();
 
     HttpResponse::Ok().body(body)
 }
@@ -35,7 +35,7 @@ pub async fn symbols(data: web::Data<AppState>) -> HttpResponse {
     context.insert("values", &symbols);
 
     let tera = data.tera.clone();
-    let body = tera.render("select_options", &context).unwrap();
+    let body = tera.render("select_options.html", &context).unwrap();
 
     HttpResponse::Ok().body(body)
 }
@@ -66,14 +66,14 @@ pub async fn exchange_symbols(data: web::Data<AppState>, path: Path<(String,)>) 
     context.insert("values", &symbols);
 
     let tera = data.tera.clone();
-    let body = tera.render("select_options", &context).unwrap();
+    let body = tera.render("select_options.html", &context).unwrap();
 
     HttpResponse::Ok().body(body)
 }
 
 pub async fn market_data_types(data: web::Data<AppState>) -> HttpResponse {
     let symbols: Vec<String> = vec![
-        "1s".into(), 
+        "1s".into(),
         "1m".into(),
         "3m".into(),
         "5m".into(),
@@ -84,13 +84,14 @@ pub async fn market_data_types(data: web::Data<AppState>) -> HttpResponse {
         "4h".into(),
         "6h".into(),
         "8h".into(),
-        ];
+        "1d".into(),
+    ];
 
     let mut context = Context::new();
     context.insert("values", &symbols);
 
     let tera = data.tera.clone();
-    let body = tera.render("select_options", &context).unwrap();
+    let body = tera.render("select_options.html", &context).unwrap();
 
     HttpResponse::Ok().body(body)
 }

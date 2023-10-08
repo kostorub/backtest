@@ -3,6 +3,7 @@ use actix_web::{
     HttpResponse,
 };
 use tera::Context;
+use uuid::Uuid;
 
 use crate::app_state::AppState;
 
@@ -25,6 +26,8 @@ pub async fn page(data: web::Data<AppState>, path: Path<(String,)>) -> HttpRespo
         s if s == "grid-backtest" => {
             context.insert("market_data_page_active", "");
             context.insert("grid_backtest_page_active", "active");
+            let id = Uuid::new_v4();
+            context.insert("backtest_uuid", &id.to_string());
         }
         _ => {
             context.insert("market_data_page_active", "");

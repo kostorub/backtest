@@ -93,6 +93,24 @@ pub fn get_archive_url(
             symbol.to_uppercase(),
             archive_name
         ),
+        "6h" => format!(
+            "{}/data/spot/monthly/klines/{}/6h/{}",
+            data_url,
+            symbol.to_uppercase(),
+            archive_name
+        ),
+        "8h" => format!(
+            "{}/data/spot/monthly/klines/{}/8h/{}",
+            data_url,
+            symbol.to_uppercase(),
+            archive_name
+        ),
+        "1d" => format!(
+            "{}/data/spot/monthly/klines/{}/1d/{}",
+            data_url,
+            symbol.to_uppercase(),
+            archive_name
+        ),
         _ => panic!("Unexpected period: {:?}", period),
     }
     .to_string()
