@@ -5,7 +5,7 @@ use log::info;
 use crate::{
     data_handlers::bin_files::{bin_file_name, get_values_from_file},
     data_models::market_data::{
-        enums::{OrderStatus, OrderType, Side},
+        enums::{MarketDataType, OrderStatus, OrderType, Side},
         kline::KLine,
         position::{Position, PositionStatus},
     },
@@ -15,14 +15,14 @@ pub fn get_klines(
     data_path: PathBuf,
     exchange: String,
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
     date_start: u64,
     date_end: u64,
 ) -> Vec<KLine> {
     let file_path = PathBuf::from(data_path.clone()).join(bin_file_name(
         exchange.clone(),
         symbol.clone(),
-        market_data_type.clone(),
+        market_data_type,
     ));
     info!("Loading data from file: {:?}", file_path);
     get_values_from_file::<KLine>(file_path, date_start, date_end).unwrap()

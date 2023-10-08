@@ -1,5 +1,5 @@
 use crate::data_models::market_data::{
-    kline::market_data_type_to_seconds, metrics::Metrics, position::Position,
+    enums::MarketDataType, metrics::Metrics, position::Position,
 };
 
 use super::{
@@ -56,8 +56,8 @@ pub fn get_metrics(positions: &Vec<Position>, start_deposit: f64, finish_deposit
     Metrics::new(&positions, start_deposit, finish_deposit)
 }
 
-pub fn generate_time_period(period: String, date_start: u64, date_end: u64) -> Vec<u64> {
+pub fn generate_time_period(mdt: MarketDataType, date_start: u64, date_end: u64) -> Vec<u64> {
     (date_start..date_end)
-        .step_by(market_data_type_to_seconds(period) as usize)
+        .step_by(mdt.value().1 as usize)
         .collect()
 }

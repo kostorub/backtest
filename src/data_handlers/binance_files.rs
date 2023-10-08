@@ -1,9 +1,11 @@
 use chrono::{Datelike, NaiveDateTime};
 use log::debug;
 
+use crate::data_models::market_data::enums::MarketDataType;
+
 pub fn generate_archives_names(
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
     date_start: u64,
     date_end: u64,
 ) -> Vec<String> {
@@ -55,7 +57,7 @@ pub fn generate_archives_names(
 fn add_months(
     result: &mut Vec<String>,
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
     year: i32,
     month_start: u32,
     month_end: u32,
@@ -64,7 +66,7 @@ fn add_months(
         result.push(format!(
             "{}-{}-{}-{:02}.zip",
             symbol.to_uppercase(),
-            market_data_type.to_lowercase(),
+            market_data_type.value().0,
             year,
             month
         ));
@@ -73,13 +75,15 @@ fn add_months(
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
 
     #[test]
     fn test_generate_archives_names_one_year() {
         let result = generate_archives_names(
             "BTCUSDT".to_string(),
-            "1m".to_string(),
+            MarketDataType::KLine1m,
             1682946000000,
             1695399134000,
         );
@@ -92,7 +96,7 @@ mod tests {
     fn test_generate_archives_names() {
         let result = generate_archives_names(
             "BTCUSDT".to_string(),
-            "1m".to_string(),
+            MarketDataType::KLine1m,
             1577836800000,
             1609459200000,
         );
@@ -107,7 +111,7 @@ mod tests {
         add_months(
             &mut result,
             "BTCUSDT".to_string(),
-            "1m".to_string(),
+            MarketDataType::KLine1m,
             2020,
             1,
             12,

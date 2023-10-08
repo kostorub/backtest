@@ -3,6 +3,8 @@ use std::{io::Cursor, path::PathBuf};
 use chrono::{NaiveDate, NaiveTime};
 use log::{debug, info, warn};
 
+use crate::data_models::market_data::enums::MarketDataType;
+
 pub async fn download_archive(archive_url: String, archive_path: PathBuf) {
     info!(
         "Downloading archive: {:?} into: {:?}",
@@ -29,89 +31,24 @@ pub async fn download_archive(archive_url: String, archive_path: PathBuf) {
 pub fn get_archive_url(
     data_url: String,
     symbol: String,
-    period: String,
+    mdt: MarketDataType,
     archive_name: String,
 ) -> String {
-    match period.as_str() {
-        "trades" => format!(
+    match mdt {
+        MarketDataType::Trade => format!(
             "{}/data/spot/monthly/trades/{}/{}",
             data_url,
             symbol.to_uppercase(),
             archive_name
         ),
-        "1s" => format!(
-            "{}/data/spot/monthly/klines/{}/1s/{}",
+        other => format!(
+            "{}/data/spot/monthly/klines/{}/{}/{}",
             data_url,
             symbol.to_uppercase(),
+            other.value().0,
             archive_name
         ),
-        "1m" => format!(
-            "{}/data/spot/monthly/klines/{}/1m/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "3m" => format!(
-            "{}/data/spot/monthly/klines/{}/3m/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "5m" => format!(
-            "{}/data/spot/monthly/klines/{}/5m/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "15m" => format!(
-            "{}/data/spot/monthly/klines/{}/15m/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "30m" => format!(
-            "{}/data/spot/monthly/klines/{}/30m/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "1h" => format!(
-            "{}/data/spot/monthly/klines/{}/1h/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "2h" => format!(
-            "{}/data/spot/monthly/klines/{}/2h/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "4h" => format!(
-            "{}/data/spot/monthly/klines/{}/4h/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "6h" => format!(
-            "{}/data/spot/monthly/klines/{}/6h/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "8h" => format!(
-            "{}/data/spot/monthly/klines/{}/8h/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        "1d" => format!(
-            "{}/data/spot/monthly/klines/{}/1d/{}",
-            data_url,
-            symbol.to_uppercase(),
-            archive_name
-        ),
-        _ => panic!("Unexpected period: {:?}", period),
+        _ => panic!("Unexpected period: {:?}", mdt),
     }
     .to_string()
 }

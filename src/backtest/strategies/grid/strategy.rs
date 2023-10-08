@@ -150,7 +150,7 @@ impl Strategy for GridStrategy {
 mod test {
     use crate::{
         backtest::strategies::grid::settings::GridSettings,
-        data_models::market_data::enums::{OrderType, Side},
+        data_models::market_data::enums::{MarketDataType, OrderType, Side},
     };
 
     use super::*;
@@ -167,7 +167,7 @@ mod test {
         StrategySettings {
             symbol: "BTCUSDT".to_string(),
             exchange: "binance".to_string(),
-            market_data_type: "1s".to_string(),
+            market_data_type: MarketDataType::KLine1m,
             date_start: 0,
             date_end: 10,
             deposit: 100.0,

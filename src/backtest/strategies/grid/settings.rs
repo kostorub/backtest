@@ -4,6 +4,8 @@ use serde_aux::field_attributes::{
     deserialize_number_from_string, deserialize_option_number_from_string,
 };
 
+use crate::data_models::market_data::enums::MarketDataType;
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettings {
     pub price_low: f64,
@@ -46,8 +48,8 @@ pub struct GridSettingsRequest {
     pub backtest_uuid: String,
     pub symbols: Vec<String>,
     pub exchange: String,
-    pub market_data_type: String,
-    pub chart_market_data_type: String,
+    pub market_data_type: MarketDataType,
+    pub chart_market_data_type: MarketDataType,
     pub date_start: String,
     pub date_end: String,
     #[serde(deserialize_with = "deserialize_number_from_string")]

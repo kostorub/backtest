@@ -10,6 +10,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use crate::data_models::be_bytes::ToFromBytes;
+use crate::data_models::market_data::enums::MarketDataType;
 use crate::data_models::market_data::kline_trait::KLineTrait;
 
 pub fn create_and_write_to_file<T: ToFromBytes>(
@@ -96,8 +97,14 @@ pub fn get_filenames(data_path: PathBuf, extension: &str) -> io::Result<Vec<Path
     Ok(result)
 }
 
-pub fn bin_file_name(exchange: String, symbol: String, market_data_type: String) -> String {
-    format!("{}-{}-{}.marketdata", exchange, symbol, market_data_type).to_lowercase()
+pub fn bin_file_name(exchange: String, symbol: String, market_data_type: MarketDataType) -> String {
+    format!(
+        "{}-{}-{}.marketdata",
+        exchange,
+        symbol,
+        market_data_type.value().0
+    )
+    .to_lowercase()
 }
 
 #[cfg(test)]

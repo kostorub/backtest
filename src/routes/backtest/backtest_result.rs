@@ -1,8 +1,7 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
-use tera::Context;
 
 use crate::app_state::AppState;
 
@@ -12,14 +11,12 @@ pub struct ChartFile {
 }
 
 pub async fn chart(data: web::Data<AppState>, r: web::Query<ChartFile>) -> HttpResponse {
-    let filename = format!("{}.svg", r.backtest_uuid);
-    let webpath = PathBuf::from("/static/img/").join(&filename);
+    let filename = format!("{}.html", r.backtest_uuid);
+    let webpath = PathBuf::from("src/web/static/charts").join(&filename);
 
-    let mut context = Context::new();
-    context.insert("image_src", &webpath.to_str().unwrap());
+    let chart_data = fs::read_to_string(webpath).unwrap();
 
-    let tera = data.tera.clone();
-    let body = tera.render("image.html", &context).unwrap();
-
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(chart_data)
 }

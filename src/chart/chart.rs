@@ -2,65 +2,70 @@ use std::path::PathBuf;
 
 use chrono::offset::TimeZone;
 use chrono::{DateTime, Duration, Utc};
-use plotters::prelude::*;
+
+use plotly::color::NamedColor;
+use plotly::common::{Line, TickFormatStop, Title};
+use plotly::layout::{Axis, RangeSelector, RangeSlider, SelectorButton, SelectorStep, StepMode};
+use plotly::{Candlestick, Layout, Ohlc, Plot, Scatter};
+use serde::Deserialize;
+use std::{env, fs};
 
 use crate::backtest::strategies::grid::settings::GridSettingsRequest;
-use crate::data_models::market_data::kline::KLine;
+use crate::data_models::market_data::enums::MarketDataType;
+use crate::data_models::market_data::kline::{self, KLine};
 use crate::data_models::market_data::position::Position;
 
-fn parse_time(t: u64) -> DateTime<Utc> {
-    Utc.timestamp_opt((t / 1000) as i64, 0).unwrap()
+fn parse_time(t: u64, mdt: MarketDataType) -> String {
+    Utc.timestamp_opt((t / mdt.value().1 * mdt.value().1) as i64 / 1000, 0)
+        .unwrap()
+        .to_string()
 }
 
 pub fn build_chart(
-    settings: &GridSettingsRequest,
+    s: &GridSettingsRequest,
     klines: Vec<KLine>,
     positions: &Vec<Position>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let filename = format!("{}.svg", settings.backtest_uuid);
-    let filepath = PathBuf::from("src/web/static/img/").join(&filename);
-    let root = SVGBackend::new(&filepath, (1920, 1440)).into_drawing_area();
-    root.fill(&WHITE)?;
-    let root = root.margin(20, 20, 20, 20);
+    let filename = format!("{}.html", s.backtest_uuid);
+    let filepath = PathBuf::from("src/web/static/charts/").join(&filename);
 
-    let (to_date, from_date) = (
-        parse_time(klines.first().unwrap().date) + Duration::days(1),
-        parse_time(klines.last().unwrap().date) - Duration::days(1),
-    );
+    let mut plot = Plot::new();
 
-    let mut chart = ChartBuilder::on(&root)
-        .x_label_area_size(40)
-        .y_label_area_size(70)
-        .build_cartesian_2d(to_date..from_date, settings.price_low..settings.price_high)?;
+    let layout = Layout::new().height(800);
+    plot.set_layout(layout);
 
-    chart
-        .configure_mesh()
-        .x_labels(settings.grids_count as usize)
-        .light_line_style(&WHITE)
-        .draw()?;
+    let x = klines
+        .iter()
+        .map(|k| parse_time(k.date, s.chart_market_data_type.clone()))
+        .collect::<Vec<_>>();
+    let open = klines.iter().map(|k| k.open).collect::<Vec<_>>();
+    let high = klines.iter().map(|k| k.high).collect::<Vec<_>>();
+    let low = klines.iter().map(|k| k.low).collect::<Vec<_>>();
+    let close = klines.iter().map(|k| k.close).collect::<Vec<_>>();
 
-    chart.draw_series(klines.iter().map(|k| {
-        CandleStick::new(
-            parse_time(k.date),
-            k.open,
-            k.high,
-            k.low,
-            k.close,
-            GREEN.filled(),
-            RED,
-            5,
-        )
-    }))?;
+    let trace = Candlestick::new(x, open, high, low, close);
+    plot.add_trace(trace);
 
     for pos in positions {
-        chart.draw_series(LineSeries::new(
+        let mut sc = Scatter::new(
             vec![
-                (parse_time(pos.open_date()), pos.open_price()),
-                (parse_time(pos.last_date()), pos.last_price()),
+                parse_time(pos.open_date(), s.chart_market_data_type.clone()),
+                parse_time(pos.last_date(), s.chart_market_data_type.clone()),
             ],
-            &BLUE,
-        ))?;
+            vec![pos.open_price(), pos.last_price()],
+        );
+        if pos.pnl.unwrap() > 0.0 {
+            let line = Line::new().color(NamedColor::Green);
+            sc = sc.line(line);
+        } else {
+            let line = Line::new().color(NamedColor::Red);
+            sc = sc.line(line);
+        }
+        plot.add_trace(sc);
     }
+
+    let plot_result = plot.to_inline_html(None);
+    fs::write(&filepath, plot_result).unwrap();
 
     // To avoid the IO failure being ignored silently, we manually call the present function
     // root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");

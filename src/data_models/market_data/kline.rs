@@ -97,17 +97,3 @@ impl KLineTrait for KLine {
         self.volume
     }
 }
-
-pub fn market_data_type_to_seconds(market_data_type: String) -> u64 {
-    match market_data_type.as_str() {
-        "1s" => 1 * 1000,
-        "1m" => 60 * 1000,
-        "3m" => 60 * 3 * 1000,
-        "5m" => 60 * 5 * 1000,
-        "15m" => 60 * 15 * 1000,
-        "30m" => 60 * 30 * 1000,
-        "1h" => 60 * 60 * 1000,
-        "1d" => 60 * 60 * 24 * 1000,
-        _ => panic!("Invalid market_data_type"),
-    }
-}

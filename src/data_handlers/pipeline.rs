@@ -6,7 +6,7 @@ use serde::de::DeserializeOwned;
 use crate::{
     data_handlers::bin_files::{append_to_file, create_and_write_to_file},
     data_handlers::{bin_files::bin_file_name, csv_files::load_data_from_csv},
-    data_models::be_bytes::ToFromBytes,
+    data_models::{be_bytes::ToFromBytes, market_data::enums::MarketDataType},
 };
 
 use futures::future::join_all;
@@ -23,7 +23,7 @@ pub async fn pipeline<T>(
     data_url: String,
     exchange: String,
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
     date_start: u64,
     date_end: u64,
 ) where
@@ -55,7 +55,7 @@ async fn download_archives(
     data_path: PathBuf,
     data_url: String,
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
     date_start: u64,
     date_end: u64,
 ) {
@@ -91,7 +91,7 @@ fn process_archives<T>(
     data_path: PathBuf,
     exchange: String,
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
 ) where
     T: DeserializeOwned + ToFromBytes,
 {
@@ -115,7 +115,7 @@ fn process_one_archive<T>(
     archive_path: PathBuf,
     exchange: String,
     symbol: String,
-    market_data_type: String,
+    market_data_type: MarketDataType,
 ) where
     T: DeserializeOwned + ToFromBytes,
 {

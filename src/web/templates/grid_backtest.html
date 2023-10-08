@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col-md-8">
             <form id="backtest-uuid-form">
-                <input type="hidden" name="backtest_uuid" value={{ backtest_uuid }} />
+                <input type="hidden" name="backtest_uuid" _="on load or backtestFinished js return Date.now().toString() end then set my value to it" />
             </form>
             <form id="backtest-data">
                 <table class="table">
@@ -107,7 +107,7 @@
         </div>
     </div>
     <div class="row mt-2">
-        <div class="col-md-12" id="chart-div" name="chart-div" hx-get="/backtest_result/chart" hx-include="#backtest-uuid-form" hx-trigger="backtestFinished from:body">
+        <div id="chart-div" name="chart-div" hx-get="/backtest_result/chart" hx-include="#backtest-uuid-form" hx-trigger="backtestFinished from:body">
         </div>
     </div>
     
