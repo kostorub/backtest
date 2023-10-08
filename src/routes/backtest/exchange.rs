@@ -1,8 +1,11 @@
-use crate::{app_state::AppState, data_models::market_data::enums::MarketDataType};
+use std::{path::PathBuf, collections::HashSet};
+
+use crate::{app_state::AppState, data_models::market_data::enums::MarketDataType, data_handlers::bin_files::get_filenames};
 use actix_web::{
     web::{self, Path},
     HttpResponse,
 };
+use serde::Deserialize;
 use strum::IntoEnumIterator;
 use tera::Context;
 use cached::proc_macro::cached;
@@ -21,21 +24,29 @@ pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
 }
 
 pub async fn local_symbols(data: web::Data<AppState>) -> HttpResponse {
-    let symbols: Vec<String> = vec![
-        "BTCUSDT".into(),
-        "ETHUSDT".into(),
-        "SOLUSDT".into(),
-        "XRPUSDT".into(),
-        "LINKUSDT".into(),
-        "MATICUSDT".into(),
-        "LOOMUSDT".into(),
-        "AVAXUSDT".into(),
-        "ADAUSDT".into(),
-        "BNBUSDT".into(),
-    ];
+    let data_path = PathBuf::from(data.app_settings.data_path.clone());
+
+    let files = get_filenames(data_path.clone(), "marketdata").unwrap();
+
+    let mut local_symbols: Vec<String> = Vec::new();
+    for f in files {
+        let fullfilename = f.file_name().unwrap().to_str().unwrap().to_string();
+        let filename = fullfilename.split(".").collect::<Vec<&str>>()[0];
+        let filename_parts: Vec<&str> = filename.split("-").collect();
+        local_symbols.push(filename_parts[1].to_string().to_uppercase());
+    }
+
+    let mut local_symbols: Vec<String> = local_symbols
+        .into_iter()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+
+    local_symbols.sort();
+    local_symbols.insert(0, "Choose symbol".to_string());
 
     let mut context = Context::new();
-    context.insert("values", &symbols);
+    context.insert("values", &local_symbols);
 
     let tera = data.tera.clone();
     let body = tera.render("select_options.html", &context).unwrap();
@@ -79,11 +90,43 @@ pub async fn get_symbols(url: String) -> String {
     reqwest::get(url).await.unwrap().text().await.unwrap()
 }
 
-pub async fn market_data_types(data: web::Data<AppState>) -> HttpResponse {
+pub async fn mdts(data: web::Data<AppState>) -> HttpResponse {
     let symbols = MarketDataType::iter().map(|s| s.value().0).collect::<Vec<String>>();
 
     let mut context = Context::new();
     context.insert("values", &symbols);
+
+    let tera = data.tera.clone();
+    let body = tera.render("select_options.html", &context).unwrap();
+
+    HttpResponse::Ok().body(body)
+}
+
+#[derive(Deserialize)]
+pub struct SymbolQuery {
+    symbol: String,
+}
+
+pub async fn mdts_from_symbol(data: web::Data<AppState>, r: web::Query<SymbolQuery>) -> HttpResponse {
+    let data_path = PathBuf::from(data.app_settings.data_path.clone());
+
+    let files = get_filenames(data_path.clone(), "marketdata").unwrap();
+
+    let mut mdts: Vec<String> = Vec::new();
+    for f in files {
+        let fullfilename = f.file_name().unwrap().to_str().unwrap().to_string();
+        let filename = fullfilename.split(".").collect::<Vec<&str>>()[0];
+        let filename_parts: Vec<&str> = filename.split("-").collect();
+        let symbol = filename_parts[1].to_string().to_uppercase();
+        if symbol == r.symbol {
+            mdts.push(filename_parts[2].to_string());
+        }
+    }
+
+    mdts.sort();
+
+    let mut context = Context::new();
+    context.insert("values", &mdts);
 
     let tera = data.tera.clone();
     let body = tera.render("select_options.html", &context).unwrap();

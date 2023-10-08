@@ -6,11 +6,11 @@ use serde::Deserialize;
 use crate::app_state::AppState;
 
 #[derive(Deserialize)]
-pub struct ChartFile {
+pub struct ChartFileQuery {
     backtest_uuid: String,
 }
 
-pub async fn chart(_data: web::Data<AppState>, r: web::Query<ChartFile>) -> HttpResponse {
+pub async fn chart(_data: web::Data<AppState>, r: web::Query<ChartFileQuery>) -> HttpResponse {
     let filename = format!("{}.html", r.backtest_uuid);
     let webpath = PathBuf::from("src/web/static/charts").join(&filename);
 

@@ -10,11 +10,9 @@
                 <table class="table">
                     <tbody id="tbody">
                         <tr>
-                            <td><label class="col-form-label">choose symbols</label></td>
+                            <td><label class="col-form-label" >choose symbols</label></td>
                             <td>
-                                <select class="form-select" name="symbols" hx-get="/exchange/symbols" hx-trigger="load"
-                                    hx-indicator=".htmx-indicator" size="3" multiple
-                                    aria-label="Multiple select Size 3">
+                                <select class="form-select" id="symbol" name="symbol" hx-get="/exchange/local-symbols" hx-trigger="load">
                                 </select>
                             </td>
                         </tr>
@@ -29,16 +27,14 @@
                         <tr>
                             <td><label class="col-form-label">market_data_type</label></td>
                             <td>
-                                <select class="form-select" name="market_data_type" hx-get="/exchange/market_data_types"
-                                    hx-trigger="load" hx-indicator=".htmx-indicator">
+                                <select class="form-select" id="market-data-type" name="market_data_type" hx-get="/exchange/mdts_from_symbol" hx-include="#symbol" hx-exclude hx-trigger="change from:#symbol">
                                 </select>
                             </td>
                         </tr>
                         <tr>
                             <td><label class="col-form-label">chart_market_data_type</label></td>
                             <td>
-                                <select class="form-select" name="chart_market_data_type" hx-get="/exchange/market_data_types"
-                                    hx-trigger="load" hx-indicator=".htmx-indicator">
+                                <select class="form-select" id="chart-market-data-type" name="chart_market_data_type" hx-get="/exchange/mdts_from_symbol" hx-include="#symbol" hx-exclude hx-trigger="change from:#symbol">
                                 </select>
                             </td>
                         </tr>
