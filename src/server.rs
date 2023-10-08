@@ -9,7 +9,7 @@ use crate::{
     routes::backtest::{
         backtest::{run_grid, run_hodl},
         backtest_result::chart,
-        exchange::{exchange_symbols, exchanges, market_data_types, symbols},
+        exchange::{exchange_symbols, exchanges, market_data_types, local_symbols},
         market_data::{download_market_data, downloaded_market_data},
         pages::{index, page},
     },
@@ -37,7 +37,7 @@ pub async fn start_server() -> std::io::Result<()> {
             .route("/", web::get().to(index))
             .route("/pages/{page}", web::get().to(page))
             .route("/pages/{page}", web::get().to(page))
-            .route("/exchange/symbols", web::get().to(symbols))
+            .route("/exchange/symbols", web::get().to(local_symbols))
             .route(
                 "/exchange/symbols/{exchange}",
                 web::get().to(exchange_symbols),

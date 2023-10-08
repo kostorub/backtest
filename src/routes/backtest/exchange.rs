@@ -1,8 +1,9 @@
-use crate::app_state::AppState;
+use crate::{app_state::AppState, data_models::market_data::enums::MarketDataType};
 use actix_web::{
     web::{self, Path},
     HttpResponse,
 };
+use strum::IntoEnumIterator;
 use tera::Context;
 use cached::proc_macro::cached;
 
@@ -19,7 +20,7 @@ pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
     HttpResponse::Ok().body(body)
 }
 
-pub async fn symbols(data: web::Data<AppState>) -> HttpResponse {
+pub async fn local_symbols(data: web::Data<AppState>) -> HttpResponse {
     let symbols: Vec<String> = vec![
         "BTCUSDT".into(),
         "ETHUSDT".into(),
@@ -79,20 +80,7 @@ pub async fn get_symbols(url: String) -> String {
 }
 
 pub async fn market_data_types(data: web::Data<AppState>) -> HttpResponse {
-    let symbols: Vec<String> = vec![
-        "1s".into(),
-        "1m".into(),
-        "3m".into(),
-        "5m".into(),
-        "15m".into(),
-        "30m".into(),
-        "1h".into(),
-        "2h".into(),
-        "4h".into(),
-        "6h".into(),
-        "8h".into(),
-        "1d".into(),
-    ];
+    let symbols = MarketDataType::iter().map(|s| s.value().0).collect::<Vec<String>>();
 
     let mut context = Context::new();
     context.insert("values", &symbols);

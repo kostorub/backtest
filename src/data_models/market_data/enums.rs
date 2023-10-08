@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use strum::EnumIter;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
@@ -39,7 +40,7 @@ impl Default for OrderStatus {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, EnumIter)]
 pub enum MarketDataType {
     Trade,
     KLine1s,
