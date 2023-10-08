@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 use super::{
     enums::{OrderStatus, Side},
     order::Order,
@@ -5,6 +7,7 @@ use super::{
 
 #[derive(Debug, Clone)]
 pub struct Position {
+    pub id: String,
     pub symbol: String,
     pub status: PositionStatus,
     pub orders: Vec<Order>,
@@ -15,6 +18,7 @@ pub struct Position {
 impl Position {
     pub fn new(symbol: String) -> Self {
         Self {
+            id: Uuid::new_v4().to_string(),
             symbol,
             status: PositionStatus::Opened,
             orders: Vec::new(),
@@ -40,7 +44,7 @@ impl Position {
     }
 
     pub fn last_date(&self) -> u64 {
-        self.orders.last().unwrap().date
+        self.orders.last().unwrap().date_update.unwrap()
     }
 
     pub fn volume_buy(&self) -> f64 {

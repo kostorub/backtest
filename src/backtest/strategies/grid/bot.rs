@@ -22,12 +22,12 @@ impl GridBot {
         Self {
             settings: settings.clone(),
             current_price: 0.0,
-            order_size: settings.deposit / settings.grids_count as f64,
+            order_size: 100.0,
             triggers: Vec::new(),
         }
     }
 
-    pub fn run(&mut self, kline: &KLine) -> Option<Vec<Order>> {
+    pub fn run(&mut self, kline: &KLine) -> Option<(usize, Vec<Order>)> {
         if self.triggers.is_empty() {
             self.current_price = kline.close;
             self.triggers = generate_grid_triggers(
@@ -41,20 +41,23 @@ impl GridBot {
             self.current_price = kline.close;
             if let Some(i) = check_buy_action(&mut self.triggers, kline.close) {
                 self.triggers[i].trigger_type = Side::Sell;
-                return Some(vec![
-                    Order::new(kline.date, kline.close, Side::Buy, OrderType::Market)
-                        .updated(kline.date)
-                        .with_price_executed(kline.close)
-                        .with_qty(self.order_size / kline.close)
-                        .filled(),
-                    Order::new(
-                        kline.date,
-                        self.triggers[i + 1].price,
-                        Side::Sell,
-                        OrderType::TakeProfitMarket,
-                    )
-                    .with_qty(self.order_size / kline.close),
-                ]);
+                return Some((
+                    i,
+                    vec![
+                        Order::new(kline.date, kline.close, Side::Buy, OrderType::Market)
+                            .updated(kline.date)
+                            .with_price_executed(kline.close)
+                            .with_qty(self.order_size / kline.close)
+                            .filled(),
+                        Order::new(
+                            kline.date,
+                            self.triggers[i + 1].price,
+                            Side::Sell,
+                            OrderType::TakeProfitMarket,
+                        )
+                        .with_qty(self.order_size / kline.close),
+                    ],
+                ));
             }
         } else {
             self.current_price = kline.close;
@@ -90,14 +93,23 @@ fn check_sell_action(triggers: &Vec<GridTrigger>, last_price: f64) -> Option<usi
 mod test {
     use super::*;
 
-    fn get_orders_buy(price: f64, tp_price: f64, qty: f64) -> Option<Vec<Order>> {
-        Some(vec![
-            Order::new(0, price, Side::Buy, OrderType::Market)
-                .updated(0)
-                .with_qty(qty)
-                .filled(),
-            Order::new(0, tp_price, Side::Sell, OrderType::TakeProfitMarket).with_qty(qty),
-        ])
+    fn get_orders_buy(
+        price: f64,
+        tp_price: f64,
+        qty: f64,
+        grid_position: usize,
+    ) -> Option<(usize, Vec<Order>)> {
+        Some((
+            grid_position,
+            vec![
+                Order::new(0, price, Side::Buy, OrderType::Market)
+                    .updated(0)
+                    .with_price_executed(price)
+                    .with_qty(qty)
+                    .filled(),
+                Order::new(0, tp_price, Side::Sell, OrderType::TakeProfitMarket).with_qty(qty),
+            ],
+        ))
     }
 
     #[rustfmt::skip]
@@ -109,11 +121,11 @@ mod test {
 
         assert_eq!(bot.run(&KLine::blank().with_close(5.0)), None);
         assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0));
+        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
         assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
 
         assert_eq!(bot.run(&KLine::blank().with_close(2.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(2.0)), get_orders_buy(2.0, 4.0, 10.0));
+        assert_eq!(bot.run(&KLine::blank().with_close(2.0)), get_orders_buy(2.0, 4.0, 10.0, 1));
         assert_eq!(bot.run(&KLine::blank().with_close(1.9)), None);
 
         assert_eq!(bot.run(&KLine::blank().with_close(2.0)), None);
@@ -130,9 +142,9 @@ mod test {
         assert_eq!(bot.run(&KLine::blank().with_close(8.0)), None);
         assert_eq!(bot.run(&KLine::blank().with_close(8.1)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(8.0)), get_orders_buy(8.0, 10.0, 20.0 / 8.0));
+        assert_eq!(bot.run(&KLine::blank().with_close(8.0)), get_orders_buy(8.0, 10.0, 20.0 / 8.0, 4));
 
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335));
+        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
         assert_eq!(bot.run(&KLine::blank().with_close(8.0)), None);
         assert_eq!(bot.run(&KLine::blank().with_close(10.0)), None);
     }
@@ -145,12 +157,35 @@ mod test {
         ));
 
         assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0));
+        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
         assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
 
         assert_eq!(bot.run(&KLine::blank().with_close(4.0)), None);
 
         assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
+    }
+
+    #[rustfmt::skip]
+    #[test]
+    fn test_run_3() {
+        let mut bot = GridBot::new(GridSettings::new(
+            0.0, 10.0, 5, 100.0, 5.0, None, None, Some(true),
+        ));
+
+        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
+
+
+        assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
+        assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
     }
 
     fn get_triggers() -> Vec<GridTrigger> {

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     backtest::{
         settings::StrategySettings,
@@ -15,6 +17,7 @@ use super::bot::GridBot;
 pub struct GridStrategy {
     pub strategy_settings: StrategySettings,
     pub bot: GridBot,
+    pub grid_position_binding: HashMap<usize, String>,
     pub klines: Vec<KLine>,
     pub positions_opened: Vec<Position>,
     pub positions_closed: Vec<Position>,
@@ -28,6 +31,7 @@ impl GridStrategy {
         Self {
             strategy_settings: strategy_settings.clone(),
             bot,
+            grid_position_binding: HashMap::new(),
             klines,
             positions_opened: Vec::new(),
             positions_closed: Vec::new(),
@@ -99,13 +103,22 @@ impl Strategy for GridStrategy {
                     -pos.volume_buy(),
                 );
                 pos.calculate_pnl();
-                self.positions_closed.push(pos.clone());
+                for (key, value) in self.grid_position_binding.clone().iter() {
+                    if value == &pos.id {
+                        self.grid_position_binding.remove(key);
+                        break;
+                    }
+                }
             }
+            self.positions_closed.extend(closed_positions);
         }
 
         match self.bot.run(kline) {
-            Some(mut orders) => {
+            Some((grid_position, mut orders)) => {
                 if self.current_budget < self.bot.order_size {
+                    return;
+                }
+                if self.grid_position_binding.get(&grid_position).is_some() {
                     return;
                 }
                 let mut position = Position::new(self.strategy_settings.symbol.clone());
@@ -124,6 +137,8 @@ impl Strategy for GridStrategy {
                     position.orders.push(order.clone());
                 }
 
+                self.grid_position_binding
+                    .insert(grid_position, position.id.clone());
                 self.positions_opened.push(position);
             }
             None => (),

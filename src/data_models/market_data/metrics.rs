@@ -246,40 +246,45 @@ mod test {
     fn get_positions_info() -> Vec<Position> {
         vec![
             Position {
+                id: "1".into(),
                 symbol: "USD_BTC".into(),
                 pnl: Some(20.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_qty(1.0),
-                    Order::new(1502942400 + 3600, 120.0, Side::Sell, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_price_executed(100.0).with_qty(1.0).filled(),
+                    Order::new(1502942400 + 3600, 120.0, Side::Sell, OrderType::Market).with_price_executed(120.0).with_qty(1.0).filled(),
                 ],
             },
             Position {
+                id: "2".into(),
                 symbol: "USD_ETH".into(),
                 pnl: Some(20.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100., Side::Buy, OrderType::Market).with_qty(1.0),
-                    Order::new(1502942400 + 3600, 120.0, Side::Sell, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_price_executed(100.0).with_qty(1.0).filled(),
+                    Order::new(1502942400 + 3600, 120.0, Side::Sell, OrderType::Market).with_price_executed(120.0).with_qty(1.0).filled(),
                 ],
             },
             Position {
+                id: "3".into(),
                 symbol: "USD_ETH".into(),
                 pnl: Some(-20.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_qty(1.0),
-                    Order::new(1502942400 + 3600, 80.0, Side::Sell, OrderType::Market).with_qty(1.0),
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_price_executed(100.0).with_qty(1.0).filled(),
+                    Order::new(1502942400 + 3600, 80.0, Side::Sell, OrderType::Market).with_price_executed(80.0).with_qty(1.0).filled(),
                 ],
             },
             Position {
+                id: "4".into(),
                 symbol: "USD_ETH".into(),
                 pnl: Some(-40.0),
                 status: PositionStatus::Closed,
                 orders: vec![
-                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_qty(1.0),
-                    Order::new(1502942400 + 3600, 60.0, Side::Sell, OrderType::Market).with_qty(1.0),
-                ],            },
+                    Order::new(1502942400, 100.0, Side::Buy, OrderType::Market).with_price_executed(100.0).with_qty(1.0).filled(),
+                    Order::new(1502942400 + 3600, 60.0, Side::Sell, OrderType::Market).with_price_executed(60.0).with_qty(1.0).filled(),
+                ],            
+            },
         ]
     }
 
