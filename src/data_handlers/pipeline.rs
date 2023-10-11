@@ -78,6 +78,7 @@ async fn download_archives(
             (archive_url, archive_path)
         })
         .collect();
+    
     let tasks: Vec<_> = archive_url_path
         .iter()
         .map(|(archive_url, archive_path)| {

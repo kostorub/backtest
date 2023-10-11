@@ -36,14 +36,16 @@ pub fn get_archive_url(
 ) -> String {
     match mdt {
         MarketDataType::Trade => format!(
-            "{}/data/spot/monthly/trades/{}/{}",
+            "{}/data/spot/{}/trades/{}/{}",
             data_url,
+            get_period(archive_name.clone()),
             symbol.to_uppercase(),
             archive_name
         ),
         other => format!(
-            "{}/data/spot/monthly/klines/{}/{}/{}",
+            "{}/data/spot/{}/klines/{}/{}/{}",
             data_url,
+            get_period(archive_name.clone()),
             symbol.to_uppercase(),
             other.value().0,
             archive_name
@@ -63,4 +65,15 @@ pub fn datetime_str_to_u64(datetime_str: String) -> u64 {
         .unwrap()
         .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
         .timestamp_millis() as u64
+}
+
+fn get_period(archive_name: String) -> String {
+    // if BTCUSDT-1m-2020-01.zip then monthly
+    // if BTCUSDT-1m-2020-01-01.zip then daily
+    let name_count: usize = archive_name.split("-").collect::<Vec<&str>>().len();
+    if name_count == 4 {
+        return "monthly".to_string();
+    } else {
+        return "daily".to_string();
+    }
 }
