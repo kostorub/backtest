@@ -7,79 +7,93 @@
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Exchange</label>
                     <div class="col-sm-7">
-                        <select class="form-select form-select-sm" name="exchange" hx-get="/exchange/exchanges" hx-trigger="load"
-                            hx-indicator=".htmx-indicator" aria-disabled="true" disabled>
+                        <select class="form-select form-select-sm" name="exchange" hx-get="/exchange/exchanges"
+                            hx-trigger="load" hx-indicator=".htmx-indicator" aria-disabled="true" disabled>
                         </select>
                     </div>
                 </div>
                 <div class="mb-3 row">
                     <label for="symbol" class="col-sm-5 col-form-label col-form-label-sm">Symbol</label>
                     <div class="col-sm-7">
-                        <select class="form-select form-select-sm" id="symbol" name="symbol" hx-get="/exchange/local-symbols" hx-trigger="load">
+                        <select class="form-select form-select-sm" id="symbol" name="symbol"
+                            hx-get="/exchange/local-symbols" hx-trigger="load">
                         </select>
                     </div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Backtest period</label>
                     <div class="col-sm-7">
-                        <select class="form-select form-select-sm" id="market-data-type" name="market_data_type" hx-get="/exchange/mdts_from_symbol" hx-include="#symbol" hx-exclude hx-trigger="change from:#symbol">
+                        <select class="form-select form-select-sm" id="market-data-type" name="market_data_type"
+                            hx-get="/exchange/mdts_from_symbol" hx-include="#symbol" hx-exclude
+                            hx-trigger="change from:#symbol">
                         </select>
                     </div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Chart period</label>
                     <div class="col-sm-7">
-                        <select class="form-select form-select-sm" id="chart-market-data-type" name="chart_market_data_type" hx-get="/exchange/mdts_from_symbol" hx-include="#symbol" hx-exclude hx-trigger="change from:#symbol">
+                        <select class="form-select form-select-sm" id="chart-market-data-type"
+                            name="chart_market_data_type" hx-get="/exchange/mdts_from_symbol" hx-include="#symbol"
+                            hx-exclude hx-trigger="change from:#symbol">
                         </select>
                     </div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Date start</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="date" name="date_start" placeholder="date_start"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="date" name="date_start"
+                            placeholder="date_start"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Date end</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="date" name="date_end" placeholder="date_end"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="date" name="date_end"
+                            placeholder="date_end"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Deposit</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" step="0.01" value="1000.0" name="deposit"
-                            placeholder="deposit">
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" step="0.01"
+                            value="1000.0" name="deposit" placeholder="deposit">
                     </div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Commission</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm"  type="number" min="0" max="100.0" step="0.01" value="0.0" name="commission"
-                            placeholder="commission"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" max="100.0"
+                            step="0.01" value="0.0" name="commission" placeholder="commission"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Price low</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" name="price_low" placeholder="price_low"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0"
+                            name="price_low" placeholder="price_low"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Price high</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" name="price_high" placeholder="price_high"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0"
+                            name="price_high" placeholder="price_high"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Grids count</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="2" max="170" step="1" name="grids_count" placeholder="grids_count">
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="2" max="170"
+                            step="1" name="grids_count" placeholder="grids_count">
                     </div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Grid trigger</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" name="grid_trigger" placeholder="grid_trigger"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0"
+                            name="grid_trigger" placeholder="grid_trigger"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Grid stop loss</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" name="grid_sl" placeholder="grid_sl"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0"
+                            name="grid_sl" placeholder="grid_sl"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Grid take profit</label>
-                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0" name="grid_tp" placeholder="grid_tp"></div>
+                    <div class="col-sm-7"><input class="form-control form-control-sm" type="number" min="0"
+                            name="grid_tp" placeholder="grid_tp"></div>
                 </div>
                 <div class="mb-3 row">
                     <label class="col-sm-5 col-form-label col-form-label-sm">Sell all</label>
-                    <div class="col-sm-7"><input class="form-check-input" type="checkbox" name="sell_all" placeholder="sell_all"></div>
+                    <div class="col-sm-7"><input class="form-check-input" type="checkbox" name="sell_all"
+                            placeholder="sell_all"></div>
                 </div>
             </form>
             <button type="button" class="btn btn-primary" hx-post="/backtest/grid/run"
@@ -90,13 +104,14 @@
             <div id="run-spinner" class="spinner-border htmx-indicator spinner-border-sm" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-                
+
         </div>
-        <div class="col-md-8" id="chart-div" name="chart-div" hx-get="/backtest_result/chart" hx-include="#backtest-uuid-form" hx-trigger="backtestFinished from:body">
+        <div class="col-md-8" id="chart-div" name="chart-div" hx-get="/backtest_result/chart"
+            hx-include="#backtest-uuid-form" hx-trigger="backtestFinished from:body">
         </div>
         <div id="metrics" class="col-md-2">
         </div>
     </div>
-    
+
 </div>
 {% endblock content %}
