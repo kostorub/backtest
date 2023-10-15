@@ -22,7 +22,7 @@ impl GridBot {
         Self {
             settings: settings.clone(),
             current_price: 0.0,
-            order_size: 100.0,
+            order_size: settings.deposit / settings.grids_count as f64,
             triggers: Vec::new(),
         }
     }
