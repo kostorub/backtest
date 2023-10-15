@@ -8,8 +8,8 @@
     <tbody>
         {% for key, value in values %}
             <tr>
-                <td>{{ key }}</td>
-                <td>{{ value }}</td>
+                <td class="col-form-label-sm">{{ key }}</td>
+                <td class="col-form-label-sm">{{ value | round(precision=2) }}</td>
             </tr>
         {% endfor %}
     </tbody>
