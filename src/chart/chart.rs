@@ -41,7 +41,7 @@ pub fn build_chart(
     let low = klines.iter().map(|k| k.low).collect::<Vec<_>>();
     let close = klines.iter().map(|k| k.close).collect::<Vec<_>>();
 
-    let trace = Candlestick::new(x, open, high, low, close);
+    let trace = Box::new(Candlestick::new(x, open, high, low, close).show_legend(false));
     plot.add_trace(trace);
 
     for pos in positions {
@@ -55,9 +55,11 @@ pub fn build_chart(
         if pos.pnl.unwrap() > 0.0 {
             let line = Line::new().color(NamedColor::Green);
             sc = sc.line(line);
+            sc = sc.show_legend(false);
         } else {
             let line = Line::new().color(NamedColor::Red);
             sc = sc.line(line);
+            sc = sc.show_legend(false);
         }
         plot.add_trace(sc);
     }
