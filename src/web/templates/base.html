@@ -16,7 +16,10 @@
     <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
     <title>Backtest</title>
 </head>
-<body>
+<body onload="document.getElementById('backtest-uuid').value = Date.now();">
+    <form id="backtest-uuid-form">
+      <input type="hidden" id="backtest-uuid" name="backtest_uuid"/>
+    </form>
     <nav class="navbar navbar-expand-lg bg-primary mb-2" data-bs-theme="dark">
         <div class="container-fluid">
           <a class="navbar-brand" href="#">Navbar</a>
