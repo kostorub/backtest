@@ -15,6 +15,3 @@ Cargo.lock
 
 # VS code settings
 .vscode
-
-# Market data
-data/
