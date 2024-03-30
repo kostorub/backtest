@@ -11,18 +11,11 @@ use actix_web::{
 use cached::proc_macro::cached;
 use serde::Deserialize;
 use strum::IntoEnumIterator;
-use tera::Context;
 
 pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
     let exchanges: Vec<String> = vec!["Binance".into()];
 
-    let mut context = Context::new();
-    context.insert("values", &exchanges);
-
-    let tera = data.tera.clone();
-    let body = tera.render("select_options.html", &context).unwrap();
-
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok().json(exchanges)
 }
 
 pub async fn local_symbols(data: web::Data<AppState>) -> HttpResponse {
@@ -45,15 +38,8 @@ pub async fn local_symbols(data: web::Data<AppState>) -> HttpResponse {
         .collect();
 
     local_symbols.sort();
-    local_symbols.insert(0, "Choose symbol".to_string());
 
-    let mut context = Context::new();
-    context.insert("values", &local_symbols);
-
-    let tera = data.tera.clone();
-    let body = tera.render("select_options.html", &context).unwrap();
-
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok().json(local_symbols)
 }
 
 pub async fn exchange_symbols(data: web::Data<AppState>, path: Path<(String,)>) -> HttpResponse {
@@ -77,13 +63,7 @@ pub async fn exchange_symbols(data: web::Data<AppState>, path: Path<(String,)>) 
 
     symbols.sort();
 
-    let mut context = Context::new();
-    context.insert("values", &symbols);
-
-    let tera = data.tera.clone();
-    let body = tera.render("select_options.html", &context).unwrap();
-
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok().json(symbols)
 }
 
 #[cached(time = 86400)]
@@ -96,13 +76,7 @@ pub async fn mdts(data: web::Data<AppState>) -> HttpResponse {
         .map(|s| s.value().0)
         .collect::<Vec<String>>();
 
-    let mut context = Context::new();
-    context.insert("values", &symbols);
-
-    let tera = data.tera.clone();
-    let body = tera.render("select_options.html", &context).unwrap();
-
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok().json(symbols)
 }
 
 #[derive(Deserialize)]
@@ -131,11 +105,5 @@ pub async fn mdts_from_symbol(
 
     mdts.sort();
 
-    let mut context = Context::new();
-    context.insert("values", &mdts);
-
-    let tera = data.tera.clone();
-    let body = tera.render("select_options.html", &context).unwrap();
-
-    HttpResponse::Ok().body(body)
+    HttpResponse::Ok().json(mdts)
 }

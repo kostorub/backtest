@@ -8,6 +8,7 @@ use plotly::common::Line;
 use plotly::{Candlestick, Layout, Plot, Scatter};
 use std::fs;
 
+use crate::backtest;
 use crate::backtest::strategies::grid::settings::GridSettingsRequest;
 use crate::data_models::market_data::enums::MarketDataType;
 use crate::data_models::market_data::kline::KLine;
@@ -20,11 +21,16 @@ fn parse_time(t: u64, mdt: MarketDataType) -> String {
 }
 
 pub fn build_chart(
+    backtest_uuid: String,
     s: &GridSettingsRequest,
     klines: Vec<KLine>,
     positions: &Vec<Position>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let filename = format!("{}.html", s.backtest_uuid);
+    let mut filename = format!("{}.html", backtest_uuid);
+    if let Some(b_uuid) = &s.backtest_uuid {
+        filename = format!("{}.html", b_uuid);
+    }
+
     let filepath = PathBuf::from("src/web/static/charts/").join(&filename);
 
     let mut plot = Plot::new();

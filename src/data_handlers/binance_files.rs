@@ -52,7 +52,15 @@ pub fn generate_archives_names(
         }
     }
 
-    add_days(&mut result, symbol.clone(), market_data_type.clone(), date_end.year(), date_end.month(), 1, date_end.day());
+    add_days(
+        &mut result,
+        symbol.clone(),
+        market_data_type.clone(),
+        date_end.year(),
+        date_end.month(),
+        1,
+        date_end.day(),
+    );
 
     debug!("Generated archives: {:?}", result);
 
@@ -157,7 +165,7 @@ mod tests {
             2020,
             1,
             1,
-            10
+            10,
         );
         assert_eq!(result.len(), 10);
         assert_eq!(result[0], "BTCUSDT-1m-2020-01-01.zip");

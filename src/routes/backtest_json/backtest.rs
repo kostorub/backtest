@@ -3,7 +3,8 @@ use std::path::PathBuf;
 use actix_web::{web, Responder, Result};
 use actix_web::{Either, HttpResponse};
 use chrono::{NaiveDate, NaiveTime};
-use tera::Context;
+use serde::Serialize;
+use uuid::Uuid;
 
 use crate::app_state::AppState;
 use crate::backtest::backtest::{
@@ -59,11 +60,15 @@ pub async fn run_hodl(
     Either::Left(Ok(web::Json(metrics)))
 }
 
+#[derive(Serialize)]
+struct RunGridResult {
+    id: String,
+}
+
 pub async fn run_grid(
     request_settings: web::Json<GridSettingsRequest>,
     data: web::Data<AppState>,
-    // ) -> Either<Result<impl Responder>, HttpResponse> {
-) -> HttpResponse {
+) -> Result<impl Responder> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
     let request_settings = request_settings.clone();
@@ -123,8 +128,10 @@ pub async fn run_grid(
         strategies[0].current_budget,
     );
 
+    let backtest_uuid = Uuid::new_v4().to_string();
+
     build_chart(
-        String::from(""),
+        backtest_uuid.clone(),
         &request_settings,
         get_klines(
             data_path.clone(),
@@ -138,15 +145,7 @@ pub async fn run_grid(
     )
     .unwrap();
 
-    let mut context = Context::new();
-    context.insert("values", &metrics);
+    let result = RunGridResult { id: backtest_uuid };
 
-    let tera = data.tera.clone();
-    let body = tera.render("metrics.html", &context).unwrap();
-
-    HttpResponse::Ok()
-        .append_header(("HX-Trigger", "backtestFinished"))
-        .body(body)
-
-    // Either::Right(HttpResponse::InternalServerError().body(format!("Internal server error. Details: {}", e)));
+    Ok(web::Json(result))
 }
