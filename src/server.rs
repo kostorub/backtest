@@ -24,6 +24,9 @@ pub async fn start_server() -> std::io::Result<()> {
 
     let settings = AppSettings::new().expect("Couldn't load config.");
 
+    // Create the folder for a .marketdata files
+    std::fs::create_dir_all(&settings.data_path).expect("Couldn't create data folder.");
+
     let app_data = web::Data::new(AppState {
         app_settings: Arc::new(settings),
         tera: Arc::new(template()),
