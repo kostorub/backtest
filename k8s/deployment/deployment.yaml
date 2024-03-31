@@ -15,11 +15,10 @@ spec:
         app: backtest
     spec:
       containers:
-      - name: backtest
-        image: <IMAGE>
-        ports:
-        - containerPort: 8080
-
+        - name: backtest
+          image: <IMAGE>
+          ports:
+            - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -40,12 +39,12 @@ metadata:
   name: backtest-ingress
 spec:
   rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: backtest
-            port:
-              number: 8080
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backtest
+                port:
+                  number: 8080
