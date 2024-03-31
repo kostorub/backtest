@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backtest-deploy
+  labels:
+    app: backtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backtest
+  template:
+    metadata:
+      labels:
+        app: backtest
+    spec:
+      containers:
+        - name: backtest
+          image: <IMAGE>
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+      - name: regcred
