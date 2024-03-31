@@ -8,7 +8,6 @@ metadata:
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
     service.beta.kubernetes.io/do-loadbalancer-name: "api.backtest.casa"
     service.beta.kubernetes.io/do-loadbalancer-hostname: "api.backtest.casa"
-    service.beta.kubernetes.io/do-loadbalancer-http2-ports: "443"
     service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
     service.beta.kubernetes.io/do-loadbalancer-tls-passthrough: "true"
     service.beta.kubernetes.io/do-loadbalancer-certificate-id: "1234-5678-9012-3456"
