@@ -44,6 +44,9 @@ jobs:
         push: true
         tags: |
           ${{ env.IMAGE }}
+          ${{ env.IMAGE_NAME }}:latest
+        cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+        cache-to: type=inline
 
     - name: Update deployment file
       run: |

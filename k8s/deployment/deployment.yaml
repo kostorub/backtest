@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backtest-deployment
+  name: backtest-deploy
   labels:
     app: backtest
 spec:
@@ -23,7 +23,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backtest-service
+  name: backtest-svc
 spec:
   type: ClusterIP
   selector:
@@ -36,7 +36,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: backtest-ingress
+  name: backtest-ing
 spec:
   rules:
     - http:
