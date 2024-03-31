@@ -40,9 +40,9 @@ jobs:
       with:
         context: .
         push: true
-        tags: 
-          - ${{ env.IMAGE_NAME }}:${{ vars.GITHUB_REF }}
-          - ${{ env.IMAGE_NAME }}:latest
+        tags: |
+          ${{ env.IMAGE_NAME }}:${{ vars.GITHUB_REF }}
+          ${{ env.IMAGE_NAME }}:latest
     
     - name: Update deployment file
       run: |
