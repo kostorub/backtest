@@ -39,9 +39,9 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ env.IMAGE_NAME }}:${{  github.ref_name }}
+          ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
           ${{ env.IMAGE_NAME }}:latest
-    
+
     - name: Update deployment file
       run: |
         sed -i "s|<IMAGE>|${{ env.IMAGE_NAME }}:${{ vars.GITHUB_REF }}|" k8s/deployment/deployment.yaml
