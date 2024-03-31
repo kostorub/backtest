@@ -43,7 +43,7 @@ jobs:
         context: .
         push: true
         tags: |
-          ${IMAGE}
+          ${{ env.IMAGE }}
 
     - name: Update deployment file
       run: |
