@@ -8,11 +8,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backtest
+      app: backtest-deploy
   template:
     metadata:
       labels:
-        app: backtest
+        app: backtest-deploy
     spec:
       containers:
         - name: backtest
