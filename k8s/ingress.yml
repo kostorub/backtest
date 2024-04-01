@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backtest-ing
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # kubernetes.io/ingress.class: nginx
+    # Enable proxy protocol 
+    # service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
+    # Specify whether the DigitalOcean Load Balancer should pass encrypted data to backend droplets
+    # service.beta.kubernetes.io/do-loadbalancer-tls-passthrough: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.backtest.casa
+    secretName: backtest-tls
+  rules:
+    - host: api.backtest.casa
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: backtest-svc
+                port:
+                  number: 8080

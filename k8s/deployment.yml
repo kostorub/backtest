@@ -8,16 +8,16 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backtest-deploy
+      app: backtest
   template:
     metadata:
       labels:
-        app: backtest-deploy
+        app: backtest
     spec:
       containers:
         - name: backtest
-          image: <IMAGE>
+          image: kostorub/backtest:v0.12
           ports:
             - containerPort: 8080
       imagePullSecrets:
-      - name: regcred
+        - name: regcred
