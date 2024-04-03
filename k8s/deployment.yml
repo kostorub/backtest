@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backtest-deploy
-  labels:
-    app: backtest
 spec:
   replicas: 1
   selector:
@@ -16,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backtest
-          image: kostorub/backtest:v0.12
+          image: <IMAGE>
           ports:
             - containerPort: 8080
       imagePullSecrets:
