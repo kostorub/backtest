@@ -13,11 +13,13 @@ use crate::{
         market_data::{download_market_data, downloaded_market_data},
         pages::{index, page},
     },
+    routes::backtest_json,
     web::template::template,
 };
 
 use actix_web::{web, App, HttpServer};
 
+#[rustfmt::skip]
 pub async fn start_server() -> std::io::Result<()> {
     let mut builder = Builder::from_env("RUST_LOG");
     builder.init();
@@ -41,27 +43,25 @@ pub async fn start_server() -> std::io::Result<()> {
             .route("/pages/{page}", web::get().to(page))
             .route("/pages/{page}", web::get().to(page))
             .route("/exchange/local-symbols", web::get().to(local_symbols))
-            .route(
-                "/exchange/symbols/{exchange}",
-                web::get().to(exchange_symbols),
-            )
+            .route("/exchange/symbols/{exchange}",web::get().to(exchange_symbols),)
             .route("/exchange/exchanges", web::get().to(exchanges))
             .route("/exchange/mdts", web::get().to(mdts))
-            .route(
-                "/exchange/mdts_from_symbol",
-                web::get().to(mdts_from_symbol),
-            )
-            .route(
-                "/market-data/downloaded",
-                web::get().to(downloaded_market_data),
-            )
-            .route(
-                "/market-data/download",
-                web::post().to(download_market_data),
-            )
+            .route("/exchange/mdts_from_symbol",web::get().to(mdts_from_symbol),)
+            .route("/market-data/downloaded",web::get().to(downloaded_market_data),)
+            .route("/market-data/download",web::post().to(download_market_data),)
             .route("/backtest/hodl/run", web::post().to(run_hodl))
             .route("/backtest/grid/run", web::post().to(run_grid))
             .route("/backtest_result/chart", web::get().to(chart))
+            .route("/api/exchange/local-symbols", web::get().to(backtest_json::exchange::local_symbols))
+            .route("/api/exchange/symbols/{exchange}",web::get().to(backtest_json::exchange::exchange_symbols))
+            .route("/api/exchange/exchanges", web::get().to(backtest_json::exchange::exchanges))
+            .route("/api/exchange/mdts", web::get().to(backtest_json::exchange::mdts))
+            .route("/api/exchange/mdts_from_symbol",web::get().to(backtest_json::exchange::mdts_from_symbol),)
+            .route("/api/market-data/downloaded",web::get().to(backtest_json::market_data::downloaded_market_data),)
+            .route("/api/market-data/download",web::post().to(backtest_json::market_data::download_market_data),)
+            .route("/api/backtest/hodl/run", web::post().to(backtest_json::backtest::run_hodl))
+            .route("/api/backtest/grid/run", web::post().to(backtest_json::backtest::run_grid))
+            .route("/api/backtest_result/chart", web::get().to(backtest_json::backtest_result::chart))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
