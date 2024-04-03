@@ -6,14 +6,14 @@ use std::sync::Arc;
 use crate::{
     app_state::AppState,
     config::AppSettings,
-    routes::backtest::{
+    routes::backtest_ui::{
         backtest::{run_grid, run_hodl},
         backtest_result::chart,
         exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
         market_data::{download_market_data, downloaded_market_data},
         pages::{index, page},
     },
-    routes::backtest_json,
+    routes::backtest_api,
     web::template::template,
 };
 
@@ -52,16 +52,16 @@ pub async fn start_server() -> std::io::Result<()> {
             .route("/backtest/hodl/run", web::post().to(run_hodl))
             .route("/backtest/grid/run", web::post().to(run_grid))
             .route("/backtest_result/chart", web::get().to(chart))
-            .route("/api/exchange/local-symbols", web::get().to(backtest_json::exchange::local_symbols))
-            .route("/api/exchange/symbols/{exchange}",web::get().to(backtest_json::exchange::exchange_symbols))
-            .route("/api/exchange/exchanges", web::get().to(backtest_json::exchange::exchanges))
-            .route("/api/exchange/mdts", web::get().to(backtest_json::exchange::mdts))
-            .route("/api/exchange/mdts_from_symbol",web::get().to(backtest_json::exchange::mdts_from_symbol),)
-            .route("/api/market-data/downloaded",web::get().to(backtest_json::market_data::downloaded_market_data),)
-            .route("/api/market-data/download",web::post().to(backtest_json::market_data::download_market_data),)
-            .route("/api/backtest/hodl/run", web::post().to(backtest_json::backtest::run_hodl))
-            .route("/api/backtest/grid/run", web::post().to(backtest_json::backtest::run_grid))
-            .route("/api/backtest_result/chart", web::get().to(backtest_json::backtest_result::chart))
+            .route("/api/exchange/local-symbols", web::get().to(backtest_api::exchange::local_symbols))
+            .route("/api/exchange/symbols/{exchange}",web::get().to(backtest_api::exchange::exchange_symbols))
+            .route("/api/exchange/exchanges", web::get().to(backtest_api::exchange::exchanges))
+            .route("/api/exchange/mdts", web::get().to(backtest_api::exchange::mdts))
+            .route("/api/exchange/mdts_from_symbol",web::get().to(backtest_api::exchange::mdts_from_symbol),)
+            .route("/api/market-data/downloaded",web::get().to(backtest_api::market_data::downloaded_market_data),)
+            .route("/api/market-data/download",web::post().to(backtest_api::market_data::download_market_data),)
+            .route("/api/backtest/hodl/run", web::post().to(backtest_api::backtest::run_hodl))
+            .route("/api/backtest/grid/run", web::post().to(backtest_api::backtest::run_grid))
+            .route("/api/backtest_result/chart", web::get().to(backtest_api::backtest_result::chart))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
