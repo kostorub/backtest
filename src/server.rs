@@ -63,7 +63,7 @@ pub async fn start_server() -> std::io::Result<()> {
             .route("/backtest/grid/run", web::post().to(run_grid))
             .route("/backtest_result/chart", web::get().to(chart))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
