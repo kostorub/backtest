@@ -58,7 +58,6 @@ jobs:
     - name: Deploy to DigitalOcean Kubernetes
       run: |
         kubectl apply -f $GITHUB_WORKSPACE/k8s/deployment.yml
-        kubectl apply -f $GITHUB_WORKSPACE/k8s/load-balancer.yml
     
     - name: Verify deployment
       run: kubectl rollout status deployment/backtest-deploy
