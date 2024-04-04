@@ -12,7 +12,7 @@ use cached::proc_macro::cached;
 use serde::Deserialize;
 use strum::IntoEnumIterator;
 
-pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
+pub async fn exchanges(_data: web::Data<AppState>) -> HttpResponse {
     let exchanges = get_exchanges();
 
     HttpResponse::Ok().json(exchanges)
@@ -52,7 +52,7 @@ pub fn get_local_symbols(data: &web::Data<AppState>) -> Vec<String> {
     local_symbols
 }
 
-pub async fn exchange_symbols(data: web::Data<AppState>, path: Path<(String,)>) -> HttpResponse {
+pub async fn exchange_symbols(_data: web::Data<AppState>, path: Path<(String,)>) -> HttpResponse {
     let symbols = match get_exchange_symbols(path).await {
         Ok(value) => value,
         Err(value) => return value,
@@ -84,7 +84,7 @@ pub async fn get_symbols(url: String) -> String {
     reqwest::get(url).await.unwrap().text().await.unwrap()
 }
 
-pub async fn mdts(data: web::Data<AppState>) -> HttpResponse {
+pub async fn mdts(_data: web::Data<AppState>) -> HttpResponse {
     let symbols = get_mdts();
 
     HttpResponse::Ok().json(symbols)

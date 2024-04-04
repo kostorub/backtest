@@ -19,6 +19,12 @@ use crate::{
 };
 
 pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
+    let market_data = get_downloaded_market_data(&data);
+
+    HttpResponse::Ok().json(market_data)
+}
+
+pub fn get_downloaded_market_data(data: &web::Data<AppState>) -> Vec<(String, String, String, String, String)> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
     let mut files = get_filenames(data_path.clone(), "marketdata").unwrap();
@@ -46,8 +52,7 @@ pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
 
         market_data.push((exchange, symbol, market_data_type, start_date, end_date));
     }
-
-    HttpResponse::Ok().json(market_data)
+    market_data
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -63,8 +68,14 @@ pub async fn download_market_data(
     data: web::Data<AppState>,
     r: web::Json<MarketDataRequest>,
 ) -> HttpResponse {
-    let data_path = PathBuf::from(data.app_settings.data_path.clone());
+    _download_market_data(data, r).await;
 
+    HttpResponse::Ok().json("Market data downloaded")
+}
+
+pub async fn _download_market_data(data: web::Data<AppState>, r: web::Json<MarketDataRequest>) {
+    let data_path = PathBuf::from(data.app_settings.data_path.clone());
+    
     pipeline::pipeline::<KLine>(
         data_path.clone(),
         data.app_settings.binance_data_url.clone(),
@@ -75,6 +86,4 @@ pub async fn download_market_data(
         datetime_str_to_u64(r.date_end.clone()),
     )
     .await;
-
-    HttpResponse::Ok().json("Market data downloaded")
-}
+    }
