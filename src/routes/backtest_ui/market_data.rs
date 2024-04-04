@@ -6,7 +6,9 @@ use tera::Context;
 
 use crate::{
     app_state::AppState,
-    routes::backtest::market_data::{MarketDataRequest, _download_market_data, get_downloaded_market_data},
+    routes::backtest::market_data::{
+        MarketDataRequest, _download_market_data, get_downloaded_market_data,
+    },
 };
 
 pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
@@ -21,7 +23,6 @@ pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
 
     HttpResponse::Ok().body(body)
 }
-
 
 pub async fn download_market_data(
     data: web::Data<AppState>,

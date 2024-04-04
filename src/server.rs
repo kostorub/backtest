@@ -1,17 +1,21 @@
 use actix_files::Files;
 use actix_web::middleware::Logger;
+use actix_web_lab::middleware::from_fn;
 use env_logger::Builder;
 use std::sync::Arc;
 
 use crate::{
     app_state::AppState,
     config::AppSettings,
-    routes::backtest,
-    routes::backtest_ui::{
-        backtest::{run_grid, run_hodl},
-        exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
-        market_data::{download_market_data, downloaded_market_data},
-        pages::{index, page},
+    routes::{
+        auth::{jwt_validate_middleware, login},
+        backtest,
+        backtest_ui::{
+            backtest::{run_grid, run_hodl},
+            exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
+            market_data::{download_market_data, downloaded_market_data},
+            pages::{index, page},
+        },
     },
     web::template::template,
 };
@@ -38,7 +42,9 @@ pub async fn start_server() -> std::io::Result<()> {
             .wrap(Logger::default())
             .app_data(app_data.clone())
             .service(Files::new("/static", "src/web/static/").show_files_listing())
+            .wrap(from_fn(jwt_validate_middleware))
             .route("/", web::get().to(index))
+            .route("/login", web::post().to(login))
             .route("/pages/{page}", web::get().to(page))
             .route("/exchange/local-symbols", web::get().to(local_symbols))
             .route("/exchange/symbols/{exchange}",web::get().to(exchange_symbols),)

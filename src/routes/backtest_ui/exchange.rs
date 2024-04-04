@@ -1,5 +1,9 @@
 use crate::{
-    app_state::AppState, routes::backtest::exchange::{get_exchange_symbols, get_exchanges, get_local_symbols, get_mdts, get_mdts_from_symbol, SymbolQuery}
+    app_state::AppState,
+    routes::backtest::exchange::{
+        get_exchange_symbols, get_exchanges, get_local_symbols, get_mdts, get_mdts_from_symbol,
+        SymbolQuery,
+    },
 };
 use actix_web::{
     web::{self, Path},

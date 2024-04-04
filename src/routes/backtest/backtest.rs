@@ -122,7 +122,7 @@ pub async fn run_grid(
     // let mut backtest = GridBacktest::new(backtest_settings.clone(), strategies);
     backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
     let positions = get_positions_from_strategies(strategies.clone());
-    let metrics = get_metrics(
+    let _metrics = get_metrics(
         &positions,
         strategies[0].strategy_settings.deposit,
         strategies[0].current_budget,
