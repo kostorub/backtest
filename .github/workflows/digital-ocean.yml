@@ -39,7 +39,7 @@ jobs:
 
     - name: Update config.yaml file
       run: |
-        cp congig.yml.template config.yml
+        cp config.yml.template config.yml
         sed -i "s|<JWT_SECRET>|${{ secrets.JWT_SECRET }}|" config.yml  
         
     - name: Build and push
