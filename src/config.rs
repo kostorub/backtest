@@ -6,6 +6,7 @@ use serde::Deserialize;
 pub struct AppSettings {
     pub data_path: String,
     pub binance_data_url: String,
+    pub jwt_secret: String,
 }
 
 impl AppSettings {

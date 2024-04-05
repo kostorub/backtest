@@ -15,3 +15,6 @@ target/
 
 # VS code settings
 .vscode
+
+.env
+config.yml

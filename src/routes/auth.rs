@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 
+use crate::app_state::AppState;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     sub: String,
@@ -29,10 +31,11 @@ struct LoginResponse {
     expires_in: usize,
 }
 
-pub async fn login(login: web::Json<LoginRequest>) -> HttpResponse {
+pub async fn login(login: web::Json<LoginRequest>, data: web::Data<AppState>) -> HttpResponse {
     if login.username != "admin" || login.password != "ntvwru94up34u" {
         return HttpResponse::BadRequest().body("Invalid username or password");
     }
+    let jwt_secret = data.app_settings.jwt_secret.clone();
     let exp = Utc::now() + Duration::days(1);
     let token = encode(
         &Header::default(),
@@ -40,7 +43,7 @@ pub async fn login(login: web::Json<LoginRequest>) -> HttpResponse {
             sub: login.username.clone(),
             exp: exp.timestamp() as usize,
         },
-        &EncodingKey::from_secret("secret".as_ref()),
+        &EncodingKey::from_secret(jwt_secret.as_ref()),
     )
     .unwrap();
     HttpResponse::Ok().json(LoginResponse {
@@ -64,9 +67,11 @@ pub async fn jwt_validate_middleware(
             return Err(ErrorForbidden("Invalid token format"));
         }
         let token = auth_header[7..].to_string();
+        let data = req.app_data::<AppState>().unwrap();
+        let jwt_secret = data.app_settings.jwt_secret.clone();
         let token_data = decode::<Claims>(
             &token,
-            &DecodingKey::from_secret("secret".as_ref()),
+            &DecodingKey::from_secret(jwt_secret.as_ref()),
             &Validation::default(),
         );
         if token_data.is_err() {
