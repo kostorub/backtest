@@ -1,4 +1,4 @@
-use chrono::{Datelike, NaiveDateTime};
+use chrono::{DateTime, Datelike};
 use log::debug;
 
 use crate::data_models::market_data::enums::MarketDataType;
@@ -9,8 +9,8 @@ pub fn generate_archives_names(
     date_start: u64,
     date_end: u64,
 ) -> Vec<String> {
-    let date_start = NaiveDateTime::from_timestamp_millis(date_start as i64).unwrap();
-    let date_end = NaiveDateTime::from_timestamp_millis(date_end as i64).unwrap();
+    let date_start = DateTime::from_timestamp_millis(date_start as i64).unwrap();
+    let date_end = DateTime::from_timestamp_millis(date_end as i64).unwrap();
 
     let mut result = Vec::new();
 

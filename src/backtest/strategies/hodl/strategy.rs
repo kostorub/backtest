@@ -4,11 +4,11 @@ use crate::{
         enums::{OrderType, Side},
         kline::KLine,
         order::Order,
-        position::{Position, PositionStatus},
+        position::Position,
     },
 };
 
-use super::{bot::HodlBot, settings::HodlSettings};
+use super::bot::HodlBot;
 
 #[derive(Debug, Clone)]
 pub struct HodlStrategy {

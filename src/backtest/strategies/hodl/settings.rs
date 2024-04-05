@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::backtest::settings::{BacktesttSettings, StrategySettings};
+use crate::backtest::settings::BacktesttSettings;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettings {
@@ -9,6 +9,7 @@ pub struct HodlSettings {
 }
 
 impl HodlSettings {
+    #[allow(dead_code)]
     pub fn new(purchase_period: u64, purchase_size: f64) -> Self {
         Self {
             purchase_period,

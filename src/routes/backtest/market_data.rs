@@ -4,7 +4,7 @@ use actix_web::{
     web::{self},
     HttpResponse,
 };
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use log::debug;
 use serde::Deserialize;
 
@@ -45,10 +45,10 @@ pub fn get_downloaded_market_data(
         let first_candle: KLine = get_first_value_from_file(f.clone()).unwrap();
         let last_candle: KLine = get_last_value_from_file(f.clone()).unwrap();
 
-        let start_date = NaiveDateTime::from_timestamp_millis(first_candle.date as i64)
+        let start_date = DateTime::from_timestamp_millis(first_candle.date as i64)
             .unwrap()
             .to_string();
-        let end_date = NaiveDateTime::from_timestamp_millis(last_candle.date as i64)
+        let end_date = DateTime::from_timestamp_millis(last_candle.date as i64)
             .unwrap()
             .to_string();
 

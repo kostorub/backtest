@@ -64,6 +64,7 @@ pub fn datetime_str_to_u64(datetime_str: String) -> u64 {
     NaiveDate::parse_from_str(datetime_str.as_str(), "%Y-%m-%d")
         .unwrap()
         .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+        .and_utc()
         .timestamp_millis() as u64
 }
 
