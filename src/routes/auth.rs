@@ -67,7 +67,7 @@ pub async fn jwt_validate_middleware(
             return Err(ErrorForbidden("Invalid token format"));
         }
         let token = auth_header[7..].to_string();
-        let data = req.app_data::<AppState>().unwrap();
+        let data = req.app_data::<web::Data<AppState>>().unwrap();
         let jwt_secret = data.app_settings.jwt_secret.clone();
         let token_data = decode::<Claims>(
             &token,
