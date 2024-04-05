@@ -11,8 +11,7 @@ pub struct AppSettings {
 
 impl AppSettings {
     pub fn new() -> Result<Self, ConfigError> {
-        let env = std::env::var("ENV").unwrap_or("local".into());
-        let config_file = format!("config/{}", env.to_lowercase());
+        let config_file = "config";
         let s = Config::builder()
             .add_source(File::with_name(&config_file).required(true))
             .add_source(Environment::default())
