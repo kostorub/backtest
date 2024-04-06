@@ -37,10 +37,10 @@ jobs:
       run: |
         echo "IMAGE=${{ env.IMAGE_NAME }}:${{ github.ref_name }}" >> $GITHUB_ENV
 
-    - name: Update config.yaml file
+    - name: Update .env file
       run: |
-        cp config.yml.template config.yml
-        sed -i "s|<JWT_SECRET>|${{ secrets.JWT_SECRET }}|" config.yml  
+        cp .env.template .env
+        sed -i "s|<JWT_SECRET>|${{ secrets.JWT_SECRET }}|" .env
         
     - name: Build and push
       uses: docker/build-push-action@v5

@@ -17,7 +17,7 @@ WORKDIR /opt/app
 
 COPY --from=builder /opt/app/target/release/backtest .
 COPY src/web/ ./src/web
-COPY config.yml ./config.yml
+COPY .env ./.env
 
 ENV RUST_LOG=info
 ENV ENV=production

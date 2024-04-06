@@ -1,4 +1,5 @@
-use config::{Config, ConfigError, Environment, File};
+use config::{Config, ConfigError, Environment};
+use dotenvy::dotenv;
 use log::debug;
 use serde::Deserialize;
 
@@ -11,9 +12,8 @@ pub struct AppSettings {
 
 impl AppSettings {
     pub fn new() -> Result<Self, ConfigError> {
-        let config_file = "config";
+        dotenv().ok();
         let s = Config::builder()
-            .add_source(File::with_name(&config_file).required(true))
             .add_source(Environment::default())
             .build()?;
 

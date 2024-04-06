@@ -1,3 +1,0 @@
-data_path: /var/data
-binance_data_url: https://data.binance.vision
-jwt_secret: <JWT_SECRET>
