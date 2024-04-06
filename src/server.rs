@@ -3,6 +3,7 @@ use actix_web::middleware::Logger;
 use actix_web_lab::middleware::from_fn;
 use env_logger::Builder;
 use std::sync::Arc;
+use tokio_postgres::NoTls;
 
 use crate::{
     app_state::AppState,
@@ -32,9 +33,12 @@ pub async fn start_server() -> std::io::Result<()> {
     // Create the folder for a .marketdata files
     std::fs::create_dir_all(&settings.data_path).expect("Couldn't create data folder.");
 
+    let pool = settings.pg.create_pool(None, NoTls).unwrap();
+
     let app_data = web::Data::new(AppState {
         app_settings: Arc::new(settings),
         tera: Arc::new(template()),
+        pool: Arc::new(pool),
     });
 
     HttpServer::new(move || {

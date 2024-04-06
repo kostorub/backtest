@@ -6,11 +6,15 @@ use actix_web::{
 };
 use actix_web_lab::middleware::Next;
 use chrono::{Duration, Utc};
-use serde::{Deserialize, Serialize};
+use deadpool_postgres::{Client, PoolError};
+use log::debug;
+use serde::{de, Deserialize, Serialize};
 
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use sha3::Digest;
 
-use crate::app_state::AppState;
+use crate::{app_state::AppState, data_models::auth::User};
+use tokio_pg_mapper::FromTokioPostgresRow;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -32,7 +36,15 @@ struct LoginResponse {
 }
 
 pub async fn login(login: web::Json<LoginRequest>, data: web::Data<AppState>) -> HttpResponse {
-    if login.username != "admin" || login.password != "ntvwru94up34u" {
+    let db_pool = &data.pool;
+    let client: Client = db_pool.get().await.unwrap();
+    let user = get_user(&client, login.username.clone()).await.unwrap();
+
+    let password_hash = sha3::Sha3_256::digest(login.password.as_bytes());
+    let password_hash = format!("{:x}", password_hash);
+    debug!("{:?}", password_hash);
+
+    if login.username != user.username || password_hash != user.password {
         return HttpResponse::BadRequest().body("Invalid username or password");
     }
     let jwt_secret = data.app_settings.jwt_secret.clone();
@@ -79,4 +91,24 @@ pub async fn jwt_validate_middleware(
         }
     }
     Ok(next.call(req).await?)
+}
+
+pub async fn get_user(client: &Client, username: String) -> Result<User, PoolError> {
+    let stmt = "SELECT $table_fields FROM users WHERE username='$username';";
+    let stmt = stmt
+        .replace("$table_fields", &User::sql_table_fields())
+        .replace("$username", &username);
+    debug!("{}", stmt);
+    let stmt = client.prepare(&stmt).await.unwrap();
+
+    let result = client
+        .query(&stmt, &[])
+        .await?
+        .iter()
+        .map(|row| User::from_row_ref(row).unwrap())
+        .collect::<Vec<User>>()
+        .pop()
+        .unwrap();
+
+    Ok(result)
 }
