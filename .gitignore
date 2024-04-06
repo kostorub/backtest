@@ -17,4 +17,7 @@ target/
 .vscode
 
 .env
-config.yml
+
+# Postgres data
+db-data/
+pgadmin-data/
