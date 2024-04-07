@@ -1,18 +1,25 @@
 use actix_web::{
     web::{self},
-    HttpResponse,
+    Error, HttpResponse,
 };
 use tera::Context;
 
 use crate::{
     app_state::AppState,
-    routes::backtest::market_data::{
-        MarketDataRequest, _download_market_data, get_downloaded_market_data,
-    },
+    data_models::market_data::market_data::{GetMarketDataRequest, MarketDataFront},
+    routes::backtest::market_data::{_download_market_data, get_downloaded_market_data},
 };
 
 pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
-    let market_data = get_downloaded_market_data(&data);
+    let market_data = get_downloaded_market_data(
+        &data,
+        GetMarketDataRequest {
+            page: 0,
+            per_page: 10,
+        },
+    )
+    .await
+    .unwrap();
 
     let mut context = Context::new();
     context.insert("market_data", &market_data);
@@ -26,11 +33,11 @@ pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
 
 pub async fn download_market_data(
     data: web::Data<AppState>,
-    r: web::Json<MarketDataRequest>,
-) -> HttpResponse {
-    _download_market_data(data, r).await;
+    r: web::Json<MarketDataFront>,
+) -> Result<HttpResponse, Error> {
+    _download_market_data(data, r).await?;
 
-    HttpResponse::Ok()
+    Ok(HttpResponse::Ok()
         .append_header(("HX-Trigger", "newMarketData"))
-        .body("Not implemented yet")
+        .body("Not implemented yet"))
 }
