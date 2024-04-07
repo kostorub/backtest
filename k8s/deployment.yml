@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backtest
-          image: kostorub/backtest:latest
+          image: <IMAGE>
           # resources:
           #   limits:
           #     memory: "100M"
