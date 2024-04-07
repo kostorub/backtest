@@ -6,15 +6,14 @@ use actix_web::{
 };
 use actix_web_lab::middleware::Next;
 use chrono::{Duration, Utc};
-use deadpool_postgres::{Client, PoolError};
+use deadpool_postgres::Client;
 use log::debug;
-use serde::{de, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use sha3::Digest;
 
-use crate::{app_state::AppState, data_models::auth::User};
-use tokio_pg_mapper::FromTokioPostgresRow;
+use crate::{app_state::AppState, data_models::user::get_user};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -91,24 +90,4 @@ pub async fn jwt_validate_middleware(
         }
     }
     Ok(next.call(req).await?)
-}
-
-pub async fn get_user(client: &Client, username: String) -> Result<User, PoolError> {
-    let stmt = "SELECT $table_fields FROM users WHERE username='$username';";
-    let stmt = stmt
-        .replace("$table_fields", &User::sql_table_fields())
-        .replace("$username", &username);
-    debug!("{}", stmt);
-    let stmt = client.prepare(&stmt).await.unwrap();
-
-    let result = client
-        .query(&stmt, &[])
-        .await?
-        .iter()
-        .map(|row| User::from_row_ref(row).unwrap())
-        .collect::<Vec<User>>()
-        .pop()
-        .unwrap();
-
-    Ok(result)
 }
