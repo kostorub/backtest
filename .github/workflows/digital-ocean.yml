@@ -65,4 +65,4 @@ jobs:
         kubectl apply -f $GITHUB_WORKSPACE/k8s/deployment.yml
     
     - name: Verify deployment
-      run: kubectl rollout status statefulset/backtest-deploy
+      run: kubectl rollout status deployment/backtest-deploy

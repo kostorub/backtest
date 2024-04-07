@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: backtest-deploy
 spec:
@@ -14,28 +14,22 @@ spec:
     spec:
       containers:
         - name: backtest
-          image: <IMAGE>
-          resources:
-            limits:
-              memory: "1400Mi"
-              cpu: "850m"
-            requests:
-              memory: "1200Mi"
-              cpu: "800m"
+          image: kostorub/backtest:latest
+          # resources:
+          #   limits:
+          #     memory: "100M"
+          #     cpu: "100m"
+          #   requests:
+          #     memory: "100M"
+          #     cpu: "100m"
           ports:
             - containerPort: 8080
           volumeMounts:
           - mountPath: "/var/sqlite"
-            name: sqlite-pvc
+            name: sqlite-v
       imagePullSecrets:
         - name: regcred
-  volumeClaimTemplates:
-    - metadata:
-        name: sqlite-pvc
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
-        storageClassName: do-block-storage
+      volumes:
+        - name: sqlite-v
+          persistentVolumeClaim:
+            claimName: sqlite-pvc
