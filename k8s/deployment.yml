@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: backtest-deploy
 spec:
@@ -24,5 +24,18 @@ spec:
               cpu: "800m"
           ports:
             - containerPort: 8080
+          volumeMounts:
+          - mountPath: "/var/sqlite"
+            name: sqlite-pvc
       imagePullSecrets:
         - name: regcred
+  volumeClaimTemplates:
+    - metadata:
+        name: sqlite-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: do-block-storage

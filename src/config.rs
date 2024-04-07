@@ -9,7 +9,8 @@ pub struct AppSettings {
     pub binance_data_url: String,
     pub jwt_secret: String,
 
-    pub pg: deadpool_postgres::Config,
+    pub db_path: String,
+    pub db_name: String,
 }
 
 impl AppSettings {

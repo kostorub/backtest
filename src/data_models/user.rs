@@ -1,33 +1,38 @@
-use deadpool_postgres::{Client, PoolError};
+use actix_web::{error, web};
 use log::debug;
 use serde::{Deserialize, Serialize};
-use tokio_pg_mapper::FromTokioPostgresRow;
-use tokio_pg_mapper_derive::PostgresMapper;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PostgresMapper)]
-#[pg_mapper(table = "users")]
+use crate::db::Pool;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
     pub id: i64,
     pub username: String,
     pub password: String,
 }
 
-pub async fn get_user(client: &Client, username: String) -> Result<User, PoolError> {
-    let stmt = "SELECT $table_fields FROM users WHERE username='$username';";
-    let stmt = stmt
-        .replace("$table_fields", &User::sql_table_fields())
-        .replace("$username", &username);
-    debug!("{}", stmt);
-    let stmt = client.prepare(&stmt).await?;
-
-    let result = client
-        .query(&stmt, &[])
+pub async fn get_user(pool: &Pool, username: String) -> Result<User, error::Error> {
+    let query = "SELECT username, password FROM users WHERE username='$username';";
+    let query = query.replace("$username", &username);
+    debug!("{}", query);
+    let pool = pool.clone();
+    let conn = web::block(move || pool.get())
         .await?
-        .iter()
-        .map(|row| User::from_row_ref(row).unwrap())
-        .collect::<Vec<User>>()
-        .pop()
-        .unwrap();
+        .map_err(error::ErrorInternalServerError)?;
 
-    Ok(result)
+    web::block(move || {
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(error::ErrorInternalServerError)
+            .unwrap();
+        let mut rows = stmt.query([]).unwrap();
+        let row = rows.next().unwrap().unwrap();
+        User {
+            id: row.get(0).unwrap(),
+            username: row.get(1).unwrap(),
+            password: row.get(2).unwrap(),
+        }
+    })
+    .await
+    .map_err(error::ErrorInternalServerError)
 }

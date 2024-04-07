@@ -18,6 +18,5 @@ target/
 
 .env
 
-# Postgres data
-db-data/
-pgadmin-data/
+# sqlite data
+db/

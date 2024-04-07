@@ -6,7 +6,6 @@ use actix_web::{
 };
 use actix_web_lab::middleware::Next;
 use chrono::{Duration, Utc};
-use deadpool_postgres::Client;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -35,9 +34,7 @@ struct LoginResponse {
 }
 
 pub async fn login(login: web::Json<LoginRequest>, data: web::Data<AppState>) -> HttpResponse {
-    let db_pool = &data.pool;
-    let client: Client = db_pool.get().await.unwrap();
-    let user = get_user(&client, login.username.clone()).await.unwrap();
+    let user = get_user(&data.pool, login.username.clone()).await.unwrap();
 
     let password_hash = sha3::Sha3_256::digest(login.password.as_bytes());
     let password_hash = format!("{:x}", password_hash);
@@ -86,6 +83,7 @@ pub async fn jwt_validate_middleware(
             &Validation::default(),
         );
         if token_data.is_err() {
+            debug!("{:?}", token_data);
             return Err(ErrorForbidden("Unauthorized to perform requested action"));
         }
     }
