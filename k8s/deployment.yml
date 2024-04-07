@@ -15,6 +15,13 @@ spec:
       containers:
         - name: backtest
           image: <IMAGE>
+          resources:
+            limits:
+              memory: "1400Mi"
+              cpu: "850m"
+            requests:
+              memory: "1200Mi"
+              cpu: "800m"
           ports:
             - containerPort: 8080
       imagePullSecrets:
