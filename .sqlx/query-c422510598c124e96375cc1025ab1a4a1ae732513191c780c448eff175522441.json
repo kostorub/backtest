@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO market_data (exchange, symbol, market_data_type, date_start, date_end)\n                VALUES (?1, ?2, ?3, ?4, ?5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "c422510598c124e96375cc1025ab1a4a1ae732513191c780c448eff175522441"
+}

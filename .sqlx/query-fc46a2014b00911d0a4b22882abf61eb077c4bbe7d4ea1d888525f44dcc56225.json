@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE market_data SET date_start = ?1, date_end = ?2 WHERE id = ?3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "fc46a2014b00911d0a4b22882abf61eb077c4bbe7d4ea1d888525f44dcc56225"
+}

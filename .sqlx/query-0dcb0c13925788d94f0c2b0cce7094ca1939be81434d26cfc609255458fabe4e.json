@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM market_data WHERE exchange = ?1 AND symbol = ?2 AND market_data_type = ?3",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "exchange",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "symbol",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "market_data_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_start",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "date_end",
+        "ordinal": 5,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0dcb0c13925788d94f0c2b0cce7094ca1939be81434d26cfc609255458fabe4e"
+}

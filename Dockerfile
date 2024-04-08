@@ -2,8 +2,7 @@ FROM rust:1.77 as builder
 
 WORKDIR /opt/app
 COPY Cargo.toml Cargo.lock ./
-RUN mkdir ./src && echo 'fn main() { println!("Dummy!"); }' > ./src/main.rs.
-RUN cargo sqlx prepare && cargo sqlx prepare --check
+RUN mkdir ./src && echo 'fn main() { println!("Dummy!"); }' > ./src/main.rs
 RUN cargo build --release
 RUN rm -rf ./src
 COPY . .

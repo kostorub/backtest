@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM market_data LIMIT ?1 OFFSET ?2",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "exchange",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "symbol",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "market_data_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_start",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "date_end",
+        "ordinal": 5,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6cbcadb72a5ace9b8ec12eba90e264edd6d3fc8422c1d12a9e93608335b25a9a"
+}
