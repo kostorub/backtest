@@ -32,14 +32,9 @@ spec:
               exec:
                 command:
                   [
-                    "sqlx",
-                    "db",
-                    "create",
-                    "--sqlite-create-db-wal=false",
-                    "&&",
-                    "sqlx",
-                    "migrate",
-                    "run",
+                    "/bin/sh",
+                    "-c",
+                    "scripts/sqlx-init.sh"
                   ]
       imagePullSecrets:
         - name: regcred
