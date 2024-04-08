@@ -30,12 +30,7 @@ spec:
           lifecycle:
             postStart:
               exec:
-                command:
-                  [
-                    "/bin/sh",
-                    "-c",
-                    "./sqlx-init.sh"
-                  ]
+                command: ["/bin/bash", "-c", "./sqlx-init.sh"]
       imagePullSecrets:
         - name: regcred
       volumes:
