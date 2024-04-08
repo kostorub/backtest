@@ -1,6 +1,7 @@
 FROM rust:1.77 as builder
 
 WORKDIR /opt/app
+RUN cargo install --root /opt/app/.cargo sqlx-cli --no-default-features --features sqlite
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir ./src && echo 'fn main() { println!("Dummy!"); }' > ./src/main.rs
 RUN cargo build --release
@@ -15,13 +16,14 @@ RUN apt-get update && apt install -y openssl ca-certificates && update-ca-certif
 
 WORKDIR /opt/app
 
-COPY --from=builder /opt/app/target/release/backtest .
+COPY --from=builder /opt/app/target/release/backtest /opt/app/.cargo/bin/sqlx ./
 COPY src/web/ ./src/web
 COPY .env ./.env
-COPY scripts/ ./scripts
+COPY migrations/ ./migrations
+COPY scripts/sqlx-init.sh .
+RUN chmod +x ./sqlx-init.sh
 
 ENV RUST_LOG=info
-ENV ENV=production
 
 EXPOSE 8080
 
