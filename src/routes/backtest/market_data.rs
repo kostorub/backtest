@@ -4,15 +4,12 @@ use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
 
 use crate::{
     app_state::AppState,
-    data_handlers::{
-        db::market_data::{get_market_data_page, insert_market_data},
-        pipeline,
-        utils::datetime_str_to_u64,
-    },
+    data_handlers::{pipeline, utils::datetime_str_to_u64},
     data_models::market_data::{
         kline::KLine,
         market_data::{GetMarketDataRequest, MarketDataFront},
     },
+    db_handlers::market_data::{get_market_data_page, insert_market_data},
 };
 
 pub async fn downloaded_market_data(
@@ -29,11 +26,8 @@ pub async fn get_downloaded_market_data(
     r: GetMarketDataRequest,
 ) -> Result<Vec<MarketDataFront>, Error> {
     let data = Arc::clone(data);
-    let conn = web::block(move || data.pool.get())
-        .await?
-        .map_err(ErrorInternalServerError)?;
 
-    let market_data = get_market_data_page(&conn, &r)
+    let market_data = get_market_data_page(&data.pool, &r)
         .await
         .map_err(ErrorInternalServerError)?;
 
@@ -66,12 +60,8 @@ pub async fn _download_market_data(
     )
     .await;
 
-    let conn = web::block(move || data.pool.get())
-        .await?
-        .map_err(ErrorInternalServerError)?;
-
     insert_market_data(
-        &conn,
+        &data.pool,
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
         r.market_data_type.clone(),

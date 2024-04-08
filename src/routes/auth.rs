@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use sha3::Digest;
 
-use crate::{app_state::AppState, data_models::user::get_user};
+use crate::{app_state::AppState, db_handlers::user::get_user};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -35,6 +35,10 @@ struct LoginResponse {
 
 pub async fn login(login: web::Json<LoginRequest>, data: web::Data<AppState>) -> HttpResponse {
     let user = get_user(&data.pool, login.username.clone()).await.unwrap();
+    if user.is_none() {
+        return HttpResponse::BadRequest().body("Invalid username or password");
+    }
+    let user = user.unwrap();
 
     let password_hash = sha3::Sha3_256::digest(login.password.as_bytes());
     let password_hash = format!("{:x}", password_hash);

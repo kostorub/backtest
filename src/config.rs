@@ -11,6 +11,7 @@ pub struct AppSettings {
 
     pub db_path: String,
     pub db_name: String,
+    pub database_url: String,
 }
 
 impl AppSettings {
