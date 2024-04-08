@@ -2,13 +2,12 @@ use actix_files::Files;
 use actix_web::middleware::Logger;
 use actix_web_lab::middleware::from_fn;
 use env_logger::Builder;
-use r2d2_sqlite::SqliteConnectionManager;
+use sqlx::sqlite::SqlitePool;
 use std::{path::Path, sync::Arc};
 
 use crate::{
     app_state::AppState,
     config::AppSettings,
-    db::init_db,
     routes::{
         auth::{jwt_validate_middleware, login},
         backtest,
@@ -35,9 +34,7 @@ pub async fn start_server() -> std::io::Result<()> {
     std::fs::create_dir_all(&settings.data_path).expect("Couldn't create the data folder.");
     std::fs::create_dir_all(&settings.db_path).expect("Couldn't create the DB folder.");
 
-    let manager = SqliteConnectionManager::file(Path::new(&settings.db_path).join(&settings.db_name));
-    let pool = r2d2::Pool::new(manager).unwrap();
-    init_db(&pool).await;
+    let pool = SqlitePool::connect(Path::new(&settings.db_path).join(&settings.db_name).to_str().unwrap()).await.unwrap();
 
     let app_data = web::Data::new(AppState {
         app_settings: Arc::new(settings),

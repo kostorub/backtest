@@ -1,6 +1,6 @@
 use std::{io::Cursor, path::PathBuf};
 
-use chrono::{NaiveDate, NaiveTime};
+use chrono::{DateTime, NaiveDate, NaiveTime};
 use log::{debug, info, warn};
 
 use crate::data_models::market_data::enums::MarketDataType;
@@ -66,6 +66,11 @@ pub fn datetime_str_to_u64(datetime_str: String) -> u64 {
         .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
         .and_utc()
         .timestamp_millis() as u64
+}
+
+pub fn u64_to_datetime_str(datetime: u64) -> String {
+    let datetime = DateTime::from_timestamp(datetime as i64 / 1000, 0).unwrap();
+    datetime.format("%Y-%m-%d").to_string()
 }
 
 fn get_period(archive_name: String) -> String {
