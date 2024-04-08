@@ -16,12 +16,11 @@ RUN apt-get update && apt install -y openssl ca-certificates && update-ca-certif
 
 WORKDIR /opt/app
 
-COPY --from=builder /opt/app/target/release/backtest /opt/app/.cargo/bin/sqlx ./
+COPY --from=builder /opt/app/target/release/backtest /opt/app/.cargo/bin/sqlx scripts/sqlx-init.sh ./
 COPY src/web/ ./src/web
 COPY .env ./.env
 COPY migrations/ ./migrations
-COPY scripts/sqlx-init.sh .
-RUN chmod +x ./sqlx-init.sh
+RUN chmod +x ./sqlx-init.sh && mkdir /var/sqlite
 
 ENV RUST_LOG=info
 

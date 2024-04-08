@@ -34,7 +34,7 @@ spec:
                   [
                     "/bin/sh",
                     "-c",
-                    "scripts/sqlx-init.sh"
+                    "./sqlx-init.sh"
                   ]
       imagePullSecrets:
         - name: regcred
