@@ -35,7 +35,7 @@ pub async fn start_server() -> std::io::Result<()> {
     std::fs::create_dir_all(&settings.data_path).expect("Couldn't create the data folder.");
     std::fs::create_dir_all(&settings.db_path).expect("Couldn't create the DB folder.");
 
-    if !Sqlite::database_exists(&settings.database_url).await.unwrap_or(false) {
+    if Sqlite::database_exists(&settings.database_url).await.unwrap_or(false) {
         info!("Database {} exists. Dropping...", &settings.database_url);
         Sqlite::drop_database(&settings.database_url).await.unwrap();
     }
