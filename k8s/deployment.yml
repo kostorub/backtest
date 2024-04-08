@@ -27,10 +27,6 @@ spec:
           volumeMounts:
             - mountPath: "/var/sqlite"
               name: sqlite-v
-          lifecycle:
-            postStart:
-              exec:
-                command: ["/bin/bash", "-c", "./sqlx-init.sh"]
       imagePullSecrets:
         - name: regcred
       volumes:
