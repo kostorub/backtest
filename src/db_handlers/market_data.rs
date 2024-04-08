@@ -1,10 +1,8 @@
 use std::str::FromStr;
 
-use chrono::offset;
 use sqlx::Error;
 use sqlx::SqlitePool;
 
-use crate::data_models::market_data;
 use crate::{
     data_handlers::utils::u64_to_datetime_str,
     data_models::market_data::{
