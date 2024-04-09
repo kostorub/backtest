@@ -71,7 +71,7 @@ pub async fn get_market_data_one(
     .fetch_optional(pool)
     .await?
     .map(|row| MarketDataFront {
-        id: Some(row.id.unwrap()),
+        id: row.id,
         exchange: row.exchange,
         symbol: row.symbol,
         market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type)).unwrap(),
@@ -96,7 +96,7 @@ pub async fn get_market_data_page(
     .await?
     .iter()
     .map(|row| MarketDataFront {
-        id: Some(row.id.unwrap()),
+        id: row.id,
         exchange: row.exchange.clone(),
         symbol: row.symbol.clone(),
         market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type)).unwrap(),

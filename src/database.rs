@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use log::info;
-use sqlx::{migrate::MigrateDatabase, Sqlite};
+use sqlx::{migrate::MigrateDatabase, sqlite::{SqliteConnectOptions, SqliteJournalMode}, Sqlite, SqlitePool};
 
 use crate::config::AppSettings;
 
-pub async fn init(settings: &AppSettings) {
+pub async fn drop(settings: &AppSettings) {
     if settings.database_drop
         && Sqlite::database_exists(&settings.database_url)
             .await
@@ -15,11 +15,17 @@ pub async fn init(settings: &AppSettings) {
         Sqlite::drop_database(&settings.database_url).await.unwrap();
         info!("Database {} dropped.", &settings.database_url)
     }
-    info!("Creating database {}.", &settings.database_url);
-    match Sqlite::create_database(&settings.database_url).await {
-        Ok(_) => info!("Database creation was successful!"),
-        Err(error) => panic!("error: {}", error),
-    }
+}
+
+pub async fn init(settings: &AppSettings) -> sqlx::Pool<sqlx::Sqlite> {
+    let options = SqliteConnectOptions::new()
+        .filename(&settings.database_path)
+        .journal_mode(SqliteJournalMode::Wal)
+        .create_if_missing(true);
+    let pool = SqlitePool::connect_with(options)
+        .await
+        .expect("Couldn't create the database pool.");
+    pool
 }
 
 pub async fn migration(pool: &sqlx::Pool<Sqlite>) {
