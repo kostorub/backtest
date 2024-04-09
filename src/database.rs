@@ -1,7 +1,11 @@
 use std::path::Path;
 
 use log::info;
-use sqlx::{migrate::MigrateDatabase, sqlite::{SqliteConnectOptions, SqliteJournalMode}, Sqlite, SqlitePool};
+use sqlx::{
+    migrate::MigrateDatabase,
+    sqlite::{SqliteConnectOptions, SqliteJournalMode},
+    Sqlite, SqlitePool,
+};
 
 use crate::config::AppSettings;
 
@@ -19,12 +23,12 @@ pub async fn drop(settings: &AppSettings) {
 
 pub async fn init(settings: &AppSettings) -> sqlx::Pool<sqlx::Sqlite> {
     let options = SqliteConnectOptions::new()
-        .filename(&settings.database_path)
+        .filename(&settings.database_url.split(":").last().unwrap())
         .journal_mode(SqliteJournalMode::Wal)
         .create_if_missing(true);
     let pool = SqlitePool::connect_with(options)
         .await
-        .expect("Couldn't create the database pool.");
+        .unwrap();
     pool
 }
 

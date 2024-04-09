@@ -14,7 +14,7 @@ pub struct MarketDataFront {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MarketData {
-    pub id: Option<i64>,
+    pub id: i64,
     pub exchange: String,
     pub symbol: String,
     pub market_data_type: MarketDataType,

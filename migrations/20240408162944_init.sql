@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS market_data (
     exchange TEXT NOT NULL,
     symbol TEXT NOT NULL,
     market_data_type TEXT NOT NULL,
-    date_start BIGINT NOT NULL,
-    date_end BIGINT NOT NULL
+    date_start INTEGER NOT NULL,
+    date_end INTEGER NOT NULL
 );
