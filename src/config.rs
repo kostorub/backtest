@@ -9,9 +9,10 @@ pub struct AppSettings {
     pub binance_data_url: String,
     pub jwt_secret: String,
 
-    pub db_path: String,
-    pub db_name: String,
+    pub database_path: String,
+    pub database_name: String,
     pub database_url: String,
+    pub database_drop: bool,
 }
 
 impl AppSettings {

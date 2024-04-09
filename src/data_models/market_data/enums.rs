@@ -107,20 +107,7 @@ impl<'de> Deserialize<'de> for MarketDataType {
         D: serde::Deserializer<'de>,
     {
         match String::deserialize(deserializer)?.as_str() {
-            "trade" => Ok(MarketDataType::Trade),
-            "1s" => Ok(MarketDataType::KLine1s),
-            "1m" => Ok(MarketDataType::KLine1m),
-            "3m" => Ok(MarketDataType::KLine3m),
-            "5m" => Ok(MarketDataType::KLine5m),
-            "15m" => Ok(MarketDataType::KLine15m),
-            "30m" => Ok(MarketDataType::KLine30m),
-            "1h" => Ok(MarketDataType::KLine1h),
-            "2h" => Ok(MarketDataType::KLine2h),
-            "4h" => Ok(MarketDataType::KLine4h),
-            "6h" => Ok(MarketDataType::KLine6h),
-            "8h" => Ok(MarketDataType::KLine8h),
-            "1d" => Ok(MarketDataType::KLine1d),
-            _ => Err(serde::de::Error::custom("Expected 0 or 1 for action")),
+            value => Ok(MarketDataType::from_str(value).unwrap()),
         }
     }
 }
@@ -145,6 +132,12 @@ impl<'de> Serialize for MarketDataType {
             MarketDataType::KLine8h => serializer.serialize_str("8h"),
             MarketDataType::KLine1d => serializer.serialize_str("1d"),
         }
+    }
+}
+
+impl From<String> for MarketDataType {
+    fn from(input: String) -> Self {
+        MarketDataType::from_str(&input).unwrap()
     }
 }
 

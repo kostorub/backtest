@@ -69,20 +69,17 @@ pub async fn get_market_data_one(
         market_data_type
     )
     .fetch_optional(pool)
-    .await?;
+    .await?
+    .map(|row| MarketDataFront {
+        id: Some(row.id.unwrap()),
+        exchange: row.exchange,
+        symbol: row.symbol,
+        market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type)).unwrap(),
+        date_start: u64_to_datetime_str(row.date_start as u64),
+        date_end: u64_to_datetime_str(row.date_end as u64),
+    });
 
-    match row {
-        Some(row) => Ok(Some(MarketDataFront {
-            id: Some(row.id),
-            exchange: row.exchange,
-            symbol: row.symbol,
-            market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type))
-                .unwrap(),
-            date_start: u64_to_datetime_str(row.date_start as u64),
-            date_end: u64_to_datetime_str(row.date_end as u64),
-        })),
-        None => Ok(None),
-    }
+    Ok(row)
 }
 
 pub async fn get_market_data_page(
@@ -90,25 +87,23 @@ pub async fn get_market_data_page(
     r: &GetMarketDataRequest,
 ) -> Result<Vec<MarketDataFront>, Error> {
     let offset = r.page * r.per_page;
-    let rows = sqlx::query!(
+    let rows: Vec<MarketDataFront> = sqlx::query!(
         "SELECT * FROM market_data LIMIT ?1 OFFSET ?2",
         r.per_page,
         offset
     )
     .fetch_all(pool)
-    .await?;
-    let market_data = rows
-        .iter()
-        .map(|row| MarketDataFront {
-            id: Some(row.id),
-            exchange: row.exchange.clone(),
-            symbol: row.symbol.clone(),
-            market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type))
-                .unwrap(),
-            date_start: u64_to_datetime_str(row.date_start as u64),
-            date_end: u64_to_datetime_str(row.date_end as u64),
-        })
-        .collect();
+    .await?
+    .iter()
+    .map(|row| MarketDataFront {
+        id: Some(row.id.unwrap()),
+        exchange: row.exchange.clone(),
+        symbol: row.symbol.clone(),
+        market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type)).unwrap(),
+        date_start: u64_to_datetime_str(row.date_start as u64),
+        date_end: u64_to_datetime_str(row.date_end as u64),
+    })
+    .collect();
 
-    Ok(market_data)
+    Ok(rows)
 }

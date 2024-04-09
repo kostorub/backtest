@@ -2,13 +2,13 @@ use actix_files::Files;
 use actix_web::middleware::Logger;
 use actix_web_lab::middleware::from_fn;
 use env_logger::Builder;
-use log::info;
-use sqlx::{migrate::MigrateDatabase, sqlite::SqlitePool, Sqlite};
-use std::{path::Path, sync::Arc};
+use sqlx::sqlite::SqlitePool;
+use std::sync::Arc;
 
 use crate::{
     app_state::AppState,
     config::AppSettings,
+    database,
     routes::{
         auth::{jwt_validate_middleware, login},
         backtest,
@@ -33,33 +33,13 @@ pub async fn start_server() -> std::io::Result<()> {
 
     // Create the folder for a .marketdata files
     std::fs::create_dir_all(&settings.data_path).expect("Couldn't create the data folder.");
-    std::fs::create_dir_all(&settings.db_path).expect("Couldn't create the DB folder.");
+    // Create the folder for the database
+    std::fs::create_dir_all(&settings.database_path).expect("Couldn't create the DB folder.");
 
-    if Sqlite::database_exists(&settings.database_url).await.unwrap_or(false) {
-        info!("Database {} exists. Dropping...", &settings.database_url);
-        Sqlite::drop_database(&settings.database_url).await.unwrap();
-    }
-    info!("Creating database {}", &settings.database_url);
-    match Sqlite::create_database(&settings.database_url).await {
-        Ok(_) => info!("Database creation was successful!"),
-        Err(error) => panic!("error: {}", error),
-    }
-
+    // Initialize the database and run the migrations
+    database::init(&settings).await;
     let pool = SqlitePool::connect(&settings.database_url).await.unwrap();
-
-    let migrations = Path::new("./migrations");
-    let migration_results = sqlx::migrate::Migrator::new(migrations)
-        .await
-        .unwrap()
-        .run(&pool)
-        .await;
-    match migration_results {
-        Ok(_) => println!("Migration success"),
-        Err(error) => {
-            panic!("error: {}", error);
-        }
-    }
-    println!("migration: {:?}", migration_results);
+    database::migration(&pool).await;
 
     let app_data = web::Data::new(AppState {
         app_settings: Arc::new(settings),
@@ -96,8 +76,8 @@ pub async fn start_server() -> std::io::Result<()> {
             .route("/api/backtest/hodl/run", web::post().to(backtest::backtest::run_hodl))
             .route("/api/backtest/grid/run", web::post().to(backtest::backtest::run_grid))
             .route("/api/backtest_result/chart", web::get().to(backtest::backtest_result::chart))
-    })
-    .bind(("0.0.0.0", 8080))?
-    .run()
-    .await
+            })
+            .bind(("0.0.0.0", 8080))?
+            .run()
+            .await
 }

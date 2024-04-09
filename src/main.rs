@@ -4,6 +4,7 @@ mod chart;
 mod config;
 mod data_handlers;
 mod data_models;
+mod database;
 mod db_handlers;
 mod routes;
 mod server;
