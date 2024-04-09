@@ -18,7 +18,7 @@ RUN apt-get update && \
 
 WORKDIR /opt/app
 
-COPY --from=builder /opt/app/target/release/backtest /opt/app/.cargo/bin/sqlx ./
+COPY --from=builder /opt/app/target/release/backtest ./
 COPY src/web/ ./src/web
 COPY .env ./.env
 COPY migrations/ ./migrations
