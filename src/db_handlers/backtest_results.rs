@@ -129,13 +129,72 @@ pub async fn get_backtest_results(
     backtest_results_id: i64,
     pool: &Pool<Sqlite>,
 ) -> Result<BacktestResults, Error> {
-    let result = sqlx::query_as!(
-        BacktestResults,
+    let row = sqlx::query!(
         "SELECT * FROM backtest_results WHERE id = ?1",
         backtest_results_id
     )
     .fetch_one(pool)
     .await?;
+
+    let result = BacktestResults {
+        id: row.id,
+        metrics_id: row.metrics_id,
+        symbol: row.symbol,
+        exchange: row.exchange,
+        market_data_type: row.market_data_type.into(),
+        chart_market_data_type: row.chart_market_data_type.into(),
+        date_start: row.date_start,
+        date_end: row.date_end,
+        deposit: row.deposit,
+        commission: row.commission,
+        price_low: row.price_low,
+        price_high: row.price_high,
+        grid_count: row.grid_count,
+        grid_trigger: row.grid_trigger,
+        grid_sl: row.grid_sl,
+        grid_tp: row.grid_tp,
+        sell_all: Some(row.sell_all),
+        positions: serde_json::from_str(&row.positions).unwrap(),
+    };
+
+    Ok(result)
+}
+
+pub async fn get_backtest_metrics(
+    backtest_results_id: i64,
+    pool: &Pool<Sqlite>,
+) -> Result<Metrics, Error> {
+    let row = sqlx::query!(
+        "SELECT metrics.* FROM metrics JOIN backtest_results ON backtest_results.metrics_id = metrics.id WHERE backtest_results.id = ?1",
+        backtest_results_id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    let result = Metrics {
+        id: row.id,
+        positions_number: row.positions_number as u64,
+        profit_positions_number: row.profit_positions_number as u64,
+        profit_positions_percent: row.profit_positions_percent,
+        loss_positions_number: row.loss_positions_number as u64,
+        loss_positions_percent: row.loss_positions_percent,
+        average_profit_position: row.average_profit_position,
+        average_loss_position: row.average_loss_position,
+        number_of_currency: row.number_of_currency as u32,
+        profit_per_position_in_percent: row.profit_per_position_in_percent,
+        profit_factor: row.profit_factor,
+        expected_payoff: row.expected_payoff,
+        sortino: row.sortino,
+        average_position_size: row.average_position_size,
+        start_deposit: row.start_deposit,
+        finish_deposit: row.finish_deposit,
+        total_profit: row.total_profit,
+        total_profit_percent: row.total_profit_percent,
+        max_deposit: row.max_deposit,
+        max_drawdown: row.max_drawdown,
+        drawdown: row.drawdown,
+        max_use_of_funds: row.max_use_of_funds,
+    };
 
     Ok(result)
 }

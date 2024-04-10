@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 
-use super::market_data::{enums::MarketDataType};
+use super::market_data::{enums::MarketDataType, position::Position};
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BacktestResults {
     pub id: i64,
     pub metrics_id: i64,
@@ -22,5 +21,5 @@ pub struct BacktestResults {
     pub grid_sl: Option<f64>,
     pub grid_tp: Option<f64>,
     pub sell_all: Option<bool>,
-    pub positions: Vec<u8>,
+    pub positions: Vec<Position>,
 }

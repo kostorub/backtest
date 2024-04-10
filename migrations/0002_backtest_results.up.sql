@@ -7,8 +7,8 @@ CREATE TABLE
         exchange TEXT NOT NULL,
         market_data_type TEXT NOT NULL,
         chart_market_data_type TEXT NOT NULL,
-        date_start TEXT NOT NULL,
-        date_end TEXT NOT NULL,
+        date_start INTEGER NOT NULL,
+        date_end INTEGER NOT NULL,
         deposit REAL NOT NULL,
         commission REAL NOT NULL,
         price_low REAL NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE
         grid_sl REAL,
         grid_tp REAL,
         sell_all BOOLEAN NOT NULL,
-        positions BLOB NOT NULL,
+        positions TEXT NOT NULL,
         FOREIGN KEY (metrics_id) REFERENCES metrics (id) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
@@ -32,7 +32,8 @@ CREATE TABLE
         loss_positions_percent REAL NOT NULL,
         average_profit_position REAL NOT NULL,
         average_loss_position REAL NOT NULL,
-        number_of_currency u32 profit_per_position_in_percent REAL NOT NULL,
+        number_of_currency INTEGER NOT NULL,
+        profit_per_position_in_percent REAL NOT NULL,
         profit_factor REAL NOT NULL,
         expected_payoff REAL NOT NULL,
         sortino REAL NOT NULL,
