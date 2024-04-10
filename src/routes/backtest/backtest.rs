@@ -1,8 +1,11 @@
 use std::path::PathBuf;
 
+use actix_web::error::ErrorInternalServerError;
+use actix_web::Error;
 use actix_web::{web, Responder, Result};
 use actix_web::{Either, HttpResponse};
 use chrono::{NaiveDate, NaiveTime};
+use log::error;
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -19,6 +22,7 @@ use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
 use crate::backtest::strategies::hodl::strategy::HodlStrategy;
 use crate::backtest::strategies::strategy_utils::get_klines;
 use crate::chart::chart::build_chart;
+use crate::db_handlers::backtest_results::{insert_backtest_metrics, insert_backtest_results};
 
 pub async fn run_hodl(
     hodl_data: web::Json<HodlSettingsRequest>,
@@ -62,13 +66,13 @@ pub async fn run_hodl(
 
 #[derive(Serialize)]
 struct RunGridResult {
-    id: String,
+    id: i64,
 }
 
 pub async fn run_grid(
     request_settings: web::Json<GridSettingsRequest>,
     data: web::Data<AppState>,
-) -> Result<impl Responder> {
+) -> Result<HttpResponse, Error> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
     let request_settings = request_settings.clone();
@@ -130,10 +134,32 @@ pub async fn run_grid(
         strategies[0].current_budget,
     );
 
-    let backtest_uuid = Uuid::new_v4().to_string();
+    let metrics_id = match insert_backtest_metrics(&_metrics, &data.pool).await {
+        Ok(id) => id,
+        Err(e) => {
+            error!("Error inserting backtest metrics: {}", e);
+            return Err(ErrorInternalServerError(e));
+        }
+    };
+
+    let backtest_results_id = match insert_backtest_results(
+        &backtest_settings,
+        &request_settings,
+        &positions,
+        metrics_id,
+        &data.pool,
+    )
+    .await
+    {
+        Ok(id) => id,
+        Err(e) => {
+            error!("Error inserting backtest results: {}", e);
+            return Err(ErrorInternalServerError(e));
+        }
+    };
 
     build_chart(
-        backtest_uuid.clone(),
+        backtest_results_id.to_string(),
         &request_settings,
         get_klines(
             data_path.clone(),
@@ -147,7 +173,9 @@ pub async fn run_grid(
     )
     .unwrap();
 
-    let result = RunGridResult { id: backtest_uuid };
+    let result = RunGridResult {
+        id: backtest_results_id,
+    };
 
-    Ok(web::Json(result))
+    Ok(HttpResponse::Ok().json(result))
 }

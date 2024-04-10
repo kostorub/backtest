@@ -21,7 +21,7 @@ struct Claims {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct LoginRequest {
+pub struct SignInRequest {
     pub username: String,
     pub password: String,
 }
@@ -33,26 +33,28 @@ struct LoginResponse {
     expires_in: usize,
 }
 
-pub async fn login(login: web::Json<LoginRequest>, data: web::Data<AppState>) -> HttpResponse {
-    let user = get_user(&data.pool, login.username.clone()).await.unwrap();
+pub async fn sign_in(sign_in: web::Json<SignInRequest>, data: web::Data<AppState>) -> HttpResponse {
+    let user = get_user(&data.pool, sign_in.username.clone())
+        .await
+        .unwrap();
     if user.is_none() {
         return HttpResponse::BadRequest().body("Invalid username or password");
     }
     let user = user.unwrap();
 
-    let password_hash = sha3::Sha3_256::digest(login.password.as_bytes());
+    let password_hash = sha3::Sha3_256::digest(sign_in.password.as_bytes());
     let password_hash = format!("{:x}", password_hash);
     debug!("{:?}", password_hash);
 
-    if login.username != user.username || password_hash != user.password {
+    if sign_in.username != user.username || password_hash != user.password {
         return HttpResponse::BadRequest().body("Invalid username or password");
     }
     let jwt_secret = data.app_settings.jwt_secret.clone();
-    let exp = Utc::now() + Duration::days(1);
+    let exp = Utc::now() + Duration::days(30);
     let token = encode(
         &Header::default(),
         &Claims {
-            sub: login.username.clone(),
+            sub: sign_in.username.clone(),
             exp: exp.timestamp() as usize,
         },
         &EncodingKey::from_secret(jwt_secret.as_ref()),
@@ -69,7 +71,7 @@ pub async fn jwt_validate_middleware(
     req: ServiceRequest,
     next: Next<impl MessageBody>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    if req.path() != "/login" {
+    if req.path() != "/sign-in" {
         let auth_header = req.headers().get("Authorization");
         if auth_header.is_none() {
             return Err(ErrorUnauthorized("Unauthorized"));

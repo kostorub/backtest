@@ -68,7 +68,7 @@ pub async fn insert_backtest_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> 
 pub async fn insert_backtest_results(
     backtest_settings: &BacktestSettings,
     grid_settings: &GridSettingsRequest,
-    positions: Vec<Position>,
+    positions: &Vec<Position>,
     metrics_id: i64,
     pool: &Pool<Sqlite>,
 ) -> Result<i64, Error> {

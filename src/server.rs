@@ -9,7 +9,7 @@ use crate::{
     config::AppSettings,
     database,
     routes::{
-        auth::{jwt_validate_middleware, login},
+        auth::{jwt_validate_middleware, sign_in},
         backtest,
         backtest_ui::{
             backtest::{run_grid, run_hodl},
@@ -53,7 +53,7 @@ pub async fn start_server() -> std::io::Result<()> {
         .service(Files::new("/static", "src/web/static/").show_files_listing())
         .wrap(from_fn(jwt_validate_middleware))
         .route("/", web::get().to(index))
-        .route("/login", web::post().to(login))
+        .route("/auth/sign-in", web::post().to(sign_in))
         .route("/pages/{page}", web::get().to(page))
         .route("/exchange/local-symbols", web::get().to(local_symbols))
         .route("/exchange/symbols/{exchange}",web::get().to(exchange_symbols),)
