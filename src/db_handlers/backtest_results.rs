@@ -23,6 +23,7 @@ pub async fn insert_backtest_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> 
             average_profit_position,
             average_loss_position,
             number_of_currency,
+            profit_per_position_in_percent,
             profit_factor,
             expected_payoff,
             sortino,
@@ -36,7 +37,7 @@ pub async fn insert_backtest_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> 
             drawdown,
             max_use_of_funds
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21
         )",
         positions_number,
         profit_positions_number,
@@ -46,6 +47,7 @@ pub async fn insert_backtest_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> 
         metrics.average_profit_position,
         metrics.average_loss_position,
         metrics.number_of_currency,
+        metrics.profit_per_position_in_percent,
         metrics.profit_factor,
         metrics.expected_payoff,
         metrics.sortino,

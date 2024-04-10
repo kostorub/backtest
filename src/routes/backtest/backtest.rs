@@ -7,7 +7,6 @@ use actix_web::{Either, HttpResponse};
 use chrono::{NaiveDate, NaiveTime};
 use log::error;
 use serde::Serialize;
-use uuid::Uuid;
 
 use crate::app_state::AppState;
 use crate::backtest::backtest::{
