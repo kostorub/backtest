@@ -71,7 +71,7 @@ pub async fn jwt_validate_middleware(
     req: ServiceRequest,
     next: Next<impl MessageBody>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    if req.path() != "/sign-in" {
+    if req.path() != "/auth/sign-in" {
         let auth_header = req.headers().get("Authorization");
         if auth_header.is_none() {
             return Err(ErrorUnauthorized("Unauthorized"));
