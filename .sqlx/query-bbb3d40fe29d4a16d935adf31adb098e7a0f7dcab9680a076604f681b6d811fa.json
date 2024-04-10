@@ -1,0 +1,122 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM backtest_results WHERE id = ?1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "metrics_id",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "symbol",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "exchange",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "market_data_type",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "chart_market_data_type",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_start",
+        "ordinal": 6,
+        "type_info": "Int64"
+      },
+      {
+        "name": "date_end",
+        "ordinal": 7,
+        "type_info": "Int64"
+      },
+      {
+        "name": "deposit",
+        "ordinal": 8,
+        "type_info": "Float"
+      },
+      {
+        "name": "commission",
+        "ordinal": 9,
+        "type_info": "Float"
+      },
+      {
+        "name": "price_low",
+        "ordinal": 10,
+        "type_info": "Float"
+      },
+      {
+        "name": "price_high",
+        "ordinal": 11,
+        "type_info": "Float"
+      },
+      {
+        "name": "grid_count",
+        "ordinal": 12,
+        "type_info": "Int64"
+      },
+      {
+        "name": "grid_trigger",
+        "ordinal": 13,
+        "type_info": "Float"
+      },
+      {
+        "name": "grid_sl",
+        "ordinal": 14,
+        "type_info": "Float"
+      },
+      {
+        "name": "grid_tp",
+        "ordinal": 15,
+        "type_info": "Float"
+      },
+      {
+        "name": "sell_all",
+        "ordinal": 16,
+        "type_info": "Bool"
+      },
+      {
+        "name": "positions",
+        "ordinal": 17,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "bbb3d40fe29d4a16d935adf31adb098e7a0f7dcab9680a076604f681b6d811fa"
+}

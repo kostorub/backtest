@@ -1,0 +1,146 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT metrics.* FROM metrics JOIN backtest_results ON backtest_results.metrics_id = metrics.id WHERE backtest_results.id = ?1",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "positions_number",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "profit_positions_number",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "profit_positions_percent",
+        "ordinal": 3,
+        "type_info": "Float"
+      },
+      {
+        "name": "loss_positions_number",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "loss_positions_percent",
+        "ordinal": 5,
+        "type_info": "Float"
+      },
+      {
+        "name": "average_profit_position",
+        "ordinal": 6,
+        "type_info": "Float"
+      },
+      {
+        "name": "average_loss_position",
+        "ordinal": 7,
+        "type_info": "Float"
+      },
+      {
+        "name": "number_of_currency",
+        "ordinal": 8,
+        "type_info": "Int64"
+      },
+      {
+        "name": "profit_per_position_in_percent",
+        "ordinal": 9,
+        "type_info": "Float"
+      },
+      {
+        "name": "profit_factor",
+        "ordinal": 10,
+        "type_info": "Float"
+      },
+      {
+        "name": "expected_payoff",
+        "ordinal": 11,
+        "type_info": "Float"
+      },
+      {
+        "name": "sortino",
+        "ordinal": 12,
+        "type_info": "Float"
+      },
+      {
+        "name": "average_position_size",
+        "ordinal": 13,
+        "type_info": "Float"
+      },
+      {
+        "name": "start_deposit",
+        "ordinal": 14,
+        "type_info": "Float"
+      },
+      {
+        "name": "finish_deposit",
+        "ordinal": 15,
+        "type_info": "Float"
+      },
+      {
+        "name": "total_profit",
+        "ordinal": 16,
+        "type_info": "Float"
+      },
+      {
+        "name": "total_profit_percent",
+        "ordinal": 17,
+        "type_info": "Float"
+      },
+      {
+        "name": "max_deposit",
+        "ordinal": 18,
+        "type_info": "Float"
+      },
+      {
+        "name": "max_drawdown",
+        "ordinal": 19,
+        "type_info": "Float"
+      },
+      {
+        "name": "drawdown",
+        "ordinal": 20,
+        "type_info": "Float"
+      },
+      {
+        "name": "max_use_of_funds",
+        "ordinal": 21,
+        "type_info": "Float"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "02f9f6cc44aeb56a781e595b2468630c10cfe26e0847afbc1e60f9fc36085b70"
+}

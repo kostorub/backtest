@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO metrics (\n            positions_number,\n            profit_positions_number,\n            profit_positions_percent,\n            loss_positions_number,\n            loss_positions_percent,\n            average_profit_position,\n            average_loss_position,\n            number_of_currency,\n            profit_per_position_in_percent,\n            profit_factor,\n            expected_payoff,\n            sortino,\n            average_position_size,\n            start_deposit,\n            finish_deposit,\n            total_profit,\n            total_profit_percent,\n            max_deposit,\n            max_drawdown,\n            drawdown,\n            max_use_of_funds\n        ) VALUES (\n            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21\n        )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 21
+    },
+    "nullable": []
+  },
+  "hash": "4af223dd252eaecefe3ecbb0be178c05973a97631abae86dfdf294aa1c25da74"
+}
