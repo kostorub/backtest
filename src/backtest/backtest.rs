@@ -3,14 +3,11 @@ use crate::data_models::market_data::{
 };
 
 use super::{
-    settings::{BacktesttSettings, StrategySettings},
+    settings::{BacktestSettings, StrategySettings},
     strategies::strategy_trait::Strategy,
 };
 
-pub fn run_sequentially<S: Strategy>(
-    backtest_settings: BacktesttSettings,
-    strategies: &mut Vec<S>,
-) {
+pub fn run_sequentially<S: Strategy>(backtest_settings: BacktestSettings, strategies: &mut Vec<S>) {
     for timestamp in generate_time_period(
         backtest_settings.market_data_type.clone(),
         backtest_settings.date_start,
@@ -28,7 +25,7 @@ pub fn run_sequentially<S: Strategy>(
     }
 }
 
-pub fn strategies_settings(backtest_settings: BacktesttSettings) -> Vec<StrategySettings> {
+pub fn strategies_settings(backtest_settings: BacktestSettings) -> Vec<StrategySettings> {
     backtest_settings
         .symbols
         .iter()

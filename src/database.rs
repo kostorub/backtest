@@ -2,7 +2,7 @@ use std::path::Path;
 
 use log::info;
 use sqlx::{
-    migrate::MigrateDatabase,
+    migrate::{Migrate, MigrateDatabase, Migrator},
     sqlite::{SqliteConnectOptions, SqliteJournalMode},
     Sqlite, SqlitePool,
 };
@@ -26,24 +26,46 @@ pub async fn init(settings: &AppSettings) -> sqlx::Pool<sqlx::Sqlite> {
         .filename(&settings.database_url.split(":").last().unwrap())
         .journal_mode(SqliteJournalMode::Wal)
         .create_if_missing(true);
-    let pool = SqlitePool::connect_with(options)
-        .await
-        .unwrap();
+    let pool = SqlitePool::connect_with(options).await.unwrap();
     pool
 }
 
-pub async fn migration(pool: &sqlx::Pool<Sqlite>) {
-    let migrations = Path::new("./migrations");
-    let migration_results = sqlx::migrate::Migrator::new(migrations)
-        .await
-        .unwrap()
-        .run(pool)
-        .await;
-    match migration_results {
-        Ok(_) => info!("Migration process was successful!"),
-        Err(error) => {
-            panic!("error: {}", error);
+pub async fn migration(pool: &sqlx::Pool<Sqlite>, settings: &AppSettings) {
+    info!("Running migrations...");
+    let mut c = pool.acquire().await.unwrap();
+    let last_migration = match c.list_applied_migrations().await {
+        Ok(migrations) => {
+            info!("There were some migrations applied: {:?}", migrations);
+            migrations.last().map(|m| m.version).unwrap_or(0)
+        }
+        Err(_) => {
+            info!("There were no migrations applied.");
+            0
+        }
+    };
+
+    if let Some(version) = &settings.database_migration_version {
+        let version = version.parse::<i64>().unwrap();
+        let migrator = Migrator::new(Path::new("./migrations")).await.unwrap();
+
+        info!(
+            "Last migration version: {}, .env version: {}",
+            last_migration, version
+        );
+        if last_migration > version {
+            let migration = migrator.undo(pool, version).await;
+            info!(
+                "Last migration version > .env version. Migration undo result: {:?}",
+                migration
+            );
+        } else if last_migration < version {
+            let migration = migrator.run(pool).await;
+            info!(
+                "Last migration version <= .env version. Migration run result: {:?}",
+                migration
+            );
+        } else {
+            info!("Last migration version == .env version. No migrations needed.");
         }
     }
-    info!("Migration result: {:?}", migration_results);
 }

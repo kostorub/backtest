@@ -38,7 +38,7 @@ pub async fn start_server() -> std::io::Result<()> {
     // Initialize the database and run the migrations
     database::drop(&settings).await;
     let pool = database::init(&settings).await;
-    database::migration(&pool).await;
+    database::migration(&pool, &settings).await;
 
     let app_data = web::Data::new(AppState {
         app_settings: Arc::new(settings),

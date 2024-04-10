@@ -13,6 +13,7 @@ pub struct AppSettings {
     pub database_name: String,
     pub database_url: String,
     pub database_drop: bool,
+    pub database_migration_version: Option<String>,
 }
 
 impl AppSettings {

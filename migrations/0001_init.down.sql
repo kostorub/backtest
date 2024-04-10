@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS market_data;
+
+DROP TABLE IF EXISTS users;

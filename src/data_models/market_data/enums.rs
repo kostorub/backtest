@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum OrderType {
     Limit,
     Market,
@@ -21,14 +21,14 @@ impl Default for OrderType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Side {
     Buy,
     Sell,
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum OrderStatus {
     New,
     Filled,
@@ -117,21 +117,7 @@ impl<'de> Serialize for MarketDataType {
     where
         S: serde::Serializer,
     {
-        match self {
-            MarketDataType::Trade => serializer.serialize_str("trade"),
-            MarketDataType::KLine1s => serializer.serialize_str("1s"),
-            MarketDataType::KLine1m => serializer.serialize_str("1m"),
-            MarketDataType::KLine3m => serializer.serialize_str("3m"),
-            MarketDataType::KLine5m => serializer.serialize_str("5m"),
-            MarketDataType::KLine15m => serializer.serialize_str("15m"),
-            MarketDataType::KLine30m => serializer.serialize_str("30m"),
-            MarketDataType::KLine1h => serializer.serialize_str("1h"),
-            MarketDataType::KLine2h => serializer.serialize_str("2h"),
-            MarketDataType::KLine4h => serializer.serialize_str("4h"),
-            MarketDataType::KLine6h => serializer.serialize_str("6h"),
-            MarketDataType::KLine8h => serializer.serialize_str("8h"),
-            MarketDataType::KLine1d => serializer.serialize_str("1d"),
-        }
+        serializer.serialize_str(self.value().0.as_str())
     }
 }
 

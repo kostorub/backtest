@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use super::enums::{OrderStatus, OrderType, Side};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Order {
     pub date: u64,
     pub date_update: Option<u64>,

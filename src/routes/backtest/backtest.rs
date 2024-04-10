@@ -10,7 +10,7 @@ use crate::app_state::AppState;
 use crate::backtest::backtest::{
     self, get_metrics, get_positions_from_strategies, strategies_settings,
 };
-use crate::backtest::settings::BacktesttSettings;
+use crate::backtest::settings::BacktestSettings;
 use crate::backtest::strategies::grid::bot::GridBot;
 use crate::backtest::strategies::grid::settings::{GridSettings, GridSettingsRequest};
 use crate::backtest::strategies::grid::strategy::GridStrategy;
@@ -73,7 +73,7 @@ pub async fn run_grid(
 
     let request_settings = request_settings.clone();
 
-    let backtest_settings = BacktesttSettings {
+    let backtest_settings = BacktestSettings {
         symbols: vec![request_settings.symbol.to_lowercase()],
         exchange: request_settings.exchange.clone().to_lowercase(),
         date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d")

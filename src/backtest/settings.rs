@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::data_models::market_data::enums::MarketDataType;
 
 #[derive(Debug, Clone, Deserialize, Default)]
-pub struct BacktesttSettings {
+pub struct BacktestSettings {
     pub symbols: Vec<String>,
     pub exchange: String,
     pub market_data_type: MarketDataType,
