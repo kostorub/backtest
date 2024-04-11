@@ -20,7 +20,7 @@ use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
 use crate::backtest::strategies::hodl::strategy::HodlStrategy;
 use crate::backtest::strategies::strategy_utils::get_klines;
 use crate::chart::chart::build_chart;
-use crate::data_models::routes::backtest_results::RunGridId;
+use crate::data_models::routes::backtest_results::BacktestResultId;
 use crate::db_handlers::backtest_results::{insert_backtest_metrics, insert_backtest_results};
 
 pub async fn run_hodl(
@@ -167,7 +167,7 @@ pub async fn run_grid(
     )
     .unwrap();
 
-    let result = RunGridId {
+    let result = BacktestResultId {
         id: backtest_results_id,
     };
 

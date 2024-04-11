@@ -1,33 +1,27 @@
 use std::{fs, path::PathBuf};
 
 use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
-use serde::Deserialize;
 
 use crate::{
     app_state::AppState,
-    data_models::routes::backtest_results::RunGridId,
+    data_models::routes::backtest_results::BacktestResultId,
     db_handlers::backtest_results::{get_backtest_metrics, get_backtest_results},
 };
 
-#[derive(Deserialize)]
-pub struct ChartFileQuery {
-    backtest_uuid: String,
-}
-
-pub async fn chart(_data: web::Data<AppState>, r: web::Query<ChartFileQuery>) -> HttpResponse {
-    let filename = format!("{}.html", r.backtest_uuid);
+pub async fn chart(_data: web::Data<AppState>, r: web::Query<BacktestResultId>) -> Result<HttpResponse, Error> {
+    let filename = format!("{}.html", r.id);
     let webpath = PathBuf::from("src/web/static/charts").join(&filename);
 
-    let chart_data = fs::read_to_string(webpath).unwrap();
+    let chart_data = fs::read_to_string(webpath).map_err(ErrorInternalServerError)?;
 
-    HttpResponse::Ok()
+    Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
-        .body(chart_data)
+        .body(chart_data))
 }
 
-pub async fn backtest_results(
+pub async fn data(
     data: web::Data<AppState>,
-    r: web::Query<RunGridId>,
+    r: web::Query<BacktestResultId>,
 ) -> Result<HttpResponse, Error> {
     let result = get_backtest_results(r.id, &data.pool)
         .await
@@ -35,9 +29,9 @@ pub async fn backtest_results(
     Ok(HttpResponse::Ok().json(result))
 }
 
-pub async fn backtest_metrics(
+pub async fn metrics(
     data: web::Data<AppState>,
-    r: web::Query<RunGridId>,
+    r: web::Query<BacktestResultId>,
 ) -> Result<HttpResponse, Error> {
     let result = get_backtest_metrics(r.id, &data.pool)
         .await

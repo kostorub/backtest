@@ -75,8 +75,8 @@ pub async fn start_server() -> std::io::Result<()> {
         .route("/api/backtest/hodl/run", web::post().to(backtest::backtest::run_hodl))
         .route("/api/backtest/grid/run", web::post().to(backtest::backtest::run_grid))
         .route("/api/backtest/result/chart", web::get().to(backtest::backtest_result::chart))
-        .route("/api/backtest/result/data", web::get().to(backtest::backtest_result::backtest_results))
-        .route("/api/backtest/result/metrics", web::get().to(backtest::backtest_result::backtest_metrics))
+        .route("/api/backtest/result/data", web::get().to(backtest::backtest_result::data))
+        .route("/api/backtest/result/metrics", web::get().to(backtest::backtest_result::metrics))
         })
         .bind(("0.0.0.0", 8080))?
         .run()
