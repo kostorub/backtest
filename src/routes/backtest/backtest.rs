@@ -6,7 +6,6 @@ use actix_web::{web, Responder, Result};
 use actix_web::{Either, HttpResponse};
 use chrono::{NaiveDate, NaiveTime};
 use log::error;
-use serde::Serialize;
 
 use crate::app_state::AppState;
 use crate::backtest::backtest::{
@@ -21,6 +20,7 @@ use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
 use crate::backtest::strategies::hodl::strategy::HodlStrategy;
 use crate::backtest::strategies::strategy_utils::get_klines;
 use crate::chart::chart::build_chart;
+use crate::data_models::routes::backtest_results::RunGridId;
 use crate::db_handlers::backtest_results::{insert_backtest_metrics, insert_backtest_results};
 
 pub async fn run_hodl(
@@ -61,11 +61,6 @@ pub async fn run_hodl(
     );
 
     Either::Left(Ok(web::Json(metrics)))
-}
-
-#[derive(Serialize)]
-struct RunGridResult {
-    id: i64,
 }
 
 pub async fn run_grid(
@@ -172,7 +167,7 @@ pub async fn run_grid(
     )
     .unwrap();
 
-    let result = RunGridResult {
+    let result = RunGridId {
         id: backtest_results_id,
     };
 
