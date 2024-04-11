@@ -1,3 +1,3 @@
 -- Add down migration script here
-DROP TABLE IF EXISTS metrics;
-DROP TABLE IF EXISTS backtest_results;
+DROP TABLE IF EXISTS backtest_metrics;
+DROP TABLE IF EXISTS backtest_data;

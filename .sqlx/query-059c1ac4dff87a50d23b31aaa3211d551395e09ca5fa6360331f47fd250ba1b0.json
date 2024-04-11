@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO backtest_data (\n            metrics_id,\n            symbol,\n            exchange,\n            market_data_type,\n            chart_market_data_type,\n            date_start,\n            date_end,\n            deposit,\n            commission,\n            price_low,\n            price_high,\n            grid_count,\n            grid_trigger,\n            grid_sl,\n            grid_tp,\n            sell_all,\n            positions\n        ) VALUES (\n            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17\n        )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 17
+    },
+    "nullable": []
+  },
+  "hash": "059c1ac4dff87a50d23b31aaa3211d551395e09ca5fa6360331f47fd250ba1b0"
+}

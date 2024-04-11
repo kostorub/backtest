@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT metrics.* FROM metrics JOIN backtest_results ON backtest_results.metrics_id = metrics.id WHERE backtest_results.id = ?1",
+  "query": "SELECT backtest_metrics.* FROM backtest_metrics JOIN backtest_data ON backtest_data.metrics_id = backtest_metrics.id WHERE backtest_data.id = ?1",
   "describe": {
     "columns": [
       {
@@ -142,5 +142,5 @@
       false
     ]
   },
-  "hash": "02f9f6cc44aeb56a781e595b2468630c10cfe26e0847afbc1e60f9fc36085b70"
+  "hash": "838c79accfcee97007f6b788cfdfbbc2e6d704c081104253497c34c5b79259ff"
 }

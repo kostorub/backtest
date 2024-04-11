@@ -1,6 +1,6 @@
 -- Add up migration script here
 CREATE TABLE
-    IF NOT EXISTS backtest_results (
+    IF NOT EXISTS backtest_data (
         id INTEGER PRIMARY KEY,
         metrics_id INTEGER NOT NULL,
         symbol TEXT NOT NULL,
@@ -19,11 +19,11 @@ CREATE TABLE
         grid_tp REAL,
         sell_all BOOLEAN NOT NULL,
         positions TEXT NOT NULL,
-        FOREIGN KEY (metrics_id) REFERENCES metrics (id) ON UPDATE CASCADE ON DELETE CASCADE
+        FOREIGN KEY (metrics_id) REFERENCES backtest_metrics (id) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
 CREATE TABLE
-    IF NOT EXISTS metrics (
+    IF NOT EXISTS backtest_metrics (
         id INTEGER PRIMARY KEY,
         positions_number INTEGER NOT NULL,
         profit_positions_number INTEGER NOT NULL,

@@ -3,18 +3,18 @@ use sqlx::{Error, Pool, Sqlite};
 use crate::{
     backtest::{settings::BacktestSettings, strategies::grid::settings::GridSettingsRequest},
     data_models::{
-        backtest_results::BacktestResults,
         market_data::{metrics::Metrics, position::Position},
+        routes::backtest_results::Data,
     },
 };
 
-pub async fn insert_backtest_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i64, Error> {
+pub async fn insert_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i64, Error> {
     let positions_number = metrics.positions_number as i64;
     let profit_positions_number = metrics.profit_positions_number as i64;
     let loss_positions_number = metrics.loss_positions_number as i64;
 
     let result = sqlx::query!(
-        "INSERT INTO metrics (
+        "INSERT INTO backtest_metrics (
             positions_number,
             profit_positions_number,
             profit_positions_percent,
@@ -67,7 +67,7 @@ pub async fn insert_backtest_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> 
     Ok(result.last_insert_rowid())
 }
 
-pub async fn insert_backtest_results(
+pub async fn insert_data(
     backtest_settings: &BacktestSettings,
     grid_settings: &GridSettingsRequest,
     positions: &Vec<Position>,
@@ -82,7 +82,7 @@ pub async fn insert_backtest_results(
     let positions = serde_json::to_string(&positions).unwrap();
 
     let result = sqlx::query!(
-        "INSERT INTO backtest_results (
+        "INSERT INTO backtest_data (
             metrics_id,
             symbol,
             exchange,
@@ -127,18 +127,15 @@ pub async fn insert_backtest_results(
     Ok(result.last_insert_rowid())
 }
 
-pub async fn get_backtest_results(
-    backtest_results_id: i64,
-    pool: &Pool<Sqlite>,
-) -> Result<BacktestResults, Error> {
+pub async fn get_data(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<Data, Error> {
     let row = sqlx::query!(
-        "SELECT * FROM backtest_results WHERE id = ?1",
+        "SELECT * FROM backtest_data WHERE id = ?1",
         backtest_results_id
     )
     .fetch_one(pool)
     .await?;
 
-    let result = BacktestResults {
+    let result = Data {
         id: row.id,
         metrics_id: row.metrics_id,
         symbol: row.symbol,
@@ -162,12 +159,9 @@ pub async fn get_backtest_results(
     Ok(result)
 }
 
-pub async fn get_backtest_metrics(
-    backtest_results_id: i64,
-    pool: &Pool<Sqlite>,
-) -> Result<Metrics, Error> {
+pub async fn get_metrics(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<Metrics, Error> {
     let row = sqlx::query!(
-        "SELECT metrics.* FROM metrics JOIN backtest_results ON backtest_results.metrics_id = metrics.id WHERE backtest_results.id = ?1",
+        "SELECT backtest_metrics.* FROM backtest_metrics JOIN backtest_data ON backtest_data.metrics_id = backtest_metrics.id WHERE backtest_data.id = ?1",
         backtest_results_id
     )
     .fetch_one(pool)

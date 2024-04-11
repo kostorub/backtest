@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM backtest_results WHERE id = ?1",
+  "query": "SELECT * FROM backtest_data WHERE id = ?1",
   "describe": {
     "columns": [
       {
@@ -118,5 +118,5 @@
       false
     ]
   },
-  "hash": "bbb3d40fe29d4a16d935adf31adb098e7a0f7dcab9680a076604f681b6d811fa"
+  "hash": "410fefdf30da95942bea7c941148c9ade8eac8fb2ac3e69ed65b6a213e31639f"
 }

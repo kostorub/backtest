@@ -21,7 +21,7 @@ use crate::backtest::strategies::hodl::strategy::HodlStrategy;
 use crate::backtest::strategies::strategy_utils::get_klines;
 use crate::chart::chart::build_chart;
 use crate::data_models::routes::backtest_results::BacktestResultId;
-use crate::db_handlers::backtest_results::{insert_backtest_metrics, insert_backtest_results};
+use crate::db_handlers::backtest_results::{insert_data, insert_metrics};
 
 pub async fn run_hodl(
     hodl_data: web::Json<HodlSettingsRequest>,
@@ -128,7 +128,7 @@ pub async fn run_grid(
         strategies[0].current_budget,
     );
 
-    let metrics_id = match insert_backtest_metrics(&_metrics, &data.pool).await {
+    let metrics_id = match insert_metrics(&_metrics, &data.pool).await {
         Ok(id) => id,
         Err(e) => {
             error!("Error inserting backtest metrics: {}", e);
@@ -136,7 +136,7 @@ pub async fn run_grid(
         }
     };
 
-    let backtest_results_id = match insert_backtest_results(
+    let backtest_results_id = match insert_data(
         &backtest_settings,
         &request_settings,
         &positions,
