@@ -1,5 +1,6 @@
 use actix_web::{
     body::MessageBody,
+    cookie::Cookie,
     dev::{ServiceRequest, ServiceResponse},
     error::{ErrorForbidden, ErrorUnauthorized},
     web, Error, HttpResponse,
@@ -60,7 +61,14 @@ pub async fn sign_in(sign_in: web::Json<SignInRequest>, data: web::Data<AppState
         &EncodingKey::from_secret(jwt_secret.as_ref()),
     )
     .unwrap();
-    HttpResponse::Ok().json(LoginResponse {
+
+    let cookie = Cookie::build("backtest_token", &token)
+        .path("/")
+        .http_only(true)
+        .secure(true)
+        .finish();
+
+    HttpResponse::Ok().cookie(cookie).json(LoginResponse {
         access_token: token,
         token_type: "Bearer".to_string(),
         expires_in: exp.timestamp() as usize,
@@ -73,25 +81,39 @@ pub async fn jwt_validate_middleware(
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
     if req.path() != "/auth/sign-in" {
         let auth_header = req.headers().get("Authorization");
-        if auth_header.is_none() {
+        dbg!(&auth_header);
+        let auth_cookie = req.cookie("backtest_token");
+        dbg!(&auth_cookie);
+        if !auth_header.is_none() {
+            let auth_header = auth_header.unwrap().to_str().unwrap();
+            if !auth_header.starts_with("Bearer ") {
+                return Err(ErrorForbidden("Invalid token format"));
+            }
+            let token = auth_header[7..].to_string();
+            validate_token(&req, &token)?;
+        } else if !auth_cookie.is_none() {
+            let cookie = auth_cookie.unwrap();
+            dbg!(&cookie);
+            dbg!(&cookie.value());
+            validate_token(&req, cookie.value())?;
+        } else {
             return Err(ErrorUnauthorized("Unauthorized"));
-        }
-        let auth_header = auth_header.unwrap().to_str().unwrap();
-        if !auth_header.starts_with("Bearer ") {
-            return Err(ErrorForbidden("Invalid token format"));
-        }
-        let token = auth_header[7..].to_string();
-        let data = req.app_data::<web::Data<AppState>>().unwrap();
-        let jwt_secret = data.app_settings.jwt_secret.clone();
-        let token_data = decode::<Claims>(
-            &token,
-            &DecodingKey::from_secret(jwt_secret.as_ref()),
-            &Validation::default(),
-        );
-        if token_data.is_err() {
-            debug!("{:?}", token_data);
-            return Err(ErrorForbidden("Unauthorized to perform requested action"));
         }
     }
     Ok(next.call(req).await?)
+}
+
+fn validate_token(req: &ServiceRequest, token: &str) -> Result<(), Error> {
+    let data = req.app_data::<web::Data<AppState>>().unwrap();
+    let jwt_secret = data.app_settings.jwt_secret.clone();
+    let token_data = decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(jwt_secret.as_ref()),
+        &Validation::default(),
+    );
+    if token_data.is_err() {
+        debug!("{:?}", token_data);
+        return Err(ErrorForbidden("Unauthorized to perform requested action"));
+    }
+    Ok(())
 }
