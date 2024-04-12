@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_files::Files;
 use actix_web::middleware::Logger;
 use actix_web_lab::middleware::from_fn;
@@ -47,8 +48,10 @@ pub async fn start_server() -> std::io::Result<()> {
     });
 
     HttpServer::new(move || {
+    let cors = Cors::permissive();
     App::new()
         .wrap(Logger::default())
+        .wrap(cors)
         .app_data(app_data.clone())
         .service(Files::new("/static", "src/web/static/").show_files_listing())
         .wrap(from_fn(jwt_validate_middleware))

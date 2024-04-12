@@ -4,6 +4,17 @@ on:
   push:
     tags:
       - v*
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to run'
+        type: string
+        required: true
+      environment:
+        description: 'Environment to run'
+        type: environment
+        required: true
+
 env:
   CARGO_TERM_COLOR: always
   IMAGE_NAME: kostorub/backtest
@@ -33,7 +44,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: 'Create the IMAGE ENV variable'
+    - name: 'Create the IMAGE ENV variable from github.ref_name'
       run: |
         echo "IMAGE=${{ env.IMAGE_NAME }}:${{ github.ref_name }}" >> $GITHUB_ENV
 
