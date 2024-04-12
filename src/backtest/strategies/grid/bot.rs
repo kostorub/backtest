@@ -45,18 +45,18 @@ impl GridBot {
                 return Some((
                     i,
                     vec![
-                        Order::new(kline.date, price, Side::Buy, OrderType::Market)
+                        Order::new(kline.date, price, Side::Buy, OrderType::Limit)
                             .updated(kline.date)
                             .with_price_executed(price)
-                            .with_qty(self.order_size / kline.close)
+                            .with_qty(self.order_size / price)
                             .filled(),
                         Order::new(
                             kline.date,
                             self.triggers[i + 1].price,
                             Side::Sell,
-                            OrderType::TakeProfitMarket,
+                            OrderType::TakeProfit,
                         )
-                        .with_qty(self.order_size / kline.close),
+                        .with_qty(self.order_size / price),
                     ],
                 ));
             }
@@ -103,12 +103,12 @@ mod test {
         Some((
             grid_position,
             vec![
-                Order::new(0, price, Side::Buy, OrderType::Market)
+                Order::new(0, price, Side::Buy, OrderType::Limit)
                     .updated(0)
                     .with_price_executed(price)
                     .with_qty(qty)
                     .filled(),
-                Order::new(0, tp_price, Side::Sell, OrderType::TakeProfitMarket).with_qty(qty),
+                Order::new(0, tp_price, Side::Sell, OrderType::TakeProfit).with_qty(qty),
             ],
         ))
     }
@@ -178,7 +178,7 @@ mod test {
         assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
         assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
         assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
         assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
         assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
         assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);

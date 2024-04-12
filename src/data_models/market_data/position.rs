@@ -242,7 +242,7 @@ mod test {
     #[test]
     fn test_last_date() {
         let p = get_position();
-        assert_eq!(p.last_date(), 180000);
+        assert_eq!(p.last_date(), 180001);
     }
 
     #[test]

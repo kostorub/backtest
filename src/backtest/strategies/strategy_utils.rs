@@ -33,10 +33,10 @@ pub fn check_tp_sl(kline: &KLine, positions_opened: &mut Vec<Position>, commissi
         for order in pos.orders.iter_mut() {
             if order.status == OrderStatus::New {
                 if (order.side == Side::Sell
-                    && order.order_type == OrderType::TakeProfitMarket
+                    && order.order_type == OrderType::TakeProfit
                     && kline.close >= order.price)
                     || (order.side == Side::Sell
-                        && order.order_type == OrderType::StopMarket
+                        && order.order_type == OrderType::Stop
                         && kline.close <= order.price)
                 {
                     let qty = order.qty.unwrap();
@@ -88,7 +88,7 @@ mod tests {
                         .filled(),
                 )
                 .with_order(
-                    Order::new(2, 200.0, Side::Sell, OrderType::TakeProfitMarket).with_qty(1.0),
+                    Order::new(2, 200.0, Side::Sell, OrderType::TakeProfit).with_qty(1.0),
                 ),
             Position::new("BTCUSDT".to_string())
                 .with_order(
@@ -99,7 +99,7 @@ mod tests {
                         .with_commission(400.0, 1.0, 0.0)
                         .filled(),
                 )
-                .with_order(Order::new(4, 50.0, Side::Sell, OrderType::StopMarket).with_qty(1.0)),
+                .with_order(Order::new(4, 50.0, Side::Sell, OrderType::Stop).with_qty(1.0)),
             Position::new("BTCUSDT".to_string())
                 .with_order(
                     Order::new(5, 100.0, Side::Buy, OrderType::Market)
@@ -110,7 +110,7 @@ mod tests {
                         .filled(),
                 )
                 .with_order(
-                    Order::new(6, 150.0, Side::Sell, OrderType::TakeProfitMarket)
+                    Order::new(6, 150.0, Side::Sell, OrderType::TakeProfit)
                         .updated(6)
                         .with_price_executed(150.0)
                         .with_qty(1.0)
