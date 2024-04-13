@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM backtest_data ORDER BY id DESC LIMIT 10",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "symbol",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "exchange",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "market_data_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_start",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "date_end",
+        "ordinal": 5,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "369d4714710b6ef6dad75a6b977f8f29dfaa54c0a910baf0f4bdfb4425c02009"
+}
