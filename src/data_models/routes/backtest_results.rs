@@ -28,3 +28,13 @@ pub struct Data {
     pub sell_all: Option<bool>,
     pub positions: Vec<Position>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResultOption {
+    pub id: i64,
+    pub symbol: String,
+    pub exchange: String,
+    pub market_data_type: MarketDataType,
+    pub date_start: String,
+    pub date_end: String,
+}

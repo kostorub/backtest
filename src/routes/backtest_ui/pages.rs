@@ -38,7 +38,9 @@ pub async fn page(data: web::Data<AppState>, path: Path<(String,)>) -> HttpRespo
     let tera = data.tera.clone();
     let body = tera
         .render(
-            format!("{}.html", page_name).replace("-", "_").as_str(),
+            format!("pages/{}.html", page_name)
+                .replace("-", "_")
+                .as_str(),
             &context,
         )
         .unwrap();

@@ -2,7 +2,7 @@ use actix_web::{
     body::MessageBody,
     cookie::Cookie,
     dev::{ServiceRequest, ServiceResponse},
-    error::{ErrorForbidden, ErrorUnauthorized},
+    error::ErrorForbidden,
     web, Error, HttpResponse,
 };
 use actix_web_lab::middleware::Next;
@@ -77,9 +77,35 @@ pub async fn sign_in(sign_in: web::Json<SignInRequest>, data: web::Data<AppState
 
 pub async fn jwt_validate_middleware(
     req: ServiceRequest,
-    next: Next<impl MessageBody>,
+    next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    if req.path() != "/auth/sign-in" {
+    let protected_routes = vec![
+        "/pages/market_data",
+        "/pages/grid_backtest",
+        "/exchange/local-symbols",
+        "/exchange/symbols/",
+        "/exchange/exchanges",
+        "/exchange/mdts",
+        "/exchange/mdts_from_symbol",
+        "/market-data/downloaded",
+        "/market-data/download",
+        "/backtest/hodl/run",
+        "/backtest/grid/run ",
+        "/backtest_result/chart",
+        "/api/exchange/local-symbols",
+        "/api/exchange/symbols",
+        "/api/exchange/exchanges",
+        "/api/exchange/mdts",
+        "/api/exchange/mdts_from_symbol",
+        "/api/market-data/downloaded",
+        "/api/market-data/download",
+        "/api/backtest/hodl/run",
+        "/api/backtest/grid/run",
+        "/api/backtest/result/chart",
+        "/api/backtest/result/data",
+        "/api/backtest/result/metrics",
+    ];
+    if protected_routes.starts_with(&[req.path()]) {
         let auth_header = req.headers().get("Authorization");
         dbg!(&auth_header);
         let auth_cookie = req.cookie("backtest_token");
@@ -97,10 +123,15 @@ pub async fn jwt_validate_middleware(
             dbg!(&cookie.value());
             validate_token(&req, cookie.value())?;
         } else {
-            return Err(ErrorUnauthorized("Unauthorized"));
+            let req = req.request().to_owned();
+            let res = HttpResponse::SeeOther()
+                .append_header(("Location", "/pages/login"))
+                .finish();
+            return Ok(ServiceResponse::new(req, res));
         }
     }
-    Ok(next.call(req).await?)
+    let res = next.call(req).await?;
+    Ok(res.map_into_boxed_body())
 }
 
 fn validate_token(req: &ServiceRequest, token: &str) -> Result<(), Error> {

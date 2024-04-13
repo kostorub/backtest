@@ -2,9 +2,10 @@ use sqlx::{Error, Pool, Sqlite};
 
 use crate::{
     backtest::{settings::BacktestSettings, strategies::grid::settings::GridSettingsRequest},
+    data_handlers::utils::u64_to_datetime_str,
     data_models::{
         market_data::{metrics::Metrics, position::Position},
-        routes::backtest_results::Data,
+        routes::backtest_results::{Data, ResultOption},
     },
 };
 
@@ -157,6 +158,26 @@ pub async fn get_data(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<D
     };
 
     Ok(result)
+}
+
+pub async fn get_data_options(pool: &Pool<Sqlite>) -> Result<Vec<ResultOption>, Error> {
+    let results = sqlx::query!(
+        "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM backtest_data ORDER BY id DESC LIMIT 10",
+    )
+    .fetch_all(pool)
+    .await?
+    .iter()
+    .map(|row| ResultOption {
+        id: row.id,
+        symbol: row.symbol.clone(),
+        exchange: row.exchange.clone(),
+        market_data_type: row.market_data_type.clone().into(),
+        date_start: u64_to_datetime_str(row.date_start as u64),
+        date_end: u64_to_datetime_str(row.date_end as u64),
+    })
+    .collect();
+
+    Ok(results)
 }
 
 pub async fn get_metrics(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<Metrics, Error> {

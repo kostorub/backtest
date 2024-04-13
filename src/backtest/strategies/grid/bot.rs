@@ -117,7 +117,7 @@ mod test {
     #[test]
     fn test_run() {
         let mut bot = GridBot::new(GridSettings::new(
-            0.0, 10.0, 5, 100.0, 5.0, None, None, Some(true),
+            0.0, 10.0, 5, 100.0, 5.0, None, None, true,
         ));
 
         assert_eq!(bot.run(&KLine::blank().with_close(5.0)), None);
@@ -154,7 +154,7 @@ mod test {
     #[test]
     fn test_run_2() {
         let mut bot = GridBot::new(GridSettings::new(
-            0.0, 10.0, 5, 100.0, 5.0, None, None, Some(true),
+            0.0, 10.0, 5, 100.0, 5.0, None, None, true,
         ));
 
         assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
@@ -170,7 +170,7 @@ mod test {
     #[test]
     fn test_run_3() {
         let mut bot = GridBot::new(GridSettings::new(
-            0.0, 10.0, 5, 100.0, 5.0, None, None, Some(true),
+            0.0, 10.0, 5, 100.0, 5.0, None, None, true,
         ));
 
         assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);

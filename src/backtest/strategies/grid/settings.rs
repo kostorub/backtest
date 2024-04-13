@@ -15,7 +15,7 @@ pub struct GridSettings {
     pub grid_trigger: f64,
     pub grid_sl: Option<f64>,
     pub grid_tp: Option<f64>,
-    pub sell_all: Option<bool>, // true by default
+    pub sell_all: bool, // true by default
 }
 
 impl GridSettings {
@@ -28,7 +28,7 @@ impl GridSettings {
         grid_trigger: f64,
         grid_sl: Option<f64>,
         grid_tp: Option<f64>,
-        sell_all: Option<bool>,
+        sell_all: bool,
     ) -> Self {
         Self {
             price_low,
@@ -45,7 +45,6 @@ impl GridSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GridSettingsRequest {
-    pub backtest_uuid: Option<String>,
     pub symbol: String,
     pub exchange: String,
     pub market_data_type: MarketDataType,
@@ -68,5 +67,6 @@ pub struct GridSettingsRequest {
     pub grid_sl: Option<f64>,
     #[serde(deserialize_with = "deserialize_option_number_from_string")]
     pub grid_tp: Option<f64>,
-    pub sell_all: Option<bool>, // true by default
+    #[serde(default)]
+    pub sell_all: bool, // true by default
 }

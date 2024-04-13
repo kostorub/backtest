@@ -11,13 +11,15 @@
                         <tr>
                             <td><label class="col-form-label">exchange</label></td>
                             <td>
-                                <input type="text" class="form-control" name="exchange" id="exchange" placeholder="exchange" value="BINANCE">
+                                <input type="text" class="form-control" name="exchange" id="exchange"
+                                    placeholder="exchange" value="BINANCE">
                             </td>
                         </tr>
                         <tr>
                             <td><label class="col-form-label">symbol</label></td>
                             <td>
-                                <select class="form-select" name="symbol" id="symbol" placeholder="symbol" hx-get="/exchange/symbols/binance" hx-trigger="load" hx-indicator="#symbol-spinner">
+                                <select class="form-select" name="symbol" id="symbol" placeholder="symbol"
+                                    hx-get="/exchange/symbols/binance" hx-trigger="load" hx-indicator="#symbol-spinner">
                                 </select>
                             </td>
                             <td>
@@ -29,11 +31,14 @@
                         <tr>
                             <td><label class="col-form-label">market_data_type</label></td>
                             <td>
-                                <select class="form-select" name="market_data_type" id="market_data_type" placeholder="market_data_type" hx-get="/exchange/mdts" hx-trigger="load" hx-indicator="#market_data_type-spinner">
+                                <select class="form-select" name="market_data_type" id="market_data_type"
+                                    placeholder="market_data_type" hx-get="/exchange/mdts" hx-trigger="load"
+                                    hx-indicator="#market_data_type-spinner">
                                 </select>
                             </td>
                             <td>
-                                <div id="market_data_type-spinner" class="spinner-border htmx-indicator col-auto" role="status">
+                                <div id="market_data_type-spinner" class="spinner-border htmx-indicator col-auto"
+                                    role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
                             </td>
@@ -50,9 +55,9 @@
                     </tbody>
                 </table>
             </form>
-            <button type="button" class="btn btn-primary" hx-post="/market-data/download"
-                hx-include="#market-data-form" hx-ext="json-enc"
-                hx-indicator="#download-spinner" _="on click toggle @disabled until htmx:afterOnLoad" hx-swap="none">
+            <button type="button" class="btn btn-primary" hx-post="/market-data/download" hx-include="#market-data-form"
+                hx-ext="json-enc" hx-indicator="#download-spinner" _="on click toggle @disabled until htmx:afterOnLoad"
+                hx-swap="none">
                 Download / Replace
             </button>
             <div id="download-spinner" class="spinner-border htmx-indicator spinner-border-sm" role="status">

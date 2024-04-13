@@ -67,10 +67,15 @@ pub async fn run_grid(
     request_settings: web::Json<GridSettingsRequest>,
     data: web::Data<AppState>,
 ) -> Result<HttpResponse, Error> {
+    let result = _run_grid(&data, &request_settings).await?;
+    Ok(HttpResponse::Ok().json(result))
+}
+
+pub async fn _run_grid(
+    data: &web::Data<AppState>,
+    request_settings: &web::Json<GridSettingsRequest>,
+) -> Result<BacktestResultId, Error> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
-
-    let request_settings = request_settings.clone();
-
     let backtest_settings = BacktestSettings {
         symbols: vec![request_settings.symbol.to_lowercase()],
         exchange: request_settings.exchange.clone().to_lowercase(),
@@ -98,7 +103,6 @@ pub async fn run_grid(
         grid_tp: request_settings.grid_tp,
         sell_all: request_settings.sell_all,
     };
-
     let grid_bot = GridBot::new(grid_settings.clone());
     let strategies_settings = strategies_settings(backtest_settings.clone());
     let mut strategies: Vec<GridStrategy> = strategies_settings
@@ -118,8 +122,6 @@ pub async fn run_grid(
             )
         })
         .collect();
-
-    // let mut backtest = GridBacktest::new(backtest_settings.clone(), strategies);
     backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
     let positions = get_positions_from_strategies(strategies.clone());
     let _metrics = get_metrics(
@@ -127,7 +129,6 @@ pub async fn run_grid(
         strategies[0].strategy_settings.deposit,
         strategies[0].current_budget,
     );
-
     let metrics_id = match insert_metrics(&_metrics, &data.pool).await {
         Ok(id) => id,
         Err(e) => {
@@ -135,7 +136,6 @@ pub async fn run_grid(
             return Err(ErrorInternalServerError(e));
         }
     };
-
     let backtest_results_id = match insert_data(
         &backtest_settings,
         &request_settings,
@@ -151,7 +151,6 @@ pub async fn run_grid(
             return Err(ErrorInternalServerError(e));
         }
     };
-
     build_chart(
         backtest_results_id.to_string(),
         &request_settings,
@@ -166,10 +165,8 @@ pub async fn run_grid(
         &positions,
     )
     .unwrap();
-
     let result = BacktestResultId {
         id: backtest_results_id,
     };
-
-    Ok(HttpResponse::Ok().json(result))
+    Ok(result)
 }

@@ -77,7 +77,7 @@
                 </div>
                 <div class="mb-3 row">
                     <label class="col-md-5 col-form-label col-form-label-sm">Grid trigger</label>
-                    <div class="col-md-7"><input class="form-control form-control-sm" type="number" min="0"
+                    <div class="col-md-7"><input class="form-control form-control-sm" type="number" min="0" value="0.0"
                             name="grid_trigger" placeholder="grid_trigger"></div>
                 </div>
                 <div class="mb-3 row">
@@ -96,9 +96,9 @@
                             placeholder="sell_all"></div>
                 </div>
             </form>
-            <button type="button" class="btn btn-primary" hx-post="/backtest/grid/run"
-                hx-include="#backtest-data, #backtest-uuid-form" hx-target="#metrics" hx-ext="json-enc"
-                hx-indicator="#run-spinner" _="on click toggle @disabled until htmx:afterOnLoad">
+            <button type="button" class="btn btn-primary" hx-post="/backtest/grid/run" hx-include="#backtest-data"
+                hx-ext="json-enc" hx-indicator="#run-spinner" hx-target="#backtest-result-select" hx-swap="beforeend"
+                _="on click toggle @disabled until htmx:afterOnLoad">
                 Run grid backtest
             </button>
             <div id="run-spinner" class="spinner-border htmx-indicator spinner-border-sm" role="status">
@@ -107,9 +107,15 @@
 
         </div>
         <div class="col-xxl-7" id="chart-div" name="chart-div" hx-get="/backtest_result/chart"
-            hx-include="#backtest-uuid-form" hx-trigger="backtestFinished from:body">
+            hx-trigger="backtestResultsEvent from:body queue:last" hx-include="#backtest-results-form">
         </div>
-        <div id="metrics" class="col-xxl-3">
+        <div class="col-xxl-3">
+            <div>
+                {% include "forms/backtest_results_form.html" %}
+            </div>
+            <div id="metrics" hx-get="/backtest_result/metrics" hx-trigger="backtestResultsEvent from:body queue:last"
+                hx-include="#backtest-results-form">
+            </div>
         </div>
     </div>
 

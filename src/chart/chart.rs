@@ -20,15 +20,12 @@ fn parse_time(t: u64, mdt: MarketDataType) -> String {
 }
 
 pub fn build_chart(
-    backtest_uuid: String,
+    backtest_id: String,
     s: &GridSettingsRequest,
     klines: Vec<KLine>,
     positions: &Vec<Position>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut filename = format!("{}.html", backtest_uuid);
-    if let Some(b_uuid) = &s.backtest_uuid {
-        filename = format!("{}.html", b_uuid);
-    }
+    let filename = format!("{}.html", backtest_id);
 
     let filepath = PathBuf::from("src/web/static/charts/").join(&filename);
 

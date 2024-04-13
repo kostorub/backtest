@@ -10,13 +10,13 @@
     </thead>
     <tbody>
         {% for value in market_data %}
-            <tr>
-                <td>{{ value.0 }}</td>
-                <td>{{ value.1 }}</td>
-                <td>{{ value.2 }}</td>
-                <td>{{ value.3 }}</td>
-                <td>{{ value.4 }}</td>
-            </tr>
+        <tr>
+            <td>{{ value.exchange }}</td>
+            <td>{{ value.symbol }}</td>
+            <td>{{ value.market_data_type }}</td>
+            <td>{{ value.date_start }}</td>
+            <td>{{ value.date_end }}</td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>

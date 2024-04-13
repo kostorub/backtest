@@ -13,7 +13,9 @@ use crate::{
         auth::{jwt_validate_middleware, sign_in},
         backtest,
         backtest_ui::{
+            self,
             backtest::{run_grid, run_hodl},
+            backtest_result::backtest_results_options,
             exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
             market_data::{download_market_data, downloaded_market_data},
             pages::{index, page},
@@ -67,7 +69,9 @@ pub async fn start_server() -> std::io::Result<()> {
         .route("/market-data/download",web::post().to(download_market_data),)
         .route("/backtest/hodl/run", web::post().to(run_hodl))
         .route("/backtest/grid/run", web::post().to(run_grid))
+        .route("/backtest_result/options", web::get().to(backtest_results_options))
         .route("/backtest_result/chart", web::get().to(backtest::backtest_result::chart))
+        .route("/backtest_result/metrics", web::get().to(backtest_ui::backtest_result::metrics))
         .route("/api/exchange/local-symbols", web::get().to(backtest::exchange::local_symbols))
         .route("/api/exchange/symbols/{exchange}",web::get().to(backtest::exchange::exchange_symbols))
         .route("/api/exchange/exchanges", web::get().to(backtest::exchange::exchanges))

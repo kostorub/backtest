@@ -1,0 +1,8 @@
+<form id="backtest-results-form" hx-trigger="load" hx-get="/backtest_result/options" hx-target="#backtest-result-select"
+    hx-swap="innerHTML">
+    <label for="backtest_result_id" class="form-label">Backtests history</label>
+    <select class="form-select" id="backtest-result-select" name="id"
+        _="on change or mutation send backtestResultsEvent to body">
+    </select>
+    <div class="form-text">The list shows the last 10 results</div>
+</form>

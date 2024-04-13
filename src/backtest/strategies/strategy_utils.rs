@@ -87,9 +87,7 @@ mod tests {
                         .with_commission(100.0, 1.0, 0.0)
                         .filled(),
                 )
-                .with_order(
-                    Order::new(2, 200.0, Side::Sell, OrderType::TakeProfit).with_qty(1.0),
-                ),
+                .with_order(Order::new(2, 200.0, Side::Sell, OrderType::TakeProfit).with_qty(1.0)),
             Position::new("BTCUSDT".to_string())
                 .with_order(
                     Order::new(3, 100.0, Side::Buy, OrderType::Market)

@@ -1,0 +1,7 @@
+<option>Select the result</option>
+{% for result in backtest_results_options %}
+<option value='{{ result.id }}'>
+    {{ result.symbol }}-{{ result.exchange }}-{{ result.market_data_type }}-{{ result.date_start }}-{{ result.date_end
+    }}
+</option>
+{% endfor %}

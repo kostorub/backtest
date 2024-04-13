@@ -1,16 +1,20 @@
 <table class="table">
     <thead>
         <tr>
-        <th scope="col">Metric's name</th>
-        <th scope="col">Value</th>
+            <th scope="col">Metric's name</th>
+            <th scope="col">Value</th>
         </tr>
     </thead>
     <tbody>
         {% for key, value in values %}
-            <tr>
-                <td class="col-form-label-sm">{{ key }}</td>
-                <td class="col-form-label-sm">{{ value | round(precision=2) }}</td>
-            </tr>
+        <tr>
+            <td class="col-form-label-sm">{{ key }}</td>
+            {% if value %}
+            <td class="col-form-label-sm">{{ value | round(precision=2) }}</td>
+            {% else %}
+            <td class="col-form-label-sm">N/A</td>
+            {% endif %}
+        </tr>
         {% endfor %}
     </tbody>
 </table>
