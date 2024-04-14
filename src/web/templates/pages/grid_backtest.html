@@ -97,7 +97,7 @@
                 </div>
             </form>
             <button type="button" class="btn btn-primary" hx-post="/backtest/grid/run" hx-include="#backtest-data"
-                hx-ext="json-enc" hx-indicator="#run-spinner" hx-target="#backtest-result-select" hx-swap="beforeend"
+                hx-ext="json-enc" hx-indicator="#run-spinner" hx-target="#backtest-result-select" 
                 _="on click toggle @disabled until htmx:afterOnLoad">
                 Run grid backtest
             </button>
@@ -107,13 +107,13 @@
 
         </div>
         <div class="col-xxl-7" id="chart-div" name="chart-div" hx-get="/backtest_result/chart"
-            hx-trigger="backtestResultsEvent from:body queue:last" hx-include="#backtest-results-form">
+            hx-trigger="backtestResultsEvent from:body delay:50ms" hx-include="#backtest-results-form">
         </div>
         <div class="col-xxl-3">
             <div>
                 {% include "forms/backtest_results_form.html" %}
             </div>
-            <div id="metrics" hx-get="/backtest_result/metrics" hx-trigger="backtestResultsEvent from:body queue:last"
+            <div id="metrics" hx-get="/backtest_result/metrics" hx-trigger="backtestResultsEvent from:body delay:50ms"
                 hx-include="#backtest-results-form">
             </div>
         </div>
