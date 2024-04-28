@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT date_start, date_end FROM market_data WHERE exchange = ?1 AND symbol = ?2 AND market_data_type = ?3",
+  "describe": {
+    "columns": [
+      {
+        "name": "date_start",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "date_end",
+        "ordinal": 1,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "202faed1506b90b55975e57037adc974bc1840ad0a4220b804899a20d5514b09"
+}
