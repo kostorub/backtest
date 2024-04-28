@@ -6,7 +6,9 @@ use crate::{
     data_models::market_data::market_data::{
         GetMarketDataRequest, MarketDataDatesRequest, MarketDataFront,
     },
-    routes::backtest::market_data::{_download_market_data, _market_data_dates, get_downloaded_market_data},
+    routes::backtest::market_data::{
+        _download_market_data, _market_data_dates, get_downloaded_market_data,
+    },
 };
 
 pub async fn downloaded_market_data(data: web::Data<AppState>) -> HttpResponse {
