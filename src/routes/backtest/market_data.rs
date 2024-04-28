@@ -94,9 +94,14 @@ pub async fn _market_data_dates(
     data: &web::Data<AppState>,
     r: MarketDataDatesRequest,
 ) -> Result<MarketDataDatesResponse, Error> {
-    let dates = get_db_market_data_dates(&data.pool, &r.exchange, &r.symbol, &r.market_data_type)
-        .await
-        .map_err(ErrorInternalServerError)?;
+    let dates = get_db_market_data_dates(
+        &data.pool,
+        &r.exchange.to_lowercase(),
+        &r.symbol.to_lowercase(),
+        &r.market_data_type,
+    )
+    .await
+    .map_err(ErrorInternalServerError)?;
 
     let result = MarketDataDatesResponse {
         date_start: i64_to_datetime_str(dates.0),
