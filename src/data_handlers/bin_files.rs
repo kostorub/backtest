@@ -51,8 +51,8 @@ fn memmap_for_file(file_path: PathBuf) -> io::Result<Mmap> {
 
 pub fn get_values_from_file<T: ToFromBytes + KLineTrait>(
     file_path: PathBuf,
-    date_start: u64,
-    date_end: u64,
+    date_start: i64,
+    date_end: i64,
 ) -> io::Result<Vec<T>> {
     let mmap = memmap_for_file(file_path)?;
     let mut result = Vec::new();
@@ -133,7 +133,7 @@ mod tests {
         let candles = get_default_candles();
         append_to_file(&candles, file_path.clone()).unwrap();
 
-        let new_candles: Vec<KLine> = get_values_from_file(file_path.clone(), 0, u64::MAX).unwrap();
+        let new_candles: Vec<KLine> = get_values_from_file(file_path.clone(), 0, i64::MAX).unwrap();
 
         assert_eq!(&candles[..], &new_candles[..]);
 
@@ -148,7 +148,7 @@ mod tests {
 
         assert!(file_path.exists());
 
-        let result: Vec<KLine> = get_values_from_file(file_path.clone(), 0, u64::MAX).unwrap();
+        let result: Vec<KLine> = get_values_from_file(file_path.clone(), 0, i64::MAX).unwrap();
 
         assert_eq!(&result, &candles);
         remove_file(file_path).unwrap();

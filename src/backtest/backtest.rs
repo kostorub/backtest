@@ -53,7 +53,7 @@ pub fn get_metrics(positions: &Vec<Position>, start_deposit: f64, finish_deposit
     Metrics::new(&positions, start_deposit, finish_deposit)
 }
 
-pub fn generate_time_period(mdt: MarketDataType, date_start: u64, date_end: u64) -> Vec<u64> {
+pub fn generate_time_period(mdt: MarketDataType, date_start: i64, date_end: i64) -> Vec<i64> {
     (date_start..date_end)
         .step_by(mdt.value().1 as usize)
         .collect()

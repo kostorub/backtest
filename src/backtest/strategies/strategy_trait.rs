@@ -26,7 +26,7 @@ pub trait Strategy {
     fn set_current_qty(&mut self, current_qty: f64);
     fn set_current_kline_position(&mut self, current_kline_position: usize);
 
-    fn run_kline(&mut self, timestamp: u64) {
+    fn run_kline(&mut self, timestamp: i64) {
         if self.klines().len() <= self.current_kline_position() {
             return;
         }
@@ -43,7 +43,7 @@ pub trait Strategy {
         self.set_current_qty(self.current_qty() + qty);
     }
 
-    fn close_all_positions(&mut self, timestamp: u64, price: f64) {
+    fn close_all_positions(&mut self, timestamp: i64, price: f64) {
         let strategy_comission = self.strategy_settings().commission;
         for mut position in self.positions_opened_mut().clone() {
             position.cancel_new_orders(timestamp);

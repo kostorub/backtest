@@ -6,8 +6,8 @@ use crate::data_models::market_data::enums::MarketDataType;
 pub fn generate_archives_names(
     symbol: String,
     market_data_type: MarketDataType,
-    date_start: u64,
-    date_end: u64,
+    date_start: i64,
+    date_end: i64,
 ) -> Vec<String> {
     let date_start = DateTime::from_timestamp_millis(date_start as i64).unwrap();
     let date_end = DateTime::from_timestamp_millis(date_end as i64).unwrap();

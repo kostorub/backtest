@@ -4,8 +4,8 @@ use super::enums::{OrderStatus, OrderType, Side};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Order {
-    pub date: u64,
-    pub date_update: Option<u64>,
+    pub date: i64,
+    pub date_update: Option<i64>,
     pub price: f64,
     pub price_executed: Option<f64>,
     pub qty: Option<f64>,
@@ -16,7 +16,7 @@ pub struct Order {
 }
 
 impl Order {
-    pub fn new(date: u64, price: f64, side: Side, order_type: OrderType) -> Self {
+    pub fn new(date: i64, price: f64, side: Side, order_type: OrderType) -> Self {
         Self {
             date,
             date_update: None,
@@ -30,7 +30,7 @@ impl Order {
         }
     }
 
-    pub fn updated(mut self, date_update: u64) -> Self {
+    pub fn updated(mut self, date_update: i64) -> Self {
         self.date_update = Some(date_update);
         self
     }
@@ -56,7 +56,7 @@ impl Order {
         self
     }
 
-    pub fn update(&mut self, date_update: u64) -> &mut Self {
+    pub fn update(&mut self, date_update: i64) -> &mut Self {
         self.date_update = Some(date_update);
         self
     }

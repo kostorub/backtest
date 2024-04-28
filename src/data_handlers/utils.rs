@@ -60,16 +60,16 @@ fn check_path_and_create(path: PathBuf) {
     }
 }
 
-pub fn datetime_str_to_u64(datetime_str: String) -> u64 {
+pub fn datetime_str_to_i64(datetime_str: String) -> i64 {
     NaiveDate::parse_from_str(datetime_str.as_str(), "%Y-%m-%d")
         .unwrap()
         .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
         .and_utc()
-        .timestamp_millis() as u64
+        .timestamp_millis()
 }
 
-pub fn u64_to_datetime_str(datetime: u64) -> String {
-    let datetime = DateTime::from_timestamp(datetime as i64 / 1000, 0).unwrap();
+pub fn i64_to_datetime_str(datetime: i64) -> String {
+    let datetime = DateTime::from_timestamp(datetime / 1000, 0).unwrap();
     datetime.format("%Y-%m-%d").to_string()
 }
 

@@ -4,13 +4,13 @@ use crate::backtest::settings::BacktestSettings;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct HodlSettings {
-    pub purchase_period: u64,
+    pub purchase_period: i64,
     pub purchase_size: f64,
 }
 
 impl HodlSettings {
     #[allow(dead_code)]
-    pub fn new(purchase_period: u64, purchase_size: f64) -> Self {
+    pub fn new(purchase_period: i64, purchase_size: f64) -> Self {
         Self {
             purchase_period,
             purchase_size,

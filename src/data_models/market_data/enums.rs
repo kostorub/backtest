@@ -60,7 +60,7 @@ pub enum MarketDataType {
 }
 
 impl MarketDataType {
-    pub fn value(&self) -> (String, u64) {
+    pub fn value(&self) -> (String, i64) {
         match *self {
             MarketDataType::Trade => ("trade".into(), 0),
             MarketDataType::KLine1s => ("1s".into(), 1000),

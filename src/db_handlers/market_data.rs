@@ -4,7 +4,7 @@ use sqlx::Error;
 use sqlx::SqlitePool;
 
 use crate::{
-    data_handlers::utils::u64_to_datetime_str,
+    data_handlers::utils::i64_to_datetime_str,
     data_models::market_data::{
         enums::MarketDataType,
         market_data::{GetMarketDataRequest, MarketDataFront},
@@ -16,14 +16,12 @@ pub async fn insert_market_data(
     exchange: String,
     symbol: String,
     market_data_type: MarketDataType,
-    date_start: u64,
-    date_end: u64,
+    date_start: i64,
+    date_end: i64,
 ) -> Result<(), Error> {
     let market_data = get_market_data_one(pool, &exchange, &symbol, &market_data_type).await?;
 
     let market_data_type = market_data_type.value().0;
-    let date_start = date_start as i64;
-    let date_end = date_end as i64;
 
     match market_data {
         Some(data) => {
@@ -75,8 +73,8 @@ pub async fn get_market_data_one(
         exchange: row.exchange,
         symbol: row.symbol,
         market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type)).unwrap(),
-        date_start: u64_to_datetime_str(row.date_start as u64),
-        date_end: u64_to_datetime_str(row.date_end as u64),
+        date_start: i64_to_datetime_str(row.date_start),
+        date_end: i64_to_datetime_str(row.date_end),
     });
 
     Ok(row)
@@ -100,8 +98,8 @@ pub async fn get_market_data_page(
         exchange: row.exchange.clone(),
         symbol: row.symbol.clone(),
         market_data_type: MarketDataType::from_str(String::as_str(&row.market_data_type)).unwrap(),
-        date_start: u64_to_datetime_str(row.date_start as u64),
-        date_end: u64_to_datetime_str(row.date_end as u64),
+        date_start: i64_to_datetime_str(row.date_start),
+        date_end: i64_to_datetime_str(row.date_end),
     })
     .collect();
 

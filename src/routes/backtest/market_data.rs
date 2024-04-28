@@ -4,7 +4,7 @@ use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
 
 use crate::{
     app_state::AppState,
-    data_handlers::{pipeline, utils::datetime_str_to_u64},
+    data_handlers::{pipeline, utils::datetime_str_to_i64},
     data_models::market_data::{
         kline::KLine,
         market_data::{GetMarketDataRequest, MarketDataFront},
@@ -55,8 +55,8 @@ pub async fn _download_market_data(
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
         r.market_data_type.clone(),
-        datetime_str_to_u64(r.date_start.clone()),
-        datetime_str_to_u64(r.date_end.clone()),
+        datetime_str_to_i64(r.date_start.clone()),
+        datetime_str_to_i64(r.date_end.clone()),
     )
     .await;
 
@@ -65,8 +65,8 @@ pub async fn _download_market_data(
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
         r.market_data_type.clone(),
-        datetime_str_to_u64(r.date_start.clone()),
-        datetime_str_to_u64(r.date_end.clone()),
+        datetime_str_to_i64(r.date_start.clone()),
+        datetime_str_to_i64(r.date_end.clone()),
     )
     .await
     .map_err(ErrorInternalServerError)?;

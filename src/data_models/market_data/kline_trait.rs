@@ -1,5 +1,5 @@
 pub trait KLineTrait {
-    fn date(&self) -> u64;
+    fn date(&self) -> i64;
     fn open(&self) -> f64;
     fn high(&self) -> f64;
     fn low(&self) -> f64;

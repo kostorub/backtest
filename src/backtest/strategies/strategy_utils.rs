@@ -16,8 +16,8 @@ pub fn get_klines(
     exchange: String,
     symbol: String,
     market_data_type: MarketDataType,
-    date_start: u64,
-    date_end: u64,
+    date_start: i64,
+    date_end: i64,
 ) -> Vec<KLine> {
     let file_path = PathBuf::from(data_path.clone()).join(bin_file_name(
         exchange.clone(),

@@ -18,8 +18,8 @@ pub struct MarketData {
     pub exchange: String,
     pub symbol: String,
     pub market_data_type: MarketDataType,
-    pub date_start: u64,
-    pub date_end: u64,
+    pub date_start: i64,
+    pub date_end: i64,
 }
 
 #[derive(Debug, Clone, Deserialize)]

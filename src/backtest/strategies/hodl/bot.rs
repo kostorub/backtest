@@ -5,7 +5,7 @@ use super::settings::HodlSettings;
 #[derive(Debug, Clone)]
 pub struct HodlBot {
     pub settings: HodlSettings,
-    pub last_purchase_ts: u64,
+    pub last_purchase_ts: i64,
 }
 
 impl HodlBot {
@@ -16,7 +16,7 @@ impl HodlBot {
         }
     }
 
-    pub fn run(&mut self, ts: u64, current_budget: f64) -> Option<Action> {
+    pub fn run(&mut self, ts: i64, current_budget: f64) -> Option<Action> {
         if ts < self.last_purchase_ts + self.settings.purchase_period {
             return None;
         }

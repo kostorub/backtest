@@ -2,7 +2,7 @@ use sqlx::{Error, Pool, Sqlite};
 
 use crate::{
     backtest::{settings::BacktestSettings, strategies::grid::settings::GridSettingsRequest},
-    data_handlers::utils::u64_to_datetime_str,
+    data_handlers::utils::i64_to_datetime_str,
     data_models::{
         market_data::{metrics::Metrics, position::Position},
         routes::backtest_results::{Data, ResultOption},
@@ -172,8 +172,8 @@ pub async fn get_data_options(pool: &Pool<Sqlite>) -> Result<Vec<ResultOption>, 
         symbol: row.symbol.clone(),
         exchange: row.exchange.clone(),
         market_data_type: row.market_data_type.clone().into(),
-        date_start: u64_to_datetime_str(row.date_start as u64),
-        date_end: u64_to_datetime_str(row.date_end as u64),
+        date_start: i64_to_datetime_str(row.date_start),
+        date_end: i64_to_datetime_str(row.date_end),
     })
     .collect();
 

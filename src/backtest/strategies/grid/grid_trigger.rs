@@ -6,7 +6,7 @@ pub struct GridTrigger {
     pub trigger_type: Side,
 }
 
-pub fn generate_trigger_prices(start: f64, end: f64, step: u64) -> Vec<f64> {
+pub fn generate_trigger_prices(start: f64, end: f64, step: i64) -> Vec<f64> {
     if step <= 0 {
         return vec![];
     }
@@ -18,7 +18,7 @@ pub fn generate_trigger_prices(start: f64, end: f64, step: u64) -> Vec<f64> {
 pub fn generate_grid_triggers(
     price_low: f64,
     price_high: f64,
-    grids_count: u64,
+    grids_count: i64,
     start_price: f64,
 ) -> Vec<GridTrigger> {
     generate_trigger_prices(price_low, price_high, grids_count)

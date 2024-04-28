@@ -83,12 +83,12 @@ pub async fn _run_grid(
             .unwrap()
             .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
             .and_utc()
-            .timestamp_millis() as u64,
+            .timestamp_millis() as i64,
         date_end: NaiveDate::parse_from_str(request_settings.date_end.as_str(), "%Y-%m-%d")
             .unwrap()
             .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
             .and_utc()
-            .timestamp_millis() as u64,
+            .timestamp_millis() as i64,
         deposit: request_settings.deposit,
         commission: request_settings.commission,
         market_data_type: request_settings.market_data_type.clone(),

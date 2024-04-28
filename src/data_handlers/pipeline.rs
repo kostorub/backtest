@@ -24,8 +24,8 @@ pub async fn pipeline<T>(
     exchange: String,
     symbol: String,
     market_data_type: MarketDataType,
-    date_start: u64,
-    date_end: u64,
+    date_start: i64,
+    date_end: i64,
 ) where
     T: DeserializeOwned + ToFromBytes,
 {
@@ -56,8 +56,8 @@ async fn download_archives(
     data_url: String,
     symbol: String,
     market_data_type: MarketDataType,
-    date_start: u64,
-    date_end: u64,
+    date_start: i64,
+    date_end: i64,
 ) {
     let archive_names = generate_archives_names(
         symbol.clone(),

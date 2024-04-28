@@ -36,7 +36,7 @@ impl Position {
         self.orders.first().unwrap().price
     }
 
-    pub fn open_date(&self) -> u64 {
+    pub fn open_date(&self) -> i64 {
         self.orders.first().unwrap().date
     }
 
@@ -44,7 +44,7 @@ impl Position {
         self.orders.last().unwrap().price
     }
 
-    pub fn last_date(&self) -> u64 {
+    pub fn last_date(&self) -> i64 {
         self.orders.last().unwrap().date_update.unwrap()
     }
 
@@ -158,7 +158,7 @@ impl Position {
         )
     }
 
-    pub fn cancel_new_orders(&mut self, date: u64) {
+    pub fn cancel_new_orders(&mut self, date: i64) {
         for order in self.orders.iter_mut() {
             if order.status == OrderStatus::New {
                 order.status = OrderStatus::Cancelled;

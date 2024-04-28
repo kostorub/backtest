@@ -10,7 +10,7 @@ use crate::data_models::market_data::enums::MarketDataType;
 pub struct GridSettings {
     pub price_low: f64,
     pub price_high: f64,
-    pub grids_count: u64,
+    pub grids_count: i64,
     pub deposit: f64,
     pub grid_trigger: f64,
     pub grid_sl: Option<f64>,
@@ -23,7 +23,7 @@ impl GridSettings {
     pub fn new(
         price_low: f64,
         price_high: f64,
-        grids_count: u64,
+        grids_count: i64,
         deposit: f64,
         grid_trigger: f64,
         grid_sl: Option<f64>,
@@ -60,7 +60,7 @@ pub struct GridSettingsRequest {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub price_high: f64,
     #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub grids_count: u64,
+    pub grids_count: i64,
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub grid_trigger: f64,
     #[serde(deserialize_with = "deserialize_option_number_from_string")]

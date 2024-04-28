@@ -13,7 +13,7 @@ use crate::data_models::market_data::enums::MarketDataType;
 use crate::data_models::market_data::kline::KLine;
 use crate::data_models::market_data::position::Position;
 
-fn parse_time(t: u64, mdt: MarketDataType) -> String {
+fn parse_time(t: i64, mdt: MarketDataType) -> String {
     Utc.timestamp_opt((t / mdt.value().1 * mdt.value().1) as i64 / 1000, 0)
         .unwrap()
         .to_string()
