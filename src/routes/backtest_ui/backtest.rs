@@ -81,6 +81,7 @@ pub async fn run_grid(
         .unwrap();
 
     HttpResponse::Ok()
-        .append_header(("HX-Trigger", "backtestFinished"))
+        .append_header(("HX-Trigger", "backtestResultsEvent"))
+        // .append_header(("HX-Trigger", "backtestFinished"))
         .body(body)
 }

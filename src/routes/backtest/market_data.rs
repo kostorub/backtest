@@ -4,12 +4,19 @@ use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
 
 use crate::{
     app_state::AppState,
-    data_handlers::{pipeline, utils::datetime_str_to_i64},
+    data_handlers::{
+        pipeline,
+        utils::{datetime_str_to_i64, i64_to_datetime_str},
+    },
     data_models::market_data::{
         kline::KLine,
-        market_data::{GetMarketDataRequest, MarketDataFront},
+        market_data::{
+            GetMarketDataRequest, MarketDataDatesRequest, MarketDataDatesResponse, MarketDataFront,
+        },
     },
-    db_handlers::market_data::{get_market_data_page, insert_market_data},
+    db_handlers::market_data::{
+        get_db_market_data_dates, get_market_data_page, insert_market_data,
+    },
 };
 
 pub async fn downloaded_market_data(
@@ -72,4 +79,29 @@ pub async fn _download_market_data(
     .map_err(ErrorInternalServerError)?;
 
     Ok(())
+}
+
+pub async fn market_data_dates(
+    data: web::Data<AppState>,
+    r: web::Query<MarketDataDatesRequest>,
+) -> Result<HttpResponse, Error> {
+    let dates = _market_data_dates(&data, r.into_inner()).await?;
+
+    Ok(HttpResponse::Ok().json(dates))
+}
+
+pub async fn _market_data_dates(
+    data: &web::Data<AppState>,
+    r: MarketDataDatesRequest,
+) -> Result<MarketDataDatesResponse, Error> {
+    let dates = get_db_market_data_dates(&data.pool, &r.exchange, &r.symbol, &r.market_data_type)
+        .await
+        .map_err(ErrorInternalServerError)?;
+
+    let result = MarketDataDatesResponse {
+        date_start: i64_to_datetime_str(dates.0),
+        date_end: i64_to_datetime_str(dates.1),
+    };
+
+    Ok(result)
 }

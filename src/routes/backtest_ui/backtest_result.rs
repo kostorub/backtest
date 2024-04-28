@@ -28,6 +28,8 @@ pub async fn backtest_results_options(data: web::Data<AppState>) -> Result<HttpR
         .await
         .map_err(ErrorInternalServerError)?;
 
+    dbg!(results_options.clone());
+
     let mut context = Context::new();
     context.insert("backtest_results_options", &results_options);
 

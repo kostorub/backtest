@@ -33,3 +33,17 @@ pub struct MarketDataResponse {
     pub market_data: Vec<MarketDataFront>,
     pub total: i64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MarketDataDatesRequest {
+    pub exchange: String,
+    pub symbol: String,
+    pub market_data_type: MarketDataType,
+    pub input_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MarketDataDatesResponse {
+    pub date_start: String,
+    pub date_end: String,
+}

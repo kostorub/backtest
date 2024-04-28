@@ -83,3 +83,16 @@ fn get_period(archive_name: String) -> String {
         return "daily".to_string();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_datetime_from_to() {
+        let datetime_str = "2020-01-01".to_string();
+        let datetime = datetime_str_to_i64(datetime_str.clone());
+        let new_datetime_str = i64_to_datetime_str(datetime);
+        assert_eq!(datetime_str, new_datetime_str);
+    }
+}

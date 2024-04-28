@@ -25,7 +25,8 @@ pub async fn exchanges(data: web::Data<AppState>) -> HttpResponse {
 }
 
 pub async fn local_symbols(data: web::Data<AppState>) -> HttpResponse {
-    let local_symbols = get_local_symbols(&data);
+    let mut local_symbols = get_local_symbols(&data);
+    local_symbols.insert(0, "Select".to_string());
 
     let mut context = Context::new();
     context.insert("values", &local_symbols);
@@ -72,7 +73,8 @@ pub async fn mdts_from_symbol(
     data: web::Data<AppState>,
     r: web::Query<SymbolQuery>,
 ) -> HttpResponse {
-    let mdts = get_mdts_from_symbol(&data, r);
+    let mut mdts = get_mdts_from_symbol(&data, r);
+    mdts.insert(0, "Select".to_string());
 
     let mut context = Context::new();
     context.insert("values", &mdts);

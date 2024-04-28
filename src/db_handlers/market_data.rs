@@ -105,3 +105,23 @@ pub async fn get_market_data_page(
 
     Ok(rows)
 }
+
+/// Function to get the date_start and date_end of the symbol for the specified exchange and market_data_type
+pub async fn get_db_market_data_dates(
+    pool: &SqlitePool,
+    exchange: &String,
+    symbol: &String,
+    market_data_type: &MarketDataType,
+) -> Result<(i64, i64), Error> {
+    let market_data_type = market_data_type.value().0;
+    let row = sqlx::query!(
+        "SELECT date_start, date_end FROM market_data WHERE exchange = ?1 AND symbol = ?2 AND market_data_type = ?3",
+        exchange,
+        symbol,
+        market_data_type
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok((row.date_start, row.date_end))
+}
