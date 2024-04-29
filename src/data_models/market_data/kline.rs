@@ -96,4 +96,14 @@ impl KLineTrait for KLine {
     fn qty(&self) -> f64 {
         self.volume
     }
+    fn zero_kline(date: i64, price: f64) -> Self {
+        KLine {
+            date,
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+            volume: 0.0,
+        }
+    }
 }

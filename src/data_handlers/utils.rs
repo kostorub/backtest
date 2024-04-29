@@ -3,7 +3,10 @@ use std::{io::Cursor, path::PathBuf};
 use chrono::{DateTime, NaiveDate, NaiveTime};
 use log::{debug, info, warn};
 
-use crate::data_models::market_data::enums::MarketDataType;
+use crate::data_models::{
+    be_bytes::ToFromBytes,
+    market_data::{enums::MarketDataType, kline_trait::KLineTrait},
+};
 
 pub async fn download_archive(archive_url: String, archive_path: PathBuf) {
     info!(
@@ -84,8 +87,48 @@ fn get_period(archive_name: String) -> String {
     }
 }
 
+pub fn fill_trades_by_zeros<T>(trades: Vec<T>, mdt: MarketDataType, last_trade_date: Option<i64>) -> Vec<T>
+where
+    T: KLineTrait + ToFromBytes + Clone,
+{
+    let date_size = mdt.value().1;
+    let mut result = Vec::new();
+
+    // At first we need to check if the delta between the last trade from the previous archive and the first trade from the current archive doesn't contain any missing trades
+    if let Some(last_trade_date) = last_trade_date {
+        let first_trade = trades[0].clone();
+        let first_trade_time = first_trade.date();
+        let time_diff = first_trade_time - last_trade_date;
+        if time_diff > date_size {
+            for i in 1..time_diff / date_size {
+                let zero_trade = T::zero_kline(last_trade_date + date_size * i, first_trade.close());
+                result.push(zero_trade);
+            }
+        }
+    }
+
+    for i in 0..trades.len() - 1 {
+        let trade = trades[i].clone();
+        let next_trade = trades[i + 1].clone();
+        result.push(trade.clone());
+        let trade_time = trade.date();
+        let next_trade_time = next_trade.date();
+        let time_diff = next_trade_time - trade_time;
+        if time_diff > date_size {
+            for i in 1..time_diff / date_size {
+                let zero_trade = T::zero_kline(trade_time + date_size * i, trade.close());
+                result.push(zero_trade);
+            }
+        }
+    }
+    result.push(trades[trades.len() - 1].clone());
+    result
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::data_models::market_data::kline::KLine;
+
     use super::*;
 
     #[test]
@@ -94,5 +137,56 @@ mod tests {
         let datetime = datetime_str_to_i64(datetime_str.clone());
         let new_datetime_str = i64_to_datetime_str(datetime);
         assert_eq!(datetime_str, new_datetime_str);
+    }
+
+    #[test]
+    fn test_fill_trades_by_zeros_0() {
+        let trades = vec![
+            KLine::blank().with_date(60 * 1000),
+            KLine::blank().with_date(120 * 1000),
+            KLine::blank().with_date(180 * 1000),
+        ];
+        let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, None);
+        assert_eq!(result.len(), 3);
+    }
+
+    #[test]
+    fn test_fill_trades_by_zeros_1() {
+        let trades = vec![
+            KLine::blank().with_date(60 * 1000),
+            KLine::blank().with_date(180 * 1000),
+            KLine::blank().with_date(240 * 1000),
+        ];
+        let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, None);
+        assert_eq!(result.len(), 4);
+        assert_eq!(result[1].date(), 120 * 1000);
+    }
+
+    #[test]
+    fn test_fill_trades_by_zeros_2() {
+        let trades = vec![
+            KLine::blank().with_date(60 * 1000),
+            KLine::blank().with_date(120 * 1000),
+            KLine::blank().with_date(300 * 1000),
+        ];
+        let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, None);
+        assert_eq!(result.len(), 5);
+        assert_eq!(result[2].date(), 180 * 1000);
+        assert_eq!(result[3].date(), 240 * 1000);
+    }
+
+    #[test]
+    fn test_fill_trades_by_zeros_3() {
+        let trades = vec![
+            KLine::blank().with_date(300_000),
+            KLine::blank().with_date(360_000),
+            KLine::blank().with_date(480_000),
+        ];
+        let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, Some(60_000));
+        assert_eq!(result.len(), 7);
+        assert_eq!(result[0].date(), 120_000);
+        assert_eq!(result[1].date(), 180_000);
+        assert_eq!(result[2].date(), 240_000);
+        assert_eq!(result[5].date(), 420_000);
     }
 }

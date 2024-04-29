@@ -5,4 +5,5 @@ pub trait KLineTrait {
     fn low(&self) -> f64;
     fn close(&self) -> f64;
     fn qty(&self) -> f64;
+    fn zero_kline(date: i64, price: f64) -> Self;
 }

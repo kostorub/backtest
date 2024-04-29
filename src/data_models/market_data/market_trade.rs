@@ -67,4 +67,14 @@ impl KLineTrait for MarketTrade {
     fn qty(&self) -> f64 {
         self.qty
     }
+
+    fn zero_kline(date: i64, price: f64) -> MarketTrade {
+        MarketTrade {
+            id: 0,
+            price: price,
+            qty: 0.0,
+            base_qty: 0.0,
+            timestamp: date,
+        }
+    }
 }
