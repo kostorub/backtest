@@ -23,11 +23,11 @@ pub struct HodlStrategy {
 }
 
 impl HodlStrategy {
-    pub fn new(strategy_settings: StrategySettings, bot: HodlBot, klines: Vec<KLine>) -> Self {
+    pub fn new(strategy_settings: StrategySettings, bot: HodlBot) -> Self {
         Self {
             strategy_settings: strategy_settings.clone(),
             bot,
-            klines,
+            klines: Vec::new(),
             positions_opened: Vec::new(),
             positions_closed: Vec::new(),
             current_budget: strategy_settings.deposit,

@@ -27,12 +27,12 @@ pub struct GridStrategy {
 }
 
 impl GridStrategy {
-    pub fn new(strategy_settings: StrategySettings, bot: GridBot, klines: Vec<KLine>) -> Self {
+    pub fn new(strategy_settings: StrategySettings, bot: GridBot) -> Self {
         Self {
             strategy_settings: strategy_settings.clone(),
             bot,
             grid_position_binding: HashMap::new(),
-            klines,
+            klines: Vec::new(),
             positions_opened: Vec::new(),
             positions_closed: Vec::new(),
             current_budget: strategy_settings.deposit,
@@ -182,21 +182,21 @@ mod test {
         let strategy_settings = get_grid_strategy_settings();
         let mut strategy = GridStrategy::new(
             strategy_settings.clone(),
-            bot,
-            vec![
-                KLine::blank().with_date(0).with_close(50.0),
-                KLine::blank().with_date(1).with_close(59.0),
-                KLine::blank().with_date(2).with_close(61.0),
-                KLine::blank().with_date(3).with_close(49.0),
-                KLine::blank().with_date(4).with_close(39.0),
-                KLine::blank().with_date(5).with_close(51.0),
-                KLine::blank().with_date(6).with_close(61.0),
-                KLine::blank().with_date(7).with_close(00.0),
-                KLine::blank().with_date(8).with_close(00.0),
-                KLine::blank().with_date(9).with_close(00.0),
-                KLine::blank().with_date(10).with_close(00.0),
-            ]
+            bot
         );
+        strategy.set_klines(vec![
+            KLine::blank().with_date(0).with_close(50.0),
+            KLine::blank().with_date(1).with_close(59.0),
+            KLine::blank().with_date(2).with_close(61.0),
+            KLine::blank().with_date(3).with_close(49.0),
+            KLine::blank().with_date(4).with_close(39.0),
+            KLine::blank().with_date(5).with_close(51.0),
+            KLine::blank().with_date(6).with_close(61.0),
+            KLine::blank().with_date(7).with_close(00.0),
+            KLine::blank().with_date(8).with_close(00.0),
+            KLine::blank().with_date(9).with_close(00.0),
+            KLine::blank().with_date(10).with_close(00.0),
+        ]);
 
         strategy.run_kline(0);
         assert_eq!(strategy.current_budget, 100.0);

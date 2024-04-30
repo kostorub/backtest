@@ -12,7 +12,6 @@ use crate::backtest::strategies::grid::settings::GridSettingsRequest;
 use crate::backtest::strategies::hodl::bot::HodlBot;
 use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
 use crate::backtest::strategies::hodl::strategy::HodlStrategy;
-use crate::backtest::strategies::strategy_utils::get_klines;
 use crate::data_models::routes::backtest_results::ResultOption;
 use crate::routes::backtest::backtest::_run_grid;
 
@@ -29,23 +28,14 @@ pub async fn run_hodl(
     let strategies_settings = strategies_settings(backtest_settings.clone());
     let mut strategies: Vec<HodlStrategy> = strategies_settings
         .iter()
-        .map(|s| {
-            HodlStrategy::new(
-                s.clone(),
-                hodl_bot.clone(),
-                get_klines(
-                    data_path.clone(),
-                    backtest_settings.exchange.clone(),
-                    s.symbol.clone(),
-                    s.market_data_type.clone(),
-                    backtest_settings.date_start,
-                    backtest_settings.date_end,
-                ),
-            )
-        })
+        .map(|s| HodlStrategy::new(s.clone(), hodl_bot.clone()))
         .collect();
 
-    backtest::run_sequentially(backtest_settings.clone(), &mut strategies);
+    backtest::run_sequentially(
+        backtest_settings.clone(),
+        &mut strategies,
+        data_path.clone(),
+    );
     let positions = get_positions_from_strategies(strategies.clone());
     let metrics = get_metrics(
         &positions,

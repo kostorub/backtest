@@ -60,6 +60,7 @@ pub enum MarketDataType {
 }
 
 impl MarketDataType {
+    /// Returns the string representation of the MarketDataType and the value in milliseconds
     pub fn value(&self) -> (String, i64) {
         match *self {
             MarketDataType::Trade => ("trade".into(), 0),
@@ -75,6 +76,15 @@ impl MarketDataType {
             MarketDataType::KLine6h => ("6h".into(), 6 * 60 * 60 * 1000),
             MarketDataType::KLine8h => ("8h".into(), 8 * 60 * 60 * 1000),
             MarketDataType::KLine1d => ("1d".into(), 24 * 60 * 60 * 1000),
+        }
+    }
+
+    /// Returns the recommended period for the MarketDataType in milliseconds
+    /// If the return value is None, the recommended period is all the data available
+    pub fn period(&self) -> Option<i64> {
+        match *self {
+            MarketDataType::KLine1s => Some(60 * 60 * 24 * 30 * 1000),
+            _ => None,
         }
     }
 }

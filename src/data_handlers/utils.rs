@@ -87,7 +87,11 @@ fn get_period(archive_name: String) -> String {
     }
 }
 
-pub fn fill_trades_by_zeros<T>(trades: Vec<T>, mdt: MarketDataType, last_trade_date: Option<i64>) -> Vec<T>
+pub fn fill_trades_by_zeros<T>(
+    trades: Vec<T>,
+    mdt: MarketDataType,
+    last_trade_date: Option<i64>,
+) -> Vec<T>
 where
     T: KLineTrait + ToFromBytes + Clone,
 {
@@ -101,7 +105,8 @@ where
         let time_diff = first_trade_time - last_trade_date;
         if time_diff > date_size {
             for i in 1..time_diff / date_size {
-                let zero_trade = T::zero_kline(last_trade_date + date_size * i, first_trade.close());
+                let zero_trade =
+                    T::zero_kline(last_trade_date + date_size * i, first_trade.close());
                 result.push(zero_trade);
             }
         }

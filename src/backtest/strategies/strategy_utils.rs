@@ -22,10 +22,13 @@ pub fn get_klines(
     let file_path = PathBuf::from(data_path.clone()).join(bin_file_name(
         exchange.clone(),
         symbol.clone(),
-        market_data_type,
+        market_data_type.clone(),
     ));
+    if date_end < date_start {
+        return Vec::new();
+    }
     info!("Loading data from file: {:?}", file_path);
-    get_values_from_file::<KLine>(file_path, date_start, date_end).unwrap()
+    get_values_from_file::<KLine>(file_path, date_start, date_end, market_data_type).unwrap()
 }
 
 pub fn check_tp_sl(kline: &KLine, positions_opened: &mut Vec<Position>, commission: f64) {

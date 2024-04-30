@@ -53,12 +53,32 @@ pub fn get_values_from_file<T: ToFromBytes + KLineTrait>(
     file_path: PathBuf,
     date_start: i64,
     date_end: i64,
+    mdt: MarketDataType,
 ) -> io::Result<Vec<T>> {
+    let first_value = get_first_value_from_file::<T>(file_path.clone())?;
+    let last_value = get_last_value_from_file::<T>(file_path.clone())?;
+
+    // If the requested date range is outside the range of the file, return an empty vector
+    if date_start > last_value.date() || date_end < first_value.date() {
+        return Ok(Vec::new());
+    }
+
+    let mut offset = 0 as usize;
+    if date_start > first_value.date() {
+        offset = ((date_start - first_value.date()) / mdt.value().1) as usize;
+    };
+
     let mmap = memmap_for_file(file_path)?;
+
+    let mut len = mmap.len() / T::size() - offset;
+    if date_end < last_value.date() {
+        len = len - ((last_value.date() - date_end) / mdt.value().1) as usize;
+    }
+
     let mut result = Vec::new();
-    let len = mmap.len() / T::size();
+
     for i in 0..len {
-        let v = T::from_be_bytes(&mmap[i * T::size()..(i + 1) * T::size()]);
+        let v = T::from_be_bytes(&mmap[(offset + i) * T::size()..(offset + i + 1) * T::size()]);
         if v.date() >= date_start && v.date() <= date_end {
             result.push(v);
         }
@@ -133,7 +153,13 @@ mod tests {
         let candles = get_default_candles();
         append_to_file(&candles, file_path.clone()).unwrap();
 
-        let new_candles: Vec<KLine> = get_values_from_file(file_path.clone(), 0, i64::MAX).unwrap();
+        let new_candles: Vec<KLine> = get_values_from_file(
+            file_path.clone(),
+            candles.first().unwrap().date(),
+            candles.last().unwrap().date(),
+            MarketDataType::KLine1m,
+        )
+        .unwrap();
 
         assert_eq!(&candles[..], &new_candles[..]);
 
@@ -148,16 +174,109 @@ mod tests {
 
         assert!(file_path.exists());
 
-        let result: Vec<KLine> = get_values_from_file(file_path.clone(), 0, i64::MAX).unwrap();
+        let result: Vec<KLine> =
+            get_values_from_file(file_path.clone(), 0, i64::MAX, MarketDataType::KLine1m).unwrap();
 
         assert_eq!(&result, &candles);
+        remove_file(file_path).unwrap();
+    }
+
+    /// [] - actual data
+    /// {} - requested data
+    /// {[}] - current test
+    #[test]
+    fn test_get_candles_from_file_1() {
+        let candles = get_default_candles();
+        let file_path = PathBuf::from("test_4.bin");
+        create_and_write_to_file(&candles, file_path.clone()).unwrap();
+
+        assert!(file_path.exists());
+
+        let result: Vec<KLine> = get_values_from_file(
+            file_path.clone(),
+            candles.first().unwrap().date() - MarketDataType::KLine1m.value().1,
+            candles.last().unwrap().date() - MarketDataType::KLine1m.value().1,
+            MarketDataType::KLine1m,
+        )
+        .unwrap();
+
+        assert_eq!(&result, &candles[..candles.len() - 1]);
+        remove_file(file_path).unwrap();
+    }
+
+    /// [] - actual data
+    /// {} - requested data
+    /// [{]} - current test
+    #[test]
+    fn test_get_candles_from_file_2() {
+        let candles = get_default_candles();
+        let file_path = PathBuf::from("test_5.bin");
+        create_and_write_to_file(&candles, file_path.clone()).unwrap();
+
+        assert!(file_path.exists());
+
+        let result: Vec<KLine> = get_values_from_file(
+            file_path.clone(),
+            candles.first().unwrap().date() + MarketDataType::KLine1m.value().1,
+            candles.last().unwrap().date() + MarketDataType::KLine1m.value().1,
+            MarketDataType::KLine1m,
+        )
+        .unwrap();
+
+        assert_eq!(&result, &candles[1..]);
+        remove_file(file_path).unwrap();
+    }
+
+    /// [] - actual data
+    /// {} - requested data
+    /// [{]} - current test
+    #[test]
+    fn test_get_candles_from_file_3() {
+        let candles = get_default_candles();
+        let file_path = PathBuf::from("test_6.bin");
+        create_and_write_to_file(&candles, file_path.clone()).unwrap();
+
+        assert!(file_path.exists());
+
+        let result: Vec<KLine> = get_values_from_file(
+            file_path.clone(),
+            candles.first().unwrap().date() + MarketDataType::KLine1m.value().1,
+            candles.last().unwrap().date() + MarketDataType::KLine1m.value().1,
+            MarketDataType::KLine1m,
+        )
+        .unwrap();
+
+        assert_eq!(&result, &candles[1..]);
+        remove_file(file_path).unwrap();
+    }
+
+    /// [] - actual data
+    /// {} - requested data
+    /// [{}] - current test
+    #[test]
+    fn test_get_candles_from_file_4() {
+        let candles = get_default_candles();
+        let file_path = PathBuf::from("test_7.bin");
+        create_and_write_to_file(&candles, file_path.clone()).unwrap();
+
+        assert!(file_path.exists());
+
+        let result: Vec<KLine> = get_values_from_file(
+            file_path.clone(),
+            candles.first().unwrap().date() + MarketDataType::KLine1m.value().1,
+            candles.last().unwrap().date() - MarketDataType::KLine1m.value().1,
+            MarketDataType::KLine1m,
+        )
+        .unwrap();
+
+        assert_eq!(&result, &candles[1..candles.len() - 1]);
         remove_file(file_path).unwrap();
     }
 
     #[test]
     fn test_get_first_value_from_file() {
         let candles = get_default_candles();
-        let file_path = PathBuf::from("test_4.bin");
+        let file_path = PathBuf::from("test_8.bin");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
 
         let candle: KLine = get_first_value_from_file(file_path.clone()).unwrap();
@@ -169,7 +288,7 @@ mod tests {
     #[test]
     fn test_get_last_value_from_file() {
         let candles = get_default_candles();
-        let file_path = PathBuf::from("test_5.bin");
+        let file_path = PathBuf::from("test_9.bin");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
 
         let candle: KLine = get_last_value_from_file(file_path.clone()).unwrap();
@@ -181,7 +300,7 @@ mod tests {
     #[test]
     fn test_get_filenames() {
         let candles = get_default_candles();
-        let file_path = PathBuf::from("./test_6.binspecial");
+        let file_path = PathBuf::from("./test_10.binspecial");
         create_and_write_to_file(&candles, file_path.clone()).unwrap();
 
         assert!(file_path.exists());

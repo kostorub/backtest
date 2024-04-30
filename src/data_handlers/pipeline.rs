@@ -4,8 +4,15 @@ use log::{debug, info};
 use serde::de::DeserializeOwned;
 
 use crate::{
-    data_handlers::{bin_files::{append_to_file, bin_file_name, create_and_write_to_file}, csv_files::load_data_from_csv, utils::fill_trades_by_zeros},
-    data_models::{be_bytes::ToFromBytes, market_data::{enums::MarketDataType, kline_trait::KLineTrait}},
+    data_handlers::{
+        bin_files::{append_to_file, bin_file_name, create_and_write_to_file},
+        csv_files::load_data_from_csv,
+        utils::fill_trades_by_zeros,
+    },
+    data_models::{
+        be_bytes::ToFromBytes,
+        market_data::{enums::MarketDataType, kline_trait::KLineTrait},
+    },
 };
 
 use futures::future::join_all;
@@ -120,9 +127,9 @@ fn process_one_archive<T>(
     symbol: String,
     market_data_type: MarketDataType,
     last_trade_date: Option<i64>,
-)  -> i64
+) -> i64
 where
-    T: DeserializeOwned + ToFromBytes + KLineTrait + Clone
+    T: DeserializeOwned + ToFromBytes + KLineTrait + Clone,
 {
     let file_name = extract_archive(data_path.clone(), archive_path.clone()).unwrap();
     let csv_path = data_path.clone().join(file_name.clone());
