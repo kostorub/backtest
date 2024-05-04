@@ -8,6 +8,19 @@ The goal of this project is to make a backtesting framework for the most popular
 - Calculation of metrics
 - Simple user interface in the HTMX format
 
+### Binance's historical market data
+The historical data is loaded from the [Binance Data Collection](https://data.binance.vision) source. The data is stored as in the following structure in the file system to allow easy access by the [memory mapped IO](https://docs.rs/memmap2/latest/memmap2/).  
+
+|timestamp: 8 bytes|open: 8 bytes|high: 8 bytes|low: 8 bytes|close: 8 bytes|volume: 8 bytes|
+|---|---|---|---|---|---|
+
+Klines are going one by one.
+|01-01-2000 12:00:00|01-01-2000 12:00:01|01-01-2000 12:00:02|...|N|
+|---|---|---|---|---|
+
+The backtesting engine takes the data in the range of `date_start` and `date_end` using the timestamp offset.
+To use the offset, gaps in the klines sequence (if they exist) are filled with the previous valid kline data.
+
 ## Code structure
 <pre>
 .
