@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_files::Files;
-use actix_web::middleware::Logger;
+use actix_web::middleware::{self, Logger};
 use actix_web_lab::middleware::from_fn;
 use env_logger::Builder;
 use std::sync::Arc;
@@ -58,6 +58,7 @@ pub async fn start_server() -> std::io::Result<()> {
         .max_age(3600);
     App::new()
         .wrap(Logger::default())
+        .wrap(middleware::Compress::default())
         .wrap(cors)
         .app_data(app_data.clone())
         .service(Files::new("/static", "src/web/static/").show_files_listing())
