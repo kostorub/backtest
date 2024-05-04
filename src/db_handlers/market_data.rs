@@ -18,12 +18,12 @@ pub async fn insert_market_data(
     market_data_type: MarketDataType,
     date_start: i64,
     date_end: i64,
-) -> Result<(), Error> {
+) -> Result<i64, Error> {
     let market_data = get_market_data_one(pool, &exchange, &symbol, &market_data_type).await?;
 
     let market_data_type = market_data_type.value().0;
 
-    match market_data {
+    let last_id = match market_data {
         Some(data) => {
             let id = data.id.unwrap();
             sqlx::query!(
@@ -34,23 +34,25 @@ pub async fn insert_market_data(
             )
             .execute(pool)
             .await?;
+            id
         }
-        None => {
-            sqlx::query!(
-                "INSERT INTO market_data (exchange, symbol, market_data_type, date_start, date_end)
+        None => sqlx::query!(
+            "INSERT INTO market_data (exchange, symbol, market_data_type, date_start, date_end)
                 VALUES (?1, ?2, ?3, ?4, ?5)",
-                exchange,
-                symbol,
-                market_data_type,
-                date_start,
-                date_end
-            )
-            .execute(pool)
-            .await?;
-        }
-    }
+            exchange,
+            symbol,
+            market_data_type,
+            date_start,
+            date_end
+        )
+        .execute(pool)
+        .await?
+        .last_insert_rowid(),
+    };
 
-    Ok(())
+    dbg!(&last_id);
+
+    Ok(last_id)
 }
 
 pub async fn get_market_data_one(

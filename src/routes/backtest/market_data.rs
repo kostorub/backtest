@@ -45,15 +45,15 @@ pub async fn download_market_data(
     data: web::Data<AppState>,
     r: web::Json<MarketDataFront>,
 ) -> Result<HttpResponse, Error> {
-    _download_market_data(data, r).await?;
+    let result = _download_market_data(data, r).await?;
 
-    Ok(HttpResponse::Ok().json("Market data downloaded"))
+    Ok(HttpResponse::Ok().json(result))
 }
 
 pub async fn _download_market_data(
     data: web::Data<AppState>,
     r: web::Json<MarketDataFront>,
-) -> Result<(), Error> {
+) -> Result<MarketDataFront, Error> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
     pipeline::pipeline::<KLine>(
@@ -67,7 +67,7 @@ pub async fn _download_market_data(
     )
     .await;
 
-    insert_market_data(
+    let insert_id = insert_market_data(
         &data.pool,
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
@@ -78,7 +78,14 @@ pub async fn _download_market_data(
     .await
     .map_err(ErrorInternalServerError)?;
 
-    Ok(())
+    Ok(MarketDataFront {
+        id: Some(insert_id),
+        exchange: r.exchange.clone(),
+        symbol: r.symbol.clone(),
+        market_data_type: r.market_data_type.clone(),
+        date_start: r.date_start.clone(),
+        date_end: r.date_end.clone(),
+    })
 }
 
 pub async fn market_data_dates(
