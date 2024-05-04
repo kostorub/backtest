@@ -44,7 +44,6 @@ pub fn run_sequentially<S: Strategy>(
         }
     }
     for strategy in strategies {
-        dbg!(strategy.klines());
         strategy.close_all_positions(
             strategy.klines().last().unwrap().date,
             strategy.klines().last().unwrap().close,
