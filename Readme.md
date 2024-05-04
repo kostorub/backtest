@@ -9,6 +9,9 @@ The goal of this project is to make a backtesting framework for the most popular
 - Calculation of metrics
 - Simple UI built using the HTMX tool with the result chart construction
 
+## Preview
+![image](https://github.com/kostorub/backtest/assets/11979976/745dd00f-1c3e-41f2-b75f-c0d7da28301b)
+
 ### Binance's historical market data
 The historical data is loaded from the [Binance Data Collection](https://data.binance.vision) source. The data is stored as in the following structure in the file system to allow easy access by the [memory mapped IO](https://docs.rs/memmap2/latest/memmap2/).  
 
