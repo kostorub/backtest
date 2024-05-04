@@ -4,9 +4,27 @@ The goal of this project is to make a backtesting framework for the most popular
 
 ## Finished parts
 - Download and use Binance's historical market data
-- Launch of a Grid bot trading strategy
+- Iteration over the same-period chunks of klines to implement complex closely-related strategies with low-memory consumption
+- Launch of the Binance Grid bot trading strategy even on trades market data
 - Calculation of metrics
-- Simple user interface in the HTMX format
+- Simple UI built using the HTMX tool with the result chart construction
+
+### Binance's historical market data
+The historical data is loaded from the [Binance Data Collection](https://data.binance.vision) source. The data is stored as in the following structure in the file system to allow easy access by the [memory mapped IO](https://docs.rs/memmap2/latest/memmap2/).  
+
+|timestamp: 8 bytes|open: 8 bytes|high: 8 bytes|low: 8 bytes|close: 8 bytes|volume: 8 bytes|
+|---|---|---|---|---|---|
+
+Klines are going one by one.
+|01-01-2000 12:00:00|01-01-2000 12:00:01|01-01-2000 12:00:02|...|N|
+|---|---|---|---|---|
+
+The backtesting engine takes the data in the range of `date_start` and `date_end` using the timestamp offset.
+To use the offset, gaps in the klines sequence (if they exist) are filled with the previous valid kline data.
+
+### Grid bot strategy
+The grid bot strategy was implemented according to the Binance grid bot description. Here are a couple of links to the mentioned description: [What Is Spot Grid Trading and How Does It Work](https://www.binance.com/en/support/faq/what-is-spot-grid-trading-and-how-does-it-work-d5f441e8ab544a5b98241e00efb3a4ab) and [Step-by-step guide to Grid Trading on Binance Futures](https://academy.binance.com/en/articles/step-by-step-guide-to-grid-trading-on-binance-futures).  
+There is only one symbol to calculate available, but core functions and the multithreaded background of the framework are intended to backtest several symbols at once to get a big picture simultaneously.
 
 ## Code structure
 <pre>
@@ -28,13 +46,30 @@ The goal of this project is to make a backtesting framework for the most popular
     ├── tests - tests
     └── web - the HTMX data
 </pre>
+## SQLite DB
+
+> The choice to use the SQLite database in this project is driven by cost-efficiency considerations. Since the project does not require the handling of large volumes of data, a lightweight and low-cost solution like SQLite is suitable. Additionally, the project does not face significant demands in terms of concurrent data access during backtests processes, minimizing the need for a more robust database system with higher concurrency capabilities. SQLite also offers a mechanism to optimize concurrency through its [Write-Ahead Logging (WAL)](https://www.sqlite.org/wal.html) feature. This feature allows for improved concurrency by permitting multiple readers to access the database at the same time a write operation is occurring, thereby enhancing performance without compromising data integrity. This makes SQLite an effective choice for projects with moderate concurrency requirements and a need for cost-effective data management solutions.
+
+The database is used to store the following data:
+- users
+- information about already downloaded historical market data
+- the initial parameters and metrics of processed backtests
+
+The database is shared between kubernetes nodes by mounting the [PersistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) to each node. [Digital Ocean: How to Add Volumes to Kubernetes Clusters](https://docs.digitalocean.com/products/kubernetes/how-to/add-volumes/)
+
 # CI/CD
-## Kubernetes
+The CI/CD process consists of two steps:
+- Building the container with the service and storing it in the docker hub service.
+- Running the deployment job to install the image on the Digital Ocean k8s cluster.
+
+Check [the digital-ocean.yml file](https://github.com/kostorub/backtest/blob/main/.github/workflows/digital-ocean.yml) to view all the steps.
+## Development notes and auxiliary commands
+### Kubernetes
 Connect
 ```
 doctl kubernetes cluster kubeconfig save $CLUSTER_ID
 ```
-## Sqlite
+### Sqlite
 Create the DB
 ```
 mkdir db
