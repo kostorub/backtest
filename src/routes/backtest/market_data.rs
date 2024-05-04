@@ -4,6 +4,7 @@ use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
 
 use crate::{
     app_state::AppState,
+    backtest::strategies::strategy_utils::get_klines,
     data_handlers::{
         pipeline,
         utils::{datetime_str_to_i64, i64_to_datetime_str},
@@ -116,4 +117,21 @@ pub async fn _market_data_dates(
     };
 
     Ok(result)
+}
+
+pub async fn klines(
+    data: web::Data<AppState>,
+    r: web::Query<MarketDataFront>,
+) -> Result<HttpResponse, Error> {
+    let data_path = PathBuf::from(data.app_settings.data_path.clone());
+    let klines = get_klines(
+        data_path,
+        r.exchange.to_lowercase(),
+        r.symbol.to_lowercase(),
+        r.market_data_type.clone(),
+        datetime_str_to_i64(r.date_start.clone()),
+        datetime_str_to_i64(r.date_end.clone()),
+    );
+
+    Ok(HttpResponse::Ok().json(klines))
 }

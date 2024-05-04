@@ -1,4 +1,4 @@
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::data_models::be_bytes::ToFromBytes;
 
@@ -6,7 +6,7 @@ use super::kline_trait::KLineTrait;
 
 pub const KLINE_SIZE: usize = 6 * 8;
 
-#[derive(Debug, Deserialize, PartialEq, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct KLine {
     #[serde(deserialize_with = "f64_to_i64")]
     pub date: i64,

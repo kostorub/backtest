@@ -86,6 +86,7 @@ pub async fn start_server() -> std::io::Result<()> {
         .route("/api/market-data/downloaded",web::get().to(backtest::market_data::downloaded_market_data))
         .route("/api/market-data/download",web::post().to(backtest::market_data::download_market_data))
         .route("/api/market-data/date-input",web::get().to(backtest::market_data::market_data_dates))
+        .route("/api/market-data/klines", web::get().to(backtest::market_data::klines))
         .route("/api/backtest/hodl/run", web::post().to(backtest::backtest::run_hodl))
         .route("/api/backtest/grid/run", web::post().to(backtest::backtest::run_grid))
         .route("/api/backtest/result/chart", web::get().to(backtest::backtest_result::chart))
