@@ -6,7 +6,7 @@ The goal of this project is to make a backtesting framework for the most popular
 - Download and use Binance's historical market data
 - Launch of a Grid bot trading strategy
 - Calculation of metrics
-- Simple user interface in the HTMX format
+- Simple user interface built using the HTMX tool
 
 ### Binance's historical market data
 The historical data is loaded from the [Binance Data Collection](https://data.binance.vision) source. The data is stored as in the following structure in the file system to allow easy access by the [memory mapped IO](https://docs.rs/memmap2/latest/memmap2/).  
@@ -20,6 +20,10 @@ Klines are going one by one.
 
 The backtesting engine takes the data in the range of `date_start` and `date_end` using the timestamp offset.
 To use the offset, gaps in the klines sequence (if they exist) are filled with the previous valid kline data.
+
+### Grid bot strategy
+The grid bot strategy was implemented according to the Binance grid bot description. Here are a couple of links to the mentioned description: [What Is Spot Grid Trading and How Does It Work](https://www.binance.com/en/support/faq/what-is-spot-grid-trading-and-how-does-it-work-d5f441e8ab544a5b98241e00efb3a4ab) and [Step-by-step guide to Grid Trading on Binance Futures](https://academy.binance.com/en/articles/step-by-step-guide-to-grid-trading-on-binance-futures).  
+There is only one symbol to calculate available, but core functions and the multithreaded background of the framework are intended to backtest several symbols at once to get a big picture simultaneously.
 
 ## Code structure
 <pre>
