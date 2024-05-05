@@ -26,7 +26,7 @@ The backtesting engine takes the data in the range of `date_start` and `date_end
 To use the offset, gaps in the klines sequence (if they exist) are filled with the previous valid kline data.
 
 ### Grid bot strategy
-The grid bot strategy was implemented according to the Binance grid bot description. Here are a couple of links to the mentioned description: [What Is Spot Grid Trading and How Does It Work](https://www.binance.com/en/support/faq/what-is-spot-grid-trading-and-how-does-it-work-d5f441e8ab544a5b98241e00efb3a4ab) and [Step-by-step guide to Grid Trading on Binance Futures](https://academy.binance.com/en/articles/step-by-step-guide-to-grid-trading-on-binance-futures).  
+The grid bot strategy was implemented according to the Binance grid bot description. Here are a couple of links to the mentioned description: [What Is Spot Grid Trading and How Does It Work](https://www.binance.com/en/support/faq/what-is-spot-grid-trading-and-how-does-it-work-d5f441e8ab544a5b98241e00efb3a4ab), [How to Create a Spot Grid Trading Strategy on Binance](https://www.binance.com/en/support/faq/how-to-create-a-spot-grid-trading-strategy-on-binance-95078b6293184bd79b56108092f337c1?hl=en) and [Binance Spot Grid Trading Parameters](https://www.binance.com/en/support/faq/binance-spot-grid-trading-parameters-688ff6ff08734848915de76a07b953dd?hl=en).  
 There is only one symbol to calculate available, but core functions and the multithreaded background of the framework are intended to backtest several symbols at once to get a big picture simultaneously.
 
 ## Code structure
