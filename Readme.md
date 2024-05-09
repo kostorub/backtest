@@ -3,7 +3,7 @@
 The goal of this project is to make a backtesting framework for the most popular trading strategies like grid or rebalancing. Before that, I did the same with Python programming language and even used PyPy (which increased the performance in times), but the performance left much to be desired. So I decided to use the Rust programming language to benefit from performance and code safety.
 
 ## Finished parts
-- Download and use Binance's historical market data
+- Download and use Binance's historical market data (including 1s & trades)
 - Iteration over the same-period chunks of klines to implement complex closely-related strategies with low-memory consumption
 - Launch of the Binance Grid bot trading strategy even on trades market data
 - Calculation of metrics
