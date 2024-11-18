@@ -100,3 +100,20 @@ Create new migration sql file
 cargo sqlx migrate add -r -s <name>
 ```
 Then don't forget to set `DATABASE_MIGRATION_VERSION` in .env.template
+
+### How to deploy new version
+
+These commands will trigger the deploy job  
+Get the latest tag
+```bash
+git describe --tags
+# v0.7
+```
+Set the incremented one
+```bash
+git tag v0.8
+```
+And push
+```bash
+git push --tags
+```

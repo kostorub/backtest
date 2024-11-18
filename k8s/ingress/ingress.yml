@@ -8,10 +8,10 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - api.backtest.casa
+    - backtest.casa
     secretName: backtest-tls
   rules:
-    - host: api.backtest.casa
+    - host: backtest.casa
       http:
         paths:
           - pathType: Prefix
