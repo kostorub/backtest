@@ -69,7 +69,7 @@ global:
 
 # This option is equivalent to setting crds.enabled=true and crds.keep=true.
 # Deprecated: use crds.enabled and crds.keep instead.
-installCRDs: true
+# installCRDs: true
 
 crds:
   # This option decides if the CRDs should be installed

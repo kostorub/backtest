@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container col-sm-6 mt-4">
+    <div class="shadow p-3 mb-5 bg-body rounded">
+        <div class="d-grid gap-2 mt-3">
+            <button type="button" id="sign-up-button" class="btn btn-primary btn-block" hx-get="/auth/sign-up"
+                hx-indicator="#sign-up-spinner" _="on click toggle @disabled until htmx:afterOnLoad"
+                hx-swap="outerHTML">
+                Sign up
+            </button>
+            <div id="sign-up-spinner" class="spinner-border htmx-indicator spinner-border-sm" role="status">
+                <span class="visually-hidden">Getting account number...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

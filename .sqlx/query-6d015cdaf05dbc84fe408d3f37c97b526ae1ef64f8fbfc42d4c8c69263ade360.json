@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT user_id as 'user_id!', account_number FROM users WHERE account_number = $1;",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "account_number",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "6d015cdaf05dbc84fe408d3f37c97b526ae1ef64f8fbfc42d4c8c69263ade360"
+}

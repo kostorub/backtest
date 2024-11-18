@@ -10,8 +10,7 @@ use crate::{
     config::AppSettings,
     database,
     routes::{
-        auth::{jwt_validate_middleware, sign_in},
-        backtest,
+        api, backtest,
         backtest_ui::{
             self,
             backtest::{run_grid, run_hodl},
@@ -20,6 +19,7 @@ use crate::{
             market_data::{download_market_data, downloaded_market_data},
             pages::{index, page},
         },
+        htmx, middlewares,
     },
     web::template::template,
 };
@@ -62,10 +62,12 @@ pub async fn start_server() -> std::io::Result<()> {
         .wrap(cors)
         .app_data(app_data.clone())
         .service(Files::new("/static", "src/web/static/").show_files_listing())
-        .wrap(from_fn(jwt_validate_middleware))
         .route("/", web::get().to(index))
-        .route("/auth/sign-in", web::post().to(sign_in))
+        .wrap(from_fn(middlewares::access::rbac_middleware))
         .route("/pages/{page}", web::get().to(page))
+        
+        .route("/auth/sign-in", web::post().to(htmx::auth::sign_in))
+        .route("/auth/sign-up", web::get().to(htmx::auth::sign_up))
         .route("/exchange/local-symbols", web::get().to(local_symbols))
         .route("/exchange/symbols/{exchange}",web::get().to(exchange_symbols),)
         .route("/exchange/exchanges", web::get().to(exchanges))
@@ -79,6 +81,9 @@ pub async fn start_server() -> std::io::Result<()> {
         .route("/backtest_result/options", web::get().to(backtest_results_options))
         .route("/backtest_result/chart", web::get().to(backtest::backtest_result::chart))
         .route("/backtest_result/metrics", web::get().to(backtest_ui::backtest_result::metrics))
+
+        .route("/api/auth/sign-in", web::post().to(api::auth::sign_in))
+        .route("/api/auth/sign-up", web::post().to(api::auth::sign_up))
         .route("/api/exchange/local-symbols", web::get().to(backtest::exchange::local_symbols))
         .route("/api/exchange/symbols/{exchange}",web::get().to(backtest::exchange::exchange_symbols))
         .route("/api/exchange/exchanges", web::get().to(backtest::exchange::exchanges))

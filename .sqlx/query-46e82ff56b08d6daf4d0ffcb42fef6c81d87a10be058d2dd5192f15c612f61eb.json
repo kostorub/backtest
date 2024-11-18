@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO users (account_number)\n        VALUES ($1)\n        RETURNING user_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "46e82ff56b08d6daf4d0ffcb42fef6c81d87a10be058d2dd5192f15c612f61eb"
+}

@@ -73,6 +73,15 @@ Connect
 doctl kubernetes cluster kubeconfig save $CLUSTER_ID
 ```
 ### Sqlite
+Create the local .env file
+```
+cp .env.template .env
+```
+Set the following variables:
+- DATA_PATH (i.e. data)
+- DATABASE_PATH (i.e. db)
+- DATABASE_URL (i.e. sqlite:db/backtest.sqlite)
+
 Create the DB
 ```
 mkdir db

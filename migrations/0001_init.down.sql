@@ -1,3 +1,5 @@
 DROP TABLE IF EXISTS market_data;
 
+DROP TABLE IF EXISTS users_roles;
+DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS users;

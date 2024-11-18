@@ -22,16 +22,26 @@ pub async fn page(data: web::Data<AppState>, path: Path<(String,)>) -> HttpRespo
         s if s == "market-data" => {
             context.insert("market_data_page_active", "active");
             context.insert("grid_backtest_page_active", "");
+            context.insert("sign_in_page_active", "");
+            context.insert("sign_up_page_active", "");
         }
         s if s == "grid-backtest" => {
             context.insert("market_data_page_active", "");
             context.insert("grid_backtest_page_active", "active");
-            let id = Uuid::new_v4();
-            context.insert("backtest_uuid", &id.to_string());
+            context.insert("sign_in_page_active", "");
+            context.insert("sign_up_page_active", "");
+        }
+        s if s == "sign-in" => {
+            context.insert("market_data_page_active", "");
+            context.insert("grid_backtest_page_active", "");
+            context.insert("sign_in_page_active", "active");
+            context.insert("sign_up_page_active", "");
         }
         _ => {
             context.insert("market_data_page_active", "");
             context.insert("grid_backtest_page_active", "");
+            context.insert("sign_in_page_active", "");
+            context.insert("sign_up_page_active", "active");
         }
     }
 

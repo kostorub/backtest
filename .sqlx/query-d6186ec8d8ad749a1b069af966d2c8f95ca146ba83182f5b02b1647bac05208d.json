@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT roles.role_name\n        FROM users_roles\n        JOIN roles ON users_roles.role_id = roles.role_id\n        WHERE users_roles.user_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "role_name",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d6186ec8d8ad749a1b069af966d2c8f95ca146ba83182f5b02b1647bac05208d"
+}
