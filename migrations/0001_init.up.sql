@@ -34,8 +34,8 @@ INSERT INTO roles
         ('GridBacktestRunner', 'Allows running grid backtests'),            -- Role 4
         ('GridBacktestTrialRunner', 'Allows running grid backtest in trial version'); -- Role 5
 
--- Assign all roles to the User 1
-INSERT OR IGNORE INTO users_roles (user_id, role_id) VALUES (1, 1), (1, 2), (1, 3), (1, 4), (1, 5);
+-- Assign all roles to the User 1 except the GridBacktestTrialRunner role
+INSERT OR IGNORE INTO users_roles (user_id, role_id) VALUES (1, 1), (1, 2), (1, 3), (1, 4);
 
 CREATE TABLE
     IF NOT EXISTS market_data (

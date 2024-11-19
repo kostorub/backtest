@@ -74,7 +74,7 @@ doctl kubernetes cluster kubeconfig save $CLUSTER_ID
 ```
 ### Sqlite
 Create the local .env file
-```
+```bash
 cp .env.template .env
 ```
 Set the following variables:
@@ -83,21 +83,22 @@ Set the following variables:
 - DATABASE_URL (i.e. sqlite:db/backtest.sqlite)
 
 Create the DB
-```
+```bash
 mkdir db
 sqlx db create --sqlite-create-db-wal=false
 ```
 Migrate DB
-```
+```bash
 sqlx migrate run
 ```
 Prepare for the offline check and build
-```
+```bash
 cargo sqlx prepare
 ```
 Create new migration sql file
-```
+```bash
 cargo sqlx migrate add -r -s <name>
+# cargo sqlx migrate add -r -s key_value_store
 ```
 Then don't forget to set `DATABASE_MIGRATION_VERSION` in .env.template
 
