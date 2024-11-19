@@ -17,7 +17,7 @@ use crate::{
             backtest_result::backtest_results_options,
             exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
             market_data::{download_market_data, downloaded_market_data},
-            pages::{index, page},
+            pages::page,
         },
         htmx, middlewares,
     },
@@ -62,14 +62,15 @@ pub async fn start_server() -> std::io::Result<()> {
         .wrap(cors)
         .app_data(app_data.clone())
         .service(Files::new("/static", "src/web/static/").show_files_listing())
-        .route("/", web::get().to(index))
+        .service(web::redirect("/", "/pages/index"))
         .wrap(from_fn(middlewares::access::rbac_middleware))
         .route("/pages/{page}", web::get().to(page))
         
         .route("/auth/sign-in", web::post().to(htmx::auth::sign_in))
         .route("/auth/sign-up", web::get().to(htmx::auth::sign_up))
+        .route("/auth/sign-out", web::post().to(htmx::auth::sign_out))
         .route("/exchange/local-symbols", web::get().to(local_symbols))
-        .route("/exchange/symbols/{exchange}",web::get().to(exchange_symbols),)
+        .route("/exchange/symbols/{exchange}", web::get().to(exchange_symbols))
         .route("/exchange/exchanges", web::get().to(exchanges))
         .route("/exchange/mdts", web::get().to(mdts))
         .route("/exchange/mdts_from_symbol",web::get().to(mdts_from_symbol))
@@ -84,6 +85,7 @@ pub async fn start_server() -> std::io::Result<()> {
 
         .route("/api/auth/sign-in", web::post().to(api::auth::sign_in))
         .route("/api/auth/sign-up", web::post().to(api::auth::sign_up))
+        .route("/api/auth/sign-out", web::post().to(api::auth::sign_out))
         .route("/api/exchange/local-symbols", web::get().to(backtest::exchange::local_symbols))
         .route("/api/exchange/symbols/{exchange}",web::get().to(backtest::exchange::exchange_symbols))
         .route("/api/exchange/exchanges", web::get().to(backtest::exchange::exchanges))

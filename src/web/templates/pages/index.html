@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container col-sm-6 mt-4">
+    <h2 class="mb-3">Welcome to the Backtest Service</h2>
+    <p>This service allows you to backtest your trading strategies with historical data.</p>
+    <p>Features:</p>
+    <ul class="list-group list-group-flush mb-4">
+        <li class="list-group-item">Download and use Binance's historical market data (including 1s & trades)</li>
+        <li class="list-group-item">Iteration over the same-period chunks of klines to implement complex closely-related strategies with low-memory consumption</li>
+        <li class="list-group-item">Launch of the Binance Grid bot trading strategy even on trades market data</li>
+        <li class="list-group-item">Calculation of metrics</li>
+        <li class="list-group-item">Simple UI built using the HTMX tool with the result chart construction</li>
+    </ul>
+    <p>Get started by <a href="/pages/sign-up">signing up</a>, then <a href="/pages/sign-in">signing in</a> 
+        and navigating to the <a href="/pages/grid-backtest">backtesting tab</a> to start your calculations.</p>
+</div>
+{% endblock content %}

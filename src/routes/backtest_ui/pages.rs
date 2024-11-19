@@ -1,46 +1,44 @@
 use actix_web::{
     web::{self, Path},
-    HttpResponse,
+    HttpMessage, HttpRequest, HttpResponse,
 };
 use tera::Context;
-use uuid::Uuid;
 
-use crate::app_state::AppState;
+use crate::{app_state::AppState, routes::middlewares::access::Claims};
 
-pub async fn index(data: web::Data<AppState>) -> HttpResponse {
-    let context = Context::new();
-    let tera = data.tera.clone();
-    let body = tera.render("index.html", &context).unwrap();
+pub async fn page(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    path: Path<(String,)>,
+) -> HttpResponse {
+    let mut signed_in = false;
+    if let Some(_claims) = req.extensions().get::<Claims>() {
+        signed_in = true;
+    }
 
-    HttpResponse::Ok().body(body)
-}
-
-pub async fn page(data: web::Data<AppState>, path: Path<(String,)>) -> HttpResponse {
     let mut context = Context::new();
+    context.insert("signed_in", &signed_in);
+    context.insert("about_page_active", "");
+    context.insert("market_data_page_active", "");
+    context.insert("grid_backtest_page_active", "");
+    context.insert("sign_in_page_active", "");
+    context.insert("sign_up_page_active", "");
+
     let page_name = path.into_inner().0;
     match page_name.clone() {
+        s if s == "index" => {
+            context.insert("about_page_active", "active");
+        }
         s if s == "market-data" => {
             context.insert("market_data_page_active", "active");
-            context.insert("grid_backtest_page_active", "");
-            context.insert("sign_in_page_active", "");
-            context.insert("sign_up_page_active", "");
         }
         s if s == "grid-backtest" => {
-            context.insert("market_data_page_active", "");
             context.insert("grid_backtest_page_active", "active");
-            context.insert("sign_in_page_active", "");
-            context.insert("sign_up_page_active", "");
         }
         s if s == "sign-in" => {
-            context.insert("market_data_page_active", "");
-            context.insert("grid_backtest_page_active", "");
             context.insert("sign_in_page_active", "active");
-            context.insert("sign_up_page_active", "");
         }
         _ => {
-            context.insert("market_data_page_active", "");
-            context.insert("grid_backtest_page_active", "");
-            context.insert("sign_in_page_active", "");
             context.insert("sign_up_page_active", "active");
         }
     }

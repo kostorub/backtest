@@ -10,7 +10,7 @@
     integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
     crossorigin="anonymous"></script>
   <script src="https://unpkg.com/htmx.org@2.0.3"></script>
-  <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.13"></script>
   <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
   <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
@@ -29,6 +29,9 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
+            <a id="link-about" class="nav-link {{ about_page_active }}" href="/">About</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {{ market_data_page_active }}" href="/pages/market-data">Market data</a>
           </li>
           <li class="nav-item">
@@ -37,12 +40,18 @@
           <li class="nav-item">
             <a class="nav-link disabled" aria-disabled="true">Pricing</a>
           </li>
+          {% if not signed_in %}
           <li class="nav-item">
             <a class="nav-link {{ sign_in_page_active }}" href="/pages/sign-in">Sign in</a>
           </li>
           <li class="d-flex">
             <a class="nav-link {{ sign_up_page_active }}" href="/pages/sign-up">Sign up</a>
           </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="#" hx-post="/auth/sign-out" hx-target="#content">Sign out</a>
+          </li>
+          {% endif %}
         </ul>
       </div>
     </div>

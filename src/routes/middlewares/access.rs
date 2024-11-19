@@ -16,7 +16,7 @@ use jsonwebtoken::{decode, DecodingKey, Validation};
 
 use crate::db_handlers::user::get_user_roles;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String,
     pub exp: usize,
@@ -33,16 +33,13 @@ pub async fn rbac_middleware(
         "/",
         "/auth/sign-in",
         "/auth/sign-up",
+        "/auth/sign-out",
+        "/pages/index",
         "/pages/sign-in",
         "/pages/sign-up",
         "/api/auth/sign-in",
         "/api/auth/sign-up",
     ];
-
-    if free_routes.contains(&req.request().path()) {
-        let res = next.call(req).await?;
-        return Ok(res.map_into_boxed_body());
-    }
 
     let mut access_map = HashMap::new();
     access_map.insert(
@@ -90,8 +87,22 @@ pub async fn rbac_middleware(
     access_map.insert("GridBacktestRunner", grid_backtest_runner.clone());
     access_map.insert("GridBacktestTrialRunner", grid_backtest_runner.clone());
 
+    let claims = get_claims(&mut req).await;
+
+    match &claims {
+        Ok(value) => {
+            req.extensions_mut().insert(value.clone());
+        }
+        Err(_) => {}
+    };
+
+    if free_routes.contains(&req.request().path()) {
+        let res = next.call(req).await?;
+        return Ok(res.map_into_boxed_body());
+    }
+
     // If there is no token or error with the token extraction, redirect to a sign-in page
-    let claims = match get_claims(&mut req).await {
+    let claims = match &claims {
         Ok(value) => value,
         Err(_) => {
             return goto_sign_in_page(&req);
@@ -158,6 +169,10 @@ fn goto_sign_in_page(req: &ServiceRequest) -> Result<ServiceResponse, Error> {
 pub async fn get_claims(req: &mut ServiceRequest) -> Result<Claims, Error> {
     let auth_header = req.headers().get("Authorization");
     let auth_cookie = req.cookie("jwt_token");
+
+    let data = req.app_data::<web::Data<AppState>>().unwrap();
+    let jwt_secret = data.app_settings.jwt_secret.clone();
+
     let token;
     if !auth_header.is_none() {
         let auth_header = auth_header.unwrap().to_str().unwrap();
@@ -172,13 +187,13 @@ pub async fn get_claims(req: &mut ServiceRequest) -> Result<Claims, Error> {
     } else {
         return Err(ErrorForbidden("No token provided"));
     }
-    validate_token(&req, &token).await?;
-    let claims = exctract_claims(&req, &token).await?;
+    validate_token(jwt_secret.clone(), &token).await?;
+    let claims = exctract_claims(jwt_secret, &token).await?;
     Ok(claims)
 }
 
-async fn validate_token(req: &ServiceRequest, token: &str) -> Result<(), Error> {
-    let claims = exctract_claims(req, token).await?;
+async fn validate_token(jwt_secret: String, token: &str) -> Result<(), Error> {
+    let claims = exctract_claims(jwt_secret, token).await?;
 
     let now = Utc::now().timestamp() as usize;
     if claims.exp < now {
@@ -187,9 +202,7 @@ async fn validate_token(req: &ServiceRequest, token: &str) -> Result<(), Error> 
     Ok(())
 }
 
-pub async fn exctract_claims(req: &ServiceRequest, token: &str) -> Result<Claims, Error> {
-    let data = req.app_data::<web::Data<AppState>>().unwrap();
-    let jwt_secret = data.app_settings.jwt_secret.clone();
+pub async fn exctract_claims(jwt_secret: String, token: &str) -> Result<Claims, Error> {
     let token_data = decode::<Claims>(
         &token,
         &DecodingKey::from_secret(jwt_secret.as_ref()),

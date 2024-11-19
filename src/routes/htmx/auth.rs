@@ -1,4 +1,7 @@
-use actix_web::{cookie::Cookie, web, HttpResponse};
+use actix_web::{
+    cookie::{Cookie, SameSite},
+    web, HttpResponse,
+};
 use tera::Context;
 
 use crate::{
@@ -16,13 +19,14 @@ pub async fn sign_in(
         .path("/")
         .http_only(true)
         .secure(true)
+        .same_site(SameSite::Strict)
         .finish();
 
     let context = Context::new();
 
     let tera = data.tera.clone();
     let body = tera
-        .render("pieces/successful_sign_in_text.html", &context)
+        .render("pieces/sign_in_response.html", &context)
         .unwrap();
 
     Ok(HttpResponse::Ok().cookie(cookie).body(body))
@@ -36,8 +40,21 @@ pub async fn sign_up(data: web::Data<AppState>) -> Result<HttpResponse, actix_we
 
     let tera = data.tera.clone();
     let body = tera
-        .render("pieces/account_number_text.html", &context)
+        .render("pieces/sign_up_response.html", &context)
         .unwrap();
 
     Ok(HttpResponse::Ok().body(body))
+}
+
+pub async fn sign_out(data: web::Data<AppState>) -> Result<HttpResponse, actix_web::Error> {
+    let cookie = common::auth::sign_out().await?;
+
+    let context = Context::new();
+
+    let tera = data.tera.clone();
+    let body = tera
+        .render("pieces/sign_out_response.html", &context)
+        .unwrap();
+
+    Ok(HttpResponse::Ok().cookie(cookie).body(body))
 }

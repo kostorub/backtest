@@ -19,3 +19,9 @@ pub async fn sign_up(data: web::Data<AppState>) -> Result<HttpResponse, actix_we
 
     Ok(HttpResponse::Ok().json(user))
 }
+
+pub async fn sign_out(_data: web::Data<AppState>) -> Result<HttpResponse, actix_web::Error> {
+    let cookie = common::auth::sign_out().await?;
+
+    Ok(HttpResponse::Ok().cookie(cookie).json("Signed out"))
+}
