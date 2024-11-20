@@ -1,9 +1,8 @@
 use std::path::PathBuf;
 
-use actix_web::error::ErrorInternalServerError;
-use actix_web::Error;
-use actix_web::{web, Responder, Result};
-use actix_web::{Either, HttpResponse};
+use actix_web::error::{ErrorForbidden, ErrorInternalServerError};
+use actix_web::{web, HttpMessage, Result};
+use actix_web::{Error, HttpRequest};
 use chrono::{NaiveDate, NaiveTime};
 use log::error;
 
@@ -15,57 +14,23 @@ use crate::backtest::settings::BacktestSettings;
 use crate::backtest::strategies::grid::bot::GridBot;
 use crate::backtest::strategies::grid::settings::{GridSettings, GridSettingsRequest};
 use crate::backtest::strategies::grid::strategy::GridStrategy;
-use crate::backtest::strategies::hodl::bot::HodlBot;
-use crate::backtest::strategies::hodl::settings::HodlSettingsRequest;
-use crate::backtest::strategies::hodl::strategy::HodlStrategy;
 use crate::backtest::strategies::strategy_utils::get_klines;
 use crate::chart::chart::build_chart;
+use crate::data_handlers::kv_store;
 use crate::data_models::routes::backtest_results::BacktestResultId;
+use crate::data_models::user::User;
 use crate::db_handlers::backtest_results::{insert_data, insert_metrics};
 
-pub async fn run_hodl(
-    hodl_data: web::Json<HodlSettingsRequest>,
-    data: web::Data<AppState>,
-) -> Either<Result<impl Responder>, HttpResponse> {
-    let data_path = PathBuf::from(data.app_settings.data_path.clone());
-
-    let backtest_settings = hodl_data.backtest_settings.clone();
-    let hodl_settings = hodl_data.hodl_settings.clone();
-
-    let hodl_bot = HodlBot::new(hodl_settings.clone());
-    let strategies_settings = strategies_settings(backtest_settings.clone());
-    let mut strategies: Vec<HodlStrategy> = strategies_settings
-        .iter()
-        .map(|s| HodlStrategy::new(s.clone(), hodl_bot.clone()))
-        .collect();
-
-    backtest::run_sequentially(
-        backtest_settings.clone(),
-        &mut strategies,
-        data_path.clone(),
-    );
-    let positions = get_positions_from_strategies(strategies.clone());
-    let metrics = get_metrics(
-        &positions,
-        strategies[0].strategy_settings.deposit,
-        strategies[0].current_budget,
-    );
-
-    Either::Left(Ok(web::Json(metrics)))
-}
-
 pub async fn run_grid(
-    request_settings: web::Json<GridSettingsRequest>,
-    data: web::Data<AppState>,
-) -> Result<HttpResponse, Error> {
-    let result = _run_grid(&data, &request_settings).await?;
-    Ok(HttpResponse::Ok().json(result))
-}
-
-pub async fn _run_grid(
+    req: HttpRequest,
     data: &web::Data<AppState>,
     request_settings: &web::Json<GridSettingsRequest>,
 ) -> Result<BacktestResultId, Error> {
+    let extensions = req.extensions();
+    let user = extensions.get::<User>().unwrap();
+    if !check_trial_access(&data.pool, user).await {
+        return Err(ErrorForbidden("Trial access limit reached"));
+    }
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
     let backtest_settings = BacktestSettings {
         symbols: vec![request_settings.symbol.to_lowercase()],
@@ -151,4 +116,46 @@ pub async fn _run_grid(
         id: backtest_results_id,
     };
     Ok(result)
+}
+
+async fn check_trial_access(pool: &sqlx::SqlitePool, user: &User) -> bool {
+    // Check if the user has the GridBacktestTrialRunner role
+    if user
+        .roles
+        .iter()
+        .any(|r| r.role_name == "GridBacktestRunner")
+    {
+        return true;
+    }
+    if user
+        .roles
+        .iter()
+        .any(|r| r.role_name == "GridBacktestTrialRunner")
+    {
+        let key = format!("grid_backtest_trial_runner_{}", user.user_id);
+        match kv_store::get_kv(&pool, &key).await {
+            Ok(value) => {
+                if let Some(v) = value {
+                    let attempts = v.parse::<i64>().unwrap();
+                    if attempts < 2 {
+                        let attempts = attempts + 1;
+                        kv_store::set_kv(&pool, &key, &attempts.to_string(), None)
+                            .await
+                            .unwrap();
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    kv_store::set_kv(&pool, &key, "1", Some(60)).await.unwrap();
+                    return true;
+                }
+            }
+            Err(e) => {
+                error!("Error checking trial access: {}", e);
+                return false;
+            }
+        }
+    }
+    false
 }

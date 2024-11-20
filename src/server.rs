@@ -10,10 +10,9 @@ use crate::{
     config::AppSettings,
     database,
     routes::{
-        api, backtest,
+        self, api, backtest,
         backtest_ui::{
             self,
-            backtest::{run_grid, run_hodl},
             backtest_result::backtest_results_options,
             exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
             market_data::{download_market_data, downloaded_market_data},
@@ -77,8 +76,7 @@ pub async fn start_server() -> std::io::Result<()> {
         .route("/market-data/downloaded",web::get().to(downloaded_market_data))
         .route("/market-data/download",web::post().to(download_market_data))
         .route("/market-data/date-input",web::get().to(backtest_ui::market_data::market_data_date_input))
-        .route("/backtest/hodl/run", web::post().to(run_hodl))
-        .route("/backtest/grid/run", web::post().to(run_grid))
+        .route("/backtest/grid/run", web::post().to(routes::htmx::backtest::run_grid))
         .route("/backtest_result/options", web::get().to(backtest_results_options))
         .route("/backtest_result/chart", web::get().to(backtest::backtest_result::chart))
         .route("/backtest_result/metrics", web::get().to(backtest_ui::backtest_result::metrics))
@@ -95,8 +93,7 @@ pub async fn start_server() -> std::io::Result<()> {
         .route("/api/market-data/download",web::post().to(backtest::market_data::download_market_data))
         .route("/api/market-data/date-input",web::get().to(backtest::market_data::market_data_dates))
         .route("/api/market-data/klines", web::get().to(backtest::market_data::klines))
-        .route("/api/backtest/hodl/run", web::post().to(backtest::backtest::run_hodl))
-        .route("/api/backtest/grid/run", web::post().to(backtest::backtest::run_grid))
+        .route("/api/backtest/grid/run", web::post().to(routes::api::backtest::run_grid))
         .route("/api/backtest/result/chart", web::get().to(backtest::backtest_result::chart))
         .route("/api/backtest/result/data", web::get().to(backtest::backtest_result::data))
         .route("/api/backtest/result/metrics", web::get().to(backtest::backtest_result::metrics))

@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT role_id as role_id, role_name as role_name, description as description\n        FROM roles\n        WHERE role_name LIKE '%Viewer%' OR role_name = 'GridBacktestTrialRunner'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "role_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "role_name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "97912c729890093db19256776053d764225c8de6c3401b336a3785321a95e043"
+}

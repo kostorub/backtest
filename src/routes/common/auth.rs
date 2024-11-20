@@ -78,13 +78,11 @@ pub async fn sign_up(data: &web::Data<AppState>) -> Result<User, actix_web::Erro
         }
     }
 
-    let user_id = create_user_with_view_roles(&data.pool, account_number_hash.clone())
+    let mut user = create_user_with_view_roles(&data.pool, account_number_hash.clone())
         .await
         .unwrap();
-    Ok(User {
-        user_id,
-        account_number,
-    })
+    user.account_number = account_number;
+    Ok(user)
 }
 
 pub async fn sign_out<'a>() -> Result<Cookie<'a>, actix_web::Error> {

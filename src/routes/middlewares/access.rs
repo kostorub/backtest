@@ -114,7 +114,9 @@ pub async fn rbac_middleware(
     // Check if user exists in the database
     match get_user(&data.pool, claims.sub.clone()).await {
         Ok(value) => {
-            if value.is_none() {
+            if let Some(value) = value {
+                req.extensions_mut().insert(value.clone());
+            } else {
                 return goto_sign_in_page(&req);
             }
         }

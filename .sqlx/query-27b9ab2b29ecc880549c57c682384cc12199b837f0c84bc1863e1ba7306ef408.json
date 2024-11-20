@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT r.role_id as \"role_id!\", r.role_name as \"role_name!\", r.description as \"description!\"\n            FROM roles r\n            INNER JOIN users_roles ur ON ur.role_id = r.role_id\n            WHERE ur.user_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "role_id!",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "role_name!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "description!",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "27b9ab2b29ecc880549c57c682384cc12199b837f0c84bc1863e1ba7306ef408"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT user_id as 'user_id!', account_number FROM users WHERE account_number = $1;",
+  "query": "SELECT user_id as \"user_id!\", account_number FROM users WHERE account_number = ?",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       false
     ]
   },
-  "hash": "6d015cdaf05dbc84fe408d3f37c97b526ae1ef64f8fbfc42d4c8c69263ade360"
+  "hash": "1abfaee8c0639f2992cf198224cf1ca9df9af6477fbdc9a36b6ef211a7397765"
 }
