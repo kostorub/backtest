@@ -1,7 +1,4 @@
-use actix_web::{
-    cookie::{time::OffsetDateTime, Cookie},
-    web,
-};
+use actix_web::{cookie, web};
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -85,13 +82,14 @@ pub async fn sign_up(data: &web::Data<AppState>) -> Result<User, actix_web::Erro
     Ok(user)
 }
 
-pub async fn sign_out<'a>() -> Result<Cookie<'a>, actix_web::Error> {
+pub async fn sign_out<'a>() -> Result<cookie::Cookie<'a>, actix_web::Error> {
     // Define the cookie to be cleared
-    let cookie = Cookie::build("jwt_token", "")
-        .path("/") // Make sure the path matches where the cookie is set
-        .http_only(true) // Match original HttpOnly attribute
-        .secure(true) // Match original Secure attribute
-        .expires(OffsetDateTime::now_utc()) // Expire the cookie
+    let cookie = cookie::Cookie::build("jwt_token", "")
+        .http_only(true)
+        .secure(true)
+        .path("/")
+        .same_site(cookie::SameSite::Strict)
+        .expires(cookie::time::OffsetDateTime::now_utc()) // Expire the cookie
         .finish();
 
     Ok(cookie)

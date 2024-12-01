@@ -61,7 +61,7 @@ pub async fn start_server() -> std::io::Result<()> {
         .wrap(cors)
         .app_data(app_data.clone())
         .service(Files::new("/static", "src/web/static/").show_files_listing())
-        .service(web::redirect("/", "/pages/index"))
+        .service(web::redirect("/", "/pages/about"))
         .wrap(from_fn(middlewares::access::rbac_middleware))
         .route("/pages/{page}", web::get().to(page))
         

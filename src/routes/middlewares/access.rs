@@ -11,7 +11,10 @@ use chrono::Utc;
 use log::{debug, error};
 use serde::{Deserialize, Serialize};
 
-use crate::{app_state::AppState, db_handlers::user::get_user};
+use crate::{
+    app_state::AppState,
+    db_handlers::user::{check_user_by_id, get_user},
+};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 
 use crate::db_handlers::user::get_user_roles;
@@ -34,11 +37,13 @@ pub async fn rbac_middleware(
         "/auth/sign-in",
         "/auth/sign-up",
         "/auth/sign-out",
-        "/pages/index",
+        "/pages/about",
         "/pages/sign-in",
         "/pages/sign-up",
+        "/pages/sign-out",
         "/api/auth/sign-in",
         "/api/auth/sign-up",
+        "/api/auth/sign-out",
     ];
 
     let mut access_map = HashMap::new();
@@ -91,7 +96,11 @@ pub async fn rbac_middleware(
 
     match &claims {
         Ok(value) => {
-            req.extensions_mut().insert(value.clone());
+            let pool = req.app_data::<web::Data<AppState>>().unwrap().pool.clone();
+            let user_exist = check_user_by_id(&pool, value.user_id).await.unwrap();
+            if user_exist {
+                req.extensions_mut().insert(value.clone());
+            }
         }
         Err(_) => {}
     };
@@ -184,7 +193,6 @@ pub async fn get_claims(req: &mut ServiceRequest) -> Result<Claims, Error> {
         token = auth_header[7..].to_string();
     } else if !auth_cookie.is_none() {
         let cookie = auth_cookie.unwrap();
-        dbg!(&cookie);
         token = cookie.value().to_string();
     } else {
         return Err(ErrorForbidden("No token provided"));

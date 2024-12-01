@@ -11,37 +11,15 @@ pub async fn page(
     data: web::Data<AppState>,
     path: Path<(String,)>,
 ) -> HttpResponse {
-    let mut signed_in = false;
+    let mut signed_in_flag = false;
     if let Some(_claims) = req.extensions().get::<Claims>() {
-        signed_in = true;
+        signed_in_flag = true;
     }
 
     let mut context = Context::new();
-    context.insert("signed_in", &signed_in);
-    context.insert("about_page_active", "");
-    context.insert("market_data_page_active", "");
-    context.insert("grid_backtest_page_active", "");
-    context.insert("sign_in_page_active", "");
-    context.insert("sign_up_page_active", "");
+    context.insert("signed_in_flag", &signed_in_flag);
 
     let page_name = path.into_inner().0;
-    match page_name.clone() {
-        s if s == "index" => {
-            context.insert("about_page_active", "active");
-        }
-        s if s == "market-data" => {
-            context.insert("market_data_page_active", "active");
-        }
-        s if s == "grid-backtest" => {
-            context.insert("grid_backtest_page_active", "active");
-        }
-        s if s == "sign-in" => {
-            context.insert("sign_in_page_active", "active");
-        }
-        _ => {
-            context.insert("sign_up_page_active", "active");
-        }
-    }
 
     let tera = data.tera.clone();
     let body = tera
