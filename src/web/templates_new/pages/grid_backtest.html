@@ -22,22 +22,14 @@
       <div>
         <label>
           Chart klines
-          <select
-            name="chart-market-data-type"
-            aria-label="Market kline type for the chart"
-            required
-          >
+          <select name="chart-market-data-type" aria-label="Market kline type for the chart" required>
             <option selected disabled value="">Chart kline type</option>
             <!-- Here should be a data from a request -->
           </select>
         </label>
         <label>
           Calculation klines
-          <select
-            name="market-data-type"
-            aria-label="Market kline type for the calculation"
-            required
-          >
+          <select name="market-data-type" aria-label="Market kline type for the calculation" required>
             <option selected disabled value="">Kline type</option>
             <!-- Here should be a data from a request -->
           </select>
@@ -56,22 +48,11 @@
       <div>
         <label>
           Deposite
-          <input
-            type="number"
-            name="deposit"
-            aria-label="Deposit"
-            min="0.1"
-            required
-          />
+          <input type="number" name="deposit" aria-label="Deposit" min="0.1" required />
         </label>
         <label>
           Comission
-          <input
-            type="number"
-            name="commission"
-            aria-label="Commission"
-            required
-          />
+          <input type="number" name="commission" aria-label="Commission" required />
         </label>
       </div>
     </div>
@@ -81,75 +62,37 @@
       <div>
         <label>
           Price bottom
-          <input
-            type="number"
-            name="price-low"
-            aria-label="Price bottom"
-            required
-          />
+          <input type="number" name="price-low" aria-label="Price bottom" required />
         </label>
         <label>
           Price top
-          <input
-            type="number"
-            name="price-high"
-            aria-label="Price top"
-            required
-          />
+          <input type="number" name="price-high" aria-label="Price top" required />
         </label>
       </div>
       <div>
         <label>
           Grids count
-          <input
-            type="number"
-            name="grid-count"
-            aria-label="Grids count"
-            required
-          />
+          <input type="number" name="grid-count" aria-label="Grids count" required />
         </label>
         <label>
           Grid start price
-          <input
-            type="number"
-            name="grid-trigger"
-            aria-label="Grid start price"
-          />
+          <input type="number" name="grid-trigger" aria-label="Grid start price" />
         </label>
       </div>
       <div>
         <label>
           Grid stop loss price
-          <input
-            type="number"
-            name="grid-sl"
-            aria-label="Grid stop loss price"
-          />
+          <input type="number" name="grid-sl" aria-label="Grid stop loss price" />
         </label>
         <label>
           Grid take profit price
-          <input
-            type="number"
-            name="grid-tp"
-            aria-label="Grid take profit price"
-          />
+          <input type="number" name="grid-tp" aria-label="Grid take profit price" />
         </label>
       </div>
-      <div
-        style="
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        "
-      >
+      <div style="display: flex; flex-direction: column; justify-content: space-between">
+        <label> The calculation may take some time if you have a large date range with a small kline. </label>
         <label>
-          The calculation may take some time if you have a large date range with
-          a small kline.
-        </label>
-        <label>
-          <button id="start-backtest-button" type="submit">
-            Start backtest
-          </button>
+          <button id="start-backtest-button" type="submit">Start backtest</button>
         </label>
       </div>
     </div>
@@ -303,12 +246,8 @@
   // This section is about the form elements and their event listeners.
   const exchangeSelect = document.querySelector('select[name="exchange"]');
   const symbolSelect = document.querySelector('select[name="symbol"]');
-  const marketDataTypes = document.querySelector(
-    'select[name="market-data-type"]'
-  );
-  const chartMarketDataTypes = document.querySelector(
-    'select[name="chart-market-data-type"]'
-  );
+  const marketDataTypes = document.querySelector('select[name="market-data-type"]');
+  const chartMarketDataTypes = document.querySelector('select[name="chart-market-data-type"]');
   const dateStartPicker = document.querySelector('input[name="date-start"]');
   const dateEndPicker = document.querySelector('input[name="date-end"]');
 
@@ -317,8 +256,7 @@
     const exchange = event.target.value;
     const response = await fetch(`/api/exchange/internal/symbols/${exchange}`);
     const data = await response.json();
-    symbolSelect.innerHTML =
-      '<option selected disabled value="">Select symbol</option>';
+    symbolSelect.innerHTML = '<option selected disabled value="">Select symbol</option>';
     data.forEach((symbol) => {
       const option = document.createElement("option");
       option.value = symbol;
@@ -334,10 +272,8 @@
     const symbol = event.target.value;
     const response = await fetch(`/api/exchange/internal/mdts/${symbol}`);
     const data = await response.json();
-    marketDataTypes.innerHTML =
-      '<option selected disabled value="">Kline type</option>';
-    chartMarketDataTypes.innerHTML =
-      '<option selected disabled value="">Chart kline type</option>';
+    marketDataTypes.innerHTML = '<option selected disabled value="">Kline type</option>';
+    chartMarketDataTypes.innerHTML = '<option selected disabled value="">Chart kline type</option>';
     data.forEach((mdt) => {
       const option = document.createElement("option");
       option.value = mdt;
@@ -517,12 +453,8 @@
   }
 
   // This section is about the Start backtest button.
-  const commonParametersForm = document.querySelector(
-    'form[name="common-parameters"]'
-  );
-  const gridParametersForm = document.querySelector(
-    'form[name="grid-parameters"]'
-  );
+  const commonParametersForm = document.querySelector('form[name="common-parameters"]');
+  const gridParametersForm = document.querySelector('form[name="grid-parameters"]');
   const startBacktestButton = document.getElementById("start-backtest-button");
   const iconOpen = document.getElementById("icon-open");
   const iconClose = document.getElementById("icon-close");
@@ -560,8 +492,8 @@
       exchange: resultData.exchange,
       symbol: resultData.symbol,
       chart_market_data_type: resultData.chart_market_data_type,
-      date_start: new Date(resultData.date_start).toISOString().split('T')[0],
-      date_end: new Date(resultData.date_end).toISOString().split('T')[0],
+      date_start: new Date(resultData.date_start).toISOString().split("T")[0],
+      date_end: new Date(resultData.date_end).toISOString().split("T")[0],
     };
     await buildChart(data, resultData.positions);
   });
