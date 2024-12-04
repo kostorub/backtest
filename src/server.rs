@@ -9,17 +9,7 @@ use crate::{
     app_state::AppState,
     config::AppSettings,
     database,
-    routes::{
-        self, api, backtest,
-        backtest_ui::{
-            self,
-            backtest_result::backtest_results_options,
-            exchange::{exchange_symbols, exchanges, local_symbols, mdts, mdts_from_symbol},
-            market_data::{download_market_data, downloaded_market_data},
-            pages::page,
-        },
-        htmx, middlewares,
-    },
+    routes::{api, middlewares},
     web::template::template,
 };
 
@@ -63,40 +53,24 @@ pub async fn start_server() -> std::io::Result<()> {
         .service(Files::new("/static", "src/web/static/").show_files_listing())
         .service(web::redirect("/", "/pages/about"))
         .wrap(from_fn(middlewares::access::rbac_middleware))
-        .route("/pages/{page}", web::get().to(page))
-        
-        .route("/auth/sign-in", web::post().to(htmx::auth::sign_in))
-        .route("/auth/sign-up", web::get().to(htmx::auth::sign_up))
-        .route("/auth/sign-out", web::post().to(htmx::auth::sign_out))
-        .route("/exchange/local-symbols", web::get().to(local_symbols))
-        .route("/exchange/symbols/{exchange}", web::get().to(exchange_symbols))
-        .route("/exchange/exchanges", web::get().to(exchanges))
-        .route("/exchange/mdts", web::get().to(mdts))
-        .route("/exchange/mdts_from_symbol",web::get().to(mdts_from_symbol))
-        .route("/market-data/downloaded",web::get().to(downloaded_market_data))
-        .route("/market-data/download",web::post().to(download_market_data))
-        .route("/market-data/date-input",web::get().to(backtest_ui::market_data::market_data_date_input))
-        .route("/backtest/grid/run", web::post().to(routes::htmx::backtest::run_grid))
-        .route("/backtest_result/options", web::get().to(backtest_results_options))
-        .route("/backtest_result/chart", web::get().to(backtest::backtest_result::chart))
-        .route("/backtest_result/metrics", web::get().to(backtest_ui::backtest_result::metrics))
+        .route("/pages/{page}", web::get().to(api::pages::page))
 
         .route("/api/auth/sign-in", web::post().to(api::auth::sign_in))
         .route("/api/auth/sign-up", web::post().to(api::auth::sign_up))
         .route("/api/auth/sign-out", web::post().to(api::auth::sign_out))
-        .route("/api/exchange/local-symbols", web::get().to(backtest::exchange::local_symbols))
-        .route("/api/exchange/symbols/{exchange}",web::get().to(backtest::exchange::exchange_symbols))
-        .route("/api/exchange/exchanges", web::get().to(backtest::exchange::exchanges))
-        .route("/api/exchange/mdts", web::get().to(backtest::exchange::mdts))
-        .route("/api/exchange/mdts_from_symbol",web::get().to(backtest::exchange::mdts_from_symbol))
-        .route("/api/market-data/downloaded",web::get().to(backtest::market_data::downloaded_market_data))
-        .route("/api/market-data/download",web::post().to(backtest::market_data::download_market_data))
-        .route("/api/market-data/date-input",web::get().to(backtest::market_data::market_data_dates))
-        .route("/api/market-data/klines", web::get().to(backtest::market_data::klines))
-        .route("/api/backtest/grid/run", web::post().to(routes::api::backtest::run_grid))
-        .route("/api/backtest/result/chart", web::get().to(backtest::backtest_result::chart))
-        .route("/api/backtest/result/data", web::get().to(backtest::backtest_result::data))
-        .route("/api/backtest/result/metrics", web::get().to(backtest::backtest_result::metrics))
+        .route("/api/exchange/internal/symbols/{exchange}", web::get().to(api::exchange::internal_symbols))
+        .route("/api/exchange/external/symbols/{exchange}",web::get().to(api::exchange::external_symbols))
+        .route("/api/exchange/exchanges", web::get().to(api::exchange::exchanges))
+        .route("/api/exchange/external/mdts", web::get().to(api::exchange::external_mdts))
+        .route("/api/exchange/internal/mdts/{symbol}",web::get().to(api::exchange::internal_mdts))
+        .route("/api/market-data/downloaded",web::get().to(api::market_data::downloaded_market_data))
+        .route("/api/market-data/download",web::post().to(api::market_data::download_market_data))
+        .route("/api/market-data/date-input",web::get().to(api::market_data::market_data_dates))
+        .route("/api/market-data/klines", web::get().to(api::market_data::klines))
+        .route("/api/backtest/grid/run", web::post().to(api::backtest::run_grid))
+        .route("/api/backtest/result/chart", web::get().to(api::backtest_result::chart))
+        .route("/api/backtest/result/data", web::get().to(api::backtest_result::data))
+        .route("/api/backtest/result/metrics", web::get().to(api::backtest_result::metrics))
         })
         .bind(("0.0.0.0", 8080))?
         .run()

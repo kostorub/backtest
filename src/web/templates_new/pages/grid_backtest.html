@@ -1,0 +1,575 @@
+{% extends "index.html" %} {% block content %}
+<section name="parameters" style="transform: scale(0.875)">
+  <!-- <section name="parameters"> -->
+  <form name="common-parameters">
+    <div class="grid">
+      <div>
+        <label>
+          Exchange
+          <select name="exchange" aria-label="Select exchange" required>
+            <option selected disabled value="">Select exchange</option>
+            <!-- Here should be a data from a request -->
+          </select>
+        </label>
+        <label>
+          Symbol
+          <select name="symbol" aria-label="Select symbol" required>
+            <option selected disabled value="">Select symbol</option>
+            <!-- Here should be a data from a request -->
+          </select>
+        </label>
+      </div>
+      <div>
+        <label>
+          Chart klines
+          <select
+            name="chart-market-data-type"
+            aria-label="Market kline type for the chart"
+            required
+          >
+            <option selected disabled value="">Chart kline type</option>
+            <!-- Here should be a data from a request -->
+          </select>
+        </label>
+        <label>
+          Calculation klines
+          <select
+            name="market-data-type"
+            aria-label="Market kline type for the calculation"
+            required
+          >
+            <option selected disabled value="">Kline type</option>
+            <!-- Here should be a data from a request -->
+          </select>
+        </label>
+      </div>
+      <div>
+        <label for="date-start">
+          Start date
+          <input type="date" name="date-start" aria-label="Start date" />
+        </label>
+        <label for="date-end">
+          End date
+          <input type="date" name="date-end" aria-label="End date" />
+        </label>
+      </div>
+      <div>
+        <label>
+          Deposite
+          <input
+            type="number"
+            name="deposit"
+            aria-label="Deposit"
+            min="0.1"
+            required
+          />
+        </label>
+        <label>
+          Comission
+          <input
+            type="number"
+            name="commission"
+            aria-label="Commission"
+            required
+          />
+        </label>
+      </div>
+    </div>
+  </form>
+  <form name="grid-parameters">
+    <div class="grid">
+      <div>
+        <label>
+          Price bottom
+          <input
+            type="number"
+            name="price-low"
+            aria-label="Price bottom"
+            required
+          />
+        </label>
+        <label>
+          Price top
+          <input
+            type="number"
+            name="price-high"
+            aria-label="Price top"
+            required
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Grids count
+          <input
+            type="number"
+            name="grid-count"
+            aria-label="Grids count"
+            required
+          />
+        </label>
+        <label>
+          Grid start price
+          <input
+            type="number"
+            name="grid-trigger"
+            aria-label="Grid start price"
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Grid stop loss price
+          <input
+            type="number"
+            name="grid-sl"
+            aria-label="Grid stop loss price"
+          />
+        </label>
+        <label>
+          Grid take profit price
+          <input
+            type="number"
+            name="grid-tp"
+            aria-label="Grid take profit price"
+          />
+        </label>
+      </div>
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        "
+      >
+        <label>
+          The calculation may take some time if you have a large date range with
+          a small kline.
+        </label>
+        <label>
+          <button id="start-backtest-button" type="submit">
+            Start backtest
+          </button>
+        </label>
+      </div>
+    </div>
+  </form>
+  <div style="display: flex; justify-content: flex-end; align-items: center">
+    <label style="margin-right: 8px">Parameters form</label>
+    <div id="icon-open" style="width: 32px; height: 32px" hidden>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="100%"
+        height="100%"
+        fill="currentColor"
+        class="bi bi-chevron-expand"
+        viewBox="0 0 16 16"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M3.646 9.146a.5.5 0 0 1 .708 0L8 12.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708m0-2.292a.5.5 0 0 0 .708 0L8 3.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708"
+        />
+      </svg>
+    </div>
+    <div id="icon-close" style="width: 32px; height: 32px">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="100%"
+        height="100%"
+        fill="currentColor"
+        class="bi bi-chevron-bar-contract"
+        viewBox="0 0 16 16"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M3.646 14.854a.5.5 0 0 0 .708 0L8 11.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708m0-13.708a.5.5 0 0 1 .708 0L8 4.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8"
+        />
+      </svg>
+    </div>
+  </div>
+</section>
+<section name="chart-section"></section>
+<section name="metrics-section" style="transform: scale(0.875)">
+  <div class="grid">
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Average Loss Position</td>
+          <td>-7.9</td>
+        </tr>
+        <tr>
+          <td>Average Position Size</td>
+          <td>100</td>
+        </tr>
+        <tr>
+          <td>Average Profit Position</td>
+          <td>23.31</td>
+        </tr>
+        <tr>
+          <td>Expected Payoff</td>
+          <td>2136.41</td>
+        </tr>
+        <tr>
+          <td>Profit Factor</td>
+          <td>44.3</td>
+        </tr>
+        <tr>
+          <td>Profit per Position (%)</td>
+          <td>4.58</td>
+        </tr>
+        <tr>
+          <td>Positions Number</td>
+          <td>16</td>
+        </tr>
+        <tr>
+          <td>Profit Positions Number</td>
+          <td>15</td>
+        </tr>
+        <tr>
+          <td>Loss Positions Number</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>Sortino</td>
+          <td>N/A</td>
+        </tr>
+      </tbody>
+    </table>
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Drawdown</td>
+          <td>N/A</td>
+        </tr>
+        <tr>
+          <td>Max Drawdown</td>
+          <td>N/A</td>
+        </tr>
+        <tr>
+          <td>Max Use of Funds</td>
+          <td>100</td>
+        </tr>
+        <tr>
+          <td>Start Deposit</td>
+          <td>1000</td>
+        </tr>
+        <tr>
+          <td>Finish Deposit</td>
+          <td>1341.83</td>
+        </tr>
+        <tr>
+          <td>Total Profit</td>
+          <td>341.83</td>
+        </tr>
+        <tr>
+          <td>Total Profit (%)</td>
+          <td>34.18</td>
+        </tr>
+        <tr>
+          <td>Profit Positions (%)</td>
+          <td>93.75</td>
+        </tr>
+        <tr>
+          <td>Loss Positions (%)</td>
+          <td>6.25</td>
+        </tr>
+        <tr>
+          <td>Max Deposit</td>
+          <td>N/A</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock content %} {% block scripts %}
+<script>
+  // This section is about loading the exchanges by using the loadExchanges() function from static/scripts/common.js
+  (async () => {
+    await loadExchanges();
+  })();
+
+  // This section is about the form elements and their event listeners.
+  const exchangeSelect = document.querySelector('select[name="exchange"]');
+  const symbolSelect = document.querySelector('select[name="symbol"]');
+  const marketDataTypes = document.querySelector(
+    'select[name="market-data-type"]'
+  );
+  const chartMarketDataTypes = document.querySelector(
+    'select[name="chart-market-data-type"]'
+  );
+  const dateStartPicker = document.querySelector('input[name="date-start"]');
+  const dateEndPicker = document.querySelector('input[name="date-end"]');
+
+  // This section is about populating the symbol select with the symbols for the selected exchange.
+  exchangeSelect.addEventListener("change", async (event) => {
+    const exchange = event.target.value;
+    const response = await fetch(`/api/exchange/internal/symbols/${exchange}`);
+    const data = await response.json();
+    symbolSelect.innerHTML =
+      '<option selected disabled value="">Select symbol</option>';
+    data.forEach((symbol) => {
+      const option = document.createElement("option");
+      option.value = symbol;
+      option.textContent = symbol;
+      symbolSelect.appendChild(option);
+    });
+    symbolSelect.value = symbolSelect.options[1].value;
+    symbolSelect.dispatchEvent(new Event("change"));
+  });
+
+  // This section is about populating the market data types for the selected symbol.
+  symbolSelect.addEventListener("change", async (event) => {
+    const symbol = event.target.value;
+    const response = await fetch(`/api/exchange/internal/mdts/${symbol}`);
+    const data = await response.json();
+    marketDataTypes.innerHTML =
+      '<option selected disabled value="">Kline type</option>';
+    chartMarketDataTypes.innerHTML =
+      '<option selected disabled value="">Chart kline type</option>';
+    data.forEach((mdt) => {
+      const option = document.createElement("option");
+      option.value = mdt;
+      option.textContent = mdt;
+      marketDataTypes.appendChild(option);
+      chartMarketDataTypes.appendChild(option.cloneNode(true));
+    });
+    marketDataTypes.value = marketDataTypes.options[1].value;
+    chartMarketDataTypes.value = chartMarketDataTypes.options[1].value;
+    chartMarketDataTypes.dispatchEvent(new Event("change"));
+  });
+
+  // This section is about populating the date range for the selected symbol and market data type.
+  chartMarketDataTypes.addEventListener("change", async (event) => {
+    const exchange = exchangeSelect.value;
+    const symbol = symbolSelect.value;
+    const marketDataType = chartMarketDataTypes.value;
+    const response = await fetch(
+      `/api/market-data/date-input?exchange=${exchange}&symbol=${symbol}&market_data_type=${marketDataType}`
+    );
+    const data = await response.json();
+    dateStartPicker.min = data.date_start;
+    dateStartPicker.max = data.date_end;
+    dateEndPicker.min = data.date_start;
+    dateEndPicker.max = data.date_end;
+    dateStartPicker.value = dateStartPicker.min;
+    dateEndPicker.value = dateEndPicker.max;
+    dateStartPicker.dispatchEvent(new Event("change"));
+  });
+
+  dateStartPicker.addEventListener("change", async (event) => {
+    const data = {
+      exchange: exchangeSelect.value,
+      symbol: symbolSelect.value,
+      chart_market_data_type: chartMarketDataTypes.value,
+      date_start: dateStartPicker.value,
+      date_end: dateEndPicker.value,
+    };
+    await buildChart(data);
+  });
+
+  dateEndPicker.addEventListener("change", async (event) => {
+    const data = {
+      exchange: exchangeSelect.value,
+      symbol: symbolSelect.value,
+      chart_market_data_type: chartMarketDataTypes.value,
+      date_start: dateStartPicker.value,
+      date_end: dateEndPicker.value,
+    };
+    await buildChart(data);
+  });
+
+  // This section is about building the chart.
+  // There should be positions on the chart.
+  // The input data for positions is the following:
+  //   pub struct Data {
+  //     pub id: i64,
+  //     pub metrics_id: i64,
+  //     pub symbol: String,
+  //     pub exchange: String,
+  //     pub market_data_type: MarketDataType,
+  //     pub chart_market_data_type: MarketDataType,
+  //     pub date_start: i64,
+  //     pub date_end: i64,
+  //     pub deposit: f64,
+  //     pub commission: f64,
+  //     pub price_low: f64,
+  //     pub price_high: f64,
+  //     pub grid_count: i64,
+  //     pub grid_trigger: f64,
+  //     pub grid_sl: Option<f64>,
+  //     pub grid_tp: Option<f64>,
+  //     pub sell_all: Option<bool>,
+  //     pub positions: Vec<Position>,
+  // }
+  //   pub struct Position {
+  //     pub id: String,
+  //     pub symbol: String,
+  //     pub status: PositionStatus,
+  //     pub orders: Vec<Order>,
+  //     pub pnl: Option<f64>,
+  // }
+  //   pub struct Order {
+  //     pub date: i64,
+  //     pub date_update: Option<i64>,
+  //     pub price: f64,
+  //     pub price_executed: Option<f64>,
+  //     pub qty: Option<f64>,
+  //     pub commission: Option<f64>,
+  //     pub order_type: OrderType,
+  //     pub side: Side,
+  //     pub status: OrderStatus,
+  // }
+  // The position start date is the date of the first order.
+  // The position end date is the date of the last order.
+  async function buildChart(data, positions = []) {
+    const chartSection = document.querySelector('section[name="chart-section"]');
+
+    chartSection.innerHTML = "";
+
+    // Fetch the market data
+    const response = await fetch(
+      `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
+    );
+    const marketData = await response.json();
+
+    // Format data for ApexCharts
+    const formattedData = marketData.map((d) => ({
+      x: new Date(d.date), // Convert timestamp to Date
+      y: [d.open, d.high, d.low, d.close], // OHLC format
+    }));
+
+    // Helper function to round dates
+    function roundDate(date, intervals) {
+      for (let i = 0; i < intervals.length; i++) {
+        if (date <= new Date(intervals[i].date)) {
+          return new Date(intervals[i].date);
+        }
+      }
+      return new Date(intervals[intervals.length - 1].date);
+    }
+
+    // Format positions for ApexCharts
+    const positionSeries = positions.map((position, index) => {
+      const startDate = roundDate(new Date(position.orders[0].date_update), marketData);
+      const endDate = roundDate(new Date(position.orders[position.orders.length - 1].date_update), marketData);
+      return {
+        name: `Position ${index + 1}`,
+        type: "line",
+        data: [
+          {
+            x: startDate,
+            y: position.orders[0].price,
+          },
+          {
+            x: endDate,
+            y: position.orders[position.orders.length - 1].price,
+          },
+        ],
+      };
+    });
+
+    // Chart options
+    const options = {
+      chart: {
+        type: "line",
+        height: 400,
+      },
+      title: {
+        text: "Candlestick Chart",
+        align: "center",
+      },
+      xaxis: {
+        type: "datetime",
+      },
+      yaxis: {
+        tooltip: {
+          enabled: true,
+        },
+      },
+      stroke: {
+        width: 2,
+      },
+      series: [
+        {
+          name: "Candlestick Data",
+          type: "candlestick",
+          data: formattedData,
+        },
+        ...positionSeries,
+      ],
+    };
+
+    // Render the chart
+    const chart = new ApexCharts(chartSection, options);
+    chart.render();
+  }
+
+  // This section is about the Start backtest button.
+  const commonParametersForm = document.querySelector(
+    'form[name="common-parameters"]'
+  );
+  const gridParametersForm = document.querySelector(
+    'form[name="grid-parameters"]'
+  );
+  const startBacktestButton = document.getElementById("start-backtest-button");
+  const iconOpen = document.getElementById("icon-open");
+  const iconClose = document.getElementById("icon-close");
+  startBacktestButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(commonParametersForm);
+    const gridFormData = new FormData(gridParametersForm);
+    const requestData = {
+      symbol: formData.get("symbol"),
+      exchange: formData.get("exchange"),
+      market_data_type: formData.get("market-data-type"),
+      chart_market_data_type: formData.get("chart-market-data-type"),
+      date_start: formData.get("date-start"),
+      date_end: formData.get("date-end"),
+      deposit: formData.get("deposit"),
+      commission: formData.get("commission"),
+      price_low: gridFormData.get("price-low"),
+      price_high: gridFormData.get("price-high"),
+      grids_count: gridFormData.get("grid-count"),
+      grid_trigger: gridFormData.get("grid-trigger"),
+      grid_sl: gridFormData.get("grid-sl"),
+      grid_tp: gridFormData.get("grid-tp"),
+      sell_all: true,
+    };
+    const response = await fetch("/api/backtest/grid/run", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
+    const result = await response.json();
+    const resultData = await getBacktestResultData(result.id);
+    const data = {
+      exchange: resultData.exchange,
+      symbol: resultData.symbol,
+      chart_market_data_type: resultData.chart_market_data_type,
+      date_start: new Date(resultData.date_start).toISOString().split('T')[0],
+      date_end: new Date(resultData.date_end).toISOString().split('T')[0],
+    };
+    await buildChart(data, resultData.positions);
+  });
+
+  async function getBacktestResultData(id) {
+    const response = await fetch(`/api/backtest/result/data?id=${id}`);
+    const data = await response.json();
+    return data;
+  }
+</script>
+{% endblock scripts %}

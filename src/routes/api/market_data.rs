@@ -1,10 +1,10 @@
-use std::{path::PathBuf, sync::Arc};
+use std::path::PathBuf;
 
 use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
 
 use crate::{
     app_state::AppState,
-    backtest::strategies::strategy_utils::get_klines,
+    backtest::strategies::strategy_utils,
     data_handlers::{
         pipeline,
         utils::{datetime_str_to_i64, i64_to_datetime_str},
@@ -15,46 +15,24 @@ use crate::{
             GetMarketDataRequest, MarketDataDatesRequest, MarketDataDatesResponse, MarketDataFront,
         },
     },
-    db_handlers::market_data::{
-        get_db_market_data_dates, get_market_data_page, insert_market_data,
-    },
+    db_handlers::market_data,
 };
 
 pub async fn downloaded_market_data(
     data: web::Data<AppState>,
     r: web::Query<GetMarketDataRequest>,
 ) -> Result<HttpResponse, Error> {
-    let market_data = get_downloaded_market_data(&data, r.into_inner()).await?;
-
-    Ok(HttpResponse::Ok().json(market_data))
-}
-
-pub async fn get_downloaded_market_data(
-    data: &web::Data<AppState>,
-    r: GetMarketDataRequest,
-) -> Result<Vec<MarketDataFront>, Error> {
-    let data = Arc::clone(data);
-
-    let market_data = get_market_data_page(&data.pool, &r)
+    let market_data = market_data::get_market_data_page(&data.pool, &r)
         .await
         .map_err(ErrorInternalServerError)?;
 
-    Ok(market_data)
+    Ok(HttpResponse::Ok().json(market_data))
 }
 
 pub async fn download_market_data(
     data: web::Data<AppState>,
     r: web::Json<MarketDataFront>,
 ) -> Result<HttpResponse, Error> {
-    let result = _download_market_data(data, r).await?;
-
-    Ok(HttpResponse::Ok().json(result))
-}
-
-pub async fn _download_market_data(
-    data: web::Data<AppState>,
-    r: web::Json<MarketDataFront>,
-) -> Result<MarketDataFront, Error> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
 
     pipeline::pipeline::<KLine>(
@@ -68,7 +46,7 @@ pub async fn _download_market_data(
     )
     .await;
 
-    let insert_id = insert_market_data(
+    let insert_id = market_data::insert_market_data(
         &data.pool,
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
@@ -79,30 +57,23 @@ pub async fn _download_market_data(
     .await
     .map_err(ErrorInternalServerError)?;
 
-    Ok(MarketDataFront {
+    let result = MarketDataFront {
         id: Some(insert_id),
         exchange: r.exchange.clone(),
         symbol: r.symbol.clone(),
         market_data_type: r.market_data_type.clone(),
         date_start: r.date_start.clone(),
         date_end: r.date_end.clone(),
-    })
+    };
+
+    Ok(HttpResponse::Ok().json(result))
 }
 
 pub async fn market_data_dates(
     data: web::Data<AppState>,
     r: web::Query<MarketDataDatesRequest>,
 ) -> Result<HttpResponse, Error> {
-    let dates = _market_data_dates(&data, r.into_inner()).await?;
-
-    Ok(HttpResponse::Ok().json(dates))
-}
-
-pub async fn _market_data_dates(
-    data: &web::Data<AppState>,
-    r: MarketDataDatesRequest,
-) -> Result<MarketDataDatesResponse, Error> {
-    let dates = get_db_market_data_dates(
+    let dates = market_data::get_db_market_data_dates(
         &data.pool,
         &r.exchange.to_lowercase(),
         &r.symbol.to_lowercase(),
@@ -116,7 +87,7 @@ pub async fn _market_data_dates(
         date_end: i64_to_datetime_str(dates.1),
     };
 
-    Ok(result)
+    Ok(HttpResponse::Ok().json(result))
 }
 
 pub async fn klines(
@@ -124,7 +95,7 @@ pub async fn klines(
     r: web::Query<MarketDataFront>,
 ) -> Result<HttpResponse, Error> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
-    let klines = get_klines(
+    let klines = strategy_utils::get_klines(
         data_path,
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),

@@ -102,7 +102,7 @@ fn process_archives<T>(
 ) where
     T: DeserializeOwned + ToFromBytes + KLineTrait + Clone,
 {
-    let mut archives = get_filenames(data_path.clone(), "zip").unwrap();
+    let mut archives = get_filenames(data_path.clone(), "zip", None).unwrap();
     archives.sort();
     debug!("Found archives: {:?}", archives);
     let mut last_trade_date: Option<i64> = None;

@@ -98,7 +98,11 @@ pub fn get_last_value_from_file<T: ToFromBytes>(file_path: PathBuf) -> io::Resul
     Ok(T::from_be_bytes(&mmap[mmap.len() - T::size()..mmap.len()]))
 }
 
-pub fn get_filenames(data_path: PathBuf, extension: &str) -> io::Result<Vec<PathBuf>> {
+pub fn get_filenames(
+    data_path: PathBuf,
+    extension: &str,
+    contains: Option<&str>,
+) -> io::Result<Vec<PathBuf>> {
     let mut result: Vec<PathBuf> = Vec::new();
     for entry in data_path.read_dir()? {
         let some_file = entry?;
@@ -110,6 +114,14 @@ pub fn get_filenames(data_path: PathBuf, extension: &str) -> io::Result<Vec<Path
             .to_str()
             .unwrap()
             == extension
+            && (contains.is_none()
+                || some_file
+                    .path()
+                    .file_name()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .contains(contains.unwrap()))
         {
             result.push(some_file.path().to_path_buf());
         }
@@ -305,7 +317,7 @@ mod tests {
 
         assert!(file_path.exists());
 
-        let filenames = get_filenames(PathBuf::from("./"), "binspecial").unwrap();
+        let filenames = get_filenames(PathBuf::from("./"), "binspecial", None).unwrap();
         assert!(filenames.contains(&file_path));
         remove_file(file_path).unwrap();
     }

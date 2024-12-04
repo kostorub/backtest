@@ -30,13 +30,11 @@ pub async fn rbac_middleware(
     mut req: ServiceRequest,
     next: Next<impl MessageBody + 'static>,
 ) -> Result<ServiceResponse<impl MessageBody>, Error> {
-    debug!("Access middleware");
+    dbg!("Access middleware");
 
     let free_routes = vec![
         "/",
-        "/auth/sign-in",
-        "/auth/sign-up",
-        "/auth/sign-out",
+        "/static/scripts/common.js",
         "/pages/about",
         "/pages/sign-in",
         "/pages/sign-up",
@@ -51,21 +49,11 @@ pub async fn rbac_middleware(
         "MarketDataViewer",
         vec![
             "/pages/market-data",
-            "/exchange/local-symbols",
-            "/exchange/symbols/",
-            "/exchange/exchanges",
-            "/exchange/mdts",
-            "/exchange/mdts_from_symbol",
-            "/market-data/downloaded",
-            "/market-data/date-input",
-            "/backtest_result/options",
-            "/backtest_result/chart",
-            "/backtest_result/metrics",
-            "/api/exchange/local-symbols",
-            "/api/exchange/symbols/",
+            "/api/exchange/internal/symbols/",
+            "/api/exchange/external/symbols/",
             "/api/exchange/exchanges",
-            "/api/exchange/mdts",
-            "/api/exchange/mdts_from_symbol",
+            "/api/exchange/external/mdts",
+            "/api/exchange/internal/mdts",
             "/api/market-data/downloaded",
             "/api/market-data/date-input",
             "/api/market-data/klines",
@@ -75,19 +63,14 @@ pub async fn rbac_middleware(
         ],
     );
 
+    access_map.insert("MarketDataEditor", vec!["/api/market-data/download"]);
+
     access_map.insert(
-        "MarketDataEditor",
-        vec!["/market-data/download", "/api/market-data/download"],
+        "GridBacktestViewer",
+        vec!["/pages/grid-backtest", "/api/backtest/result/data"],
     );
 
-    access_map.insert("GridBacktestViewer", vec!["/pages/grid-backtest"]);
-
-    let grid_backtest_runner = vec![
-        "/backtest/hodl/run",
-        "/backtest/grid/run",
-        "/api/backtest/hodl/run",
-        "/api/backtest/grid/run",
-    ];
+    let grid_backtest_runner = vec!["/api/backtest/hodl/run", "/api/backtest/grid/run"];
 
     access_map.insert("GridBacktestRunner", grid_backtest_runner.clone());
     access_map.insert("GridBacktestTrialRunner", grid_backtest_runner.clone());
