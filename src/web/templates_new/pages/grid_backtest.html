@@ -304,152 +304,137 @@
     dateStartPicker.dispatchEvent(new Event("change"));
   });
 
-  dateStartPicker.addEventListener("change", async (event) => {
-    const data = {
-      exchange: exchangeSelect.value,
-      symbol: symbolSelect.value,
-      chart_market_data_type: chartMarketDataTypes.value,
-      date_start: dateStartPicker.value,
-      date_end: dateEndPicker.value,
-    };
-    await buildChart(data);
-  });
-
   dateEndPicker.addEventListener("change", async (event) => {
-    const data = {
-      exchange: exchangeSelect.value,
-      symbol: symbolSelect.value,
-      chart_market_data_type: chartMarketDataTypes.value,
-      date_start: dateStartPicker.value,
-      date_end: dateEndPicker.value,
-    };
-    await buildChart(data);
+    try {
+      const data = {
+        exchange: exchangeSelect.value,
+        symbol: symbolSelect.value,
+        chart_market_data_type: chartMarketDataTypes.value,
+        date_start: dateStartPicker.value,
+        date_end: dateEndPicker.value,
+      };
+      await buildChart(data);
+    } catch (error) {
+      console.error("Error while building the chart:", error);
+    }
   });
 
-  // This section is about building the chart.
-  // There should be positions on the chart.
-  // The input data for positions is the following:
-  //   pub struct Data {
-  //     pub id: i64,
-  //     pub metrics_id: i64,
-  //     pub symbol: String,
-  //     pub exchange: String,
-  //     pub market_data_type: MarketDataType,
-  //     pub chart_market_data_type: MarketDataType,
-  //     pub date_start: i64,
-  //     pub date_end: i64,
-  //     pub deposit: f64,
-  //     pub commission: f64,
-  //     pub price_low: f64,
-  //     pub price_high: f64,
-  //     pub grid_count: i64,
-  //     pub grid_trigger: f64,
-  //     pub grid_sl: Option<f64>,
-  //     pub grid_tp: Option<f64>,
-  //     pub sell_all: Option<bool>,
-  //     pub positions: Vec<Position>,
-  // }
-  //   pub struct Position {
-  //     pub id: String,
-  //     pub symbol: String,
-  //     pub status: PositionStatus,
-  //     pub orders: Vec<Order>,
-  //     pub pnl: Option<f64>,
-  // }
-  //   pub struct Order {
-  //     pub date: i64,
-  //     pub date_update: Option<i64>,
-  //     pub price: f64,
-  //     pub price_executed: Option<f64>,
-  //     pub qty: Option<f64>,
-  //     pub commission: Option<f64>,
-  //     pub order_type: OrderType,
-  //     pub side: Side,
-  //     pub status: OrderStatus,
-  // }
-  // The position start date is the date of the first order.
-  // The position end date is the date of the last order.
-  async function buildChart(data, positions = []) {
-    const chartSection = document.querySelector('section[name="chart-section"]');
+  // This section is about auxiliary functions for the chart.
+  function getSecondsFromMarketDataType(marketDataType) {
+    const mapping = {
+      trade: 0,
+      "1s": 1 * 1000,
+      "1m": 60 * 1000,
+      "3m": 3 * 60 * 1000,
+      "5m": 5 * 60 * 1000,
+      "15m": 15 * 60 * 1000,
+      "30m": 30 * 60 * 1000,
+      "1h": 60 * 60 * 1000,
+      "2h": 2 * 60 * 60 * 1000,
+      "4h": 4 * 60 * 60 * 1000,
+      "6h": 6 * 60 * 60 * 1000,
+      "8h": 8 * 60 * 60 * 1000,
+      "1d": 24 * 60 * 60 * 1000,
+    };
 
-    chartSection.innerHTML = "";
-
-    // Fetch the market data
-    const response = await fetch(
-      `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
-    );
-    const marketData = await response.json();
-
-    // Format data for ApexCharts
-    const formattedData = marketData.map((d) => ({
-      x: new Date(d.date), // Convert timestamp to Date
-      y: [d.open, d.high, d.low, d.close], // OHLC format
-    }));
-
-    // Helper function to round dates
-    function roundDate(date, intervals) {
-      for (let i = 0; i < intervals.length; i++) {
-        if (date <= new Date(intervals[i].date)) {
-          return new Date(intervals[i].date);
-        }
-      }
-      return new Date(intervals[intervals.length - 1].date);
+    if (!(marketDataType in mapping)) {
+      throw new Error(`Unknown market data type: ${marketDataType}`);
     }
 
-    // Format positions for ApexCharts
-    const positionSeries = positions.map((position, index) => {
-      const startDate = roundDate(new Date(position.orders[0].date_update), marketData);
-      const endDate = roundDate(new Date(position.orders[position.orders.length - 1].date_update), marketData);
-      return {
-        name: `Position ${index + 1}`,
-        type: "line",
-        data: [
-          {
-            x: startDate,
-            y: position.orders[0].price,
-          },
-          {
-            x: endDate,
-            y: position.orders[position.orders.length - 1].price,
-          },
-        ],
+    return mapping[marketDataType];
+  }
+
+  function parseTime(t, marketDataType) {
+    try {
+      if (!t || isNaN(t)) {
+        throw new Error(`Invalid timestamp: ${t}`);
+      }
+
+      const seconds = getSecondsFromMarketDataType(marketDataType);
+      const date = new Date(Math.floor(t / seconds) * seconds);
+
+      if (isNaN(date.getTime())) {
+        throw new Error(`Failed to parse date from timestamp: ${t}`);
+      }
+
+      return date.toISOString();
+    } catch (error) {
+      console.error(`Error in parseTime. t: ${t}, marketDataType: ${marketDataType}`, error);
+      throw error; // Re-throw to propagate to the main function
+    }
+  }
+
+  async function buildChart(data, positions = []) {
+    try {
+      const chartSection = document.querySelector('section[name="chart-section"]');
+      chartSection.innerHTML = "";
+
+      // Fetch market data
+      const response = await fetch(
+        `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch market data: ${response.statusText}`);
+      }
+
+      const marketData = await response.json();
+
+      // Debugging: Log the market data
+      console.log("Market Data:", marketData);
+
+      const x = marketData.map((k) => {
+        if (!k.date || isNaN(k.date)) {
+          console.error("Invalid time in marketData entry:", k);
+        }
+        return parseTime(k.date, data.chart_market_data_type);
+      });
+
+      const open = marketData.map((k) => k.open);
+      const high = marketData.map((k) => k.high);
+      const low = marketData.map((k) => k.low);
+      const close = marketData.map((k) => k.close);
+
+      const trace = {
+        x: x,
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        type: "candlestick",
+        showlegend: false,
       };
-    });
 
-    // Chart options
-    const options = {
-      chart: {
-        type: "line",
-        height: 400,
-      },
-      title: {
-        text: "Candlestick Chart",
-        align: "center",
-      },
-      xaxis: {
-        type: "datetime",
-      },
-      yaxis: {
-        tooltip: {
-          enabled: true,
-        },
-      },
-      stroke: {
-        width: 2,
-      },
-      series: [
-        {
-          name: "Candlestick Data",
-          type: "candlestick",
-          data: formattedData,
-        },
-        ...positionSeries,
-      ],
-    };
+      const traces = [trace];
 
-    // Render the chart
-    const chart = new ApexCharts(chartSection, options);
-    chart.render();
+      positions.forEach((pos) => {
+        const lineTrace = {
+          x: [
+            parseTime(pos.orders[0].date, data.chart_market_data_type),
+            parseTime(pos.orders[pos.orders.length - 1].date_update, data.chart_market_data_type),
+          ],
+          y: [pos.orders[0].price, pos.orders[pos.orders.length - 1].price],
+          mode: "lines",
+          line: {
+            color: pos.pnl && pos.pnl > 0 ? "green" : "red",
+          },
+          showlegend: false,
+        };
+        traces.push(lineTrace);
+      });
+
+      const layout = {
+        height: 800,
+        xaxis: { title: "Date" },
+        yaxis: { title: "Price" },
+      };
+
+      Plotly.newPlot(chartSection, traces, layout);
+    } catch (error) {
+      console.error("Error while rendering the chart:", error);
+      const chartSection = document.querySelector('section[name="chart-section"]');
+      chartSection.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+    }
   }
 
   // This section is about the Start backtest button.
