@@ -38,6 +38,18 @@ pub async fn get_user(pool: &SqlitePool, account_number: String) -> Result<Optio
     }
 }
 
+pub async fn check_user_by_id(pool: &SqlitePool, user_id: i64) -> Result<bool, Error> {
+    let user = sqlx::query!(r#"SELECT user_id FROM users WHERE user_id = ?"#, user_id)
+        .fetch_optional(pool)
+        .await?;
+
+    if let Some(_) = user {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 pub async fn create_user_with_view_roles(
     pool: &SqlitePool,
     account_number_hash: String,

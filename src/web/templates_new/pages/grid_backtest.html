@@ -1,0 +1,460 @@
+{% extends "index.html" %} {% block content %}
+<!-- <section name="parameters" style="transform: scale(0.875)"> -->
+<section name="parameters">
+  <details id="parameters-details" open>
+    <summary>Parameters form</summary>
+    <form name="common-parameters">
+      <div class="grid">
+        <div>
+          <label>
+            Exchange
+            <select name="exchange" aria-label="Select exchange" required>
+              <option selected disabled value="">Select exchange</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+          <label>
+            Symbol
+            <select name="symbol" aria-label="Select symbol" required>
+              <option selected disabled value="">Select symbol</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>
+            Chart klines
+            <select name="chart-market-data-type" aria-label="Market kline type for the chart" required>
+              <option selected disabled value="">Chart kline type</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+          <label>
+            Calculation klines
+            <select name="market-data-type" aria-label="Market kline type for the calculation" required>
+              <option selected disabled value="">Kline type</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+        </div>
+        <div>
+          <label for="date-start">
+            Start date
+            <input type="date" name="date-start" aria-label="Start date" />
+          </label>
+          <label for="date-end">
+            End date
+            <input type="date" name="date-end" aria-label="End date" />
+          </label>
+        </div>
+        <div>
+          <label>
+            Deposite
+            <input type="number" name="deposit" aria-label="Deposit" min="0.1" value="1000.0" required />
+          </label>
+          <label>
+            Comission
+            <input type="number" name="commission" aria-label="Commission" value="0.0" required />
+          </label>
+        </div>
+      </div>
+    </form>
+    <form name="grid-parameters">
+      <div class="grid">
+        <div>
+          <label>
+            Price bottom
+            <input type="number" name="price-low" aria-label="Price bottom" required />
+          </label>
+          <label>
+            Price top
+            <input type="number" name="price-high" aria-label="Price top" required />
+          </label>
+        </div>
+        <div>
+          <label>
+            Grids count
+            <input type="number" name="grid-count" aria-label="Grids count" value="10" required />
+          </label>
+          <label>
+            Grid start price
+            <input type="number" name="grid-trigger" aria-label="Grid start price" value="0" disabled />
+          </label>
+        </div>
+        <div>
+          <label>
+            Grid stop loss price
+            <input type="number" name="grid-sl" aria-label="Grid stop loss price" disabled />
+          </label>
+          <label>
+            Grid take profit price
+            <input type="number" name="grid-tp" aria-label="Grid take profit price" disabled />
+          </label>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between">
+          <label> The calculation may take some time if you have a large date range with a small kline. </label>
+          <label>
+            <button id="start-backtest-button" type="submit">Start backtest</button>
+          </label>
+        </div>
+      </div>
+    </form>
+  </details>
+</section>
+<section name="chart-section"></section>
+<!-- <section name="metrics-section" style="transform: scale(0.875)"> -->
+<section name="metrics-section">
+  <div class="grid">
+    <table id="metrics-table-0" hidden>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <table id="metrics-table-1" hidden>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+{% endblock content %} {% block scripts %}
+<script>
+  // This section is about loading the exchanges by using the loadExchanges() function from static/scripts/common.js
+  (async () => {
+    await loadExchanges();
+  })();
+
+  // This section is about the form elements and their event listeners.
+  const exchangeSelect = document.querySelector('select[name="exchange"]');
+  const symbolSelect = document.querySelector('select[name="symbol"]');
+  const marketDataTypes = document.querySelector('select[name="market-data-type"]');
+  const chartMarketDataTypes = document.querySelector('select[name="chart-market-data-type"]');
+  const dateStartPicker = document.querySelector('input[name="date-start"]');
+  const dateEndPicker = document.querySelector('input[name="date-end"]');
+
+  // This section is about populating the symbol select with the symbols for the selected exchange.
+  exchangeSelect.addEventListener("change", async (event) => {
+    const exchange = event.target.value;
+    const response = await fetch(`/api/exchange/internal/symbols/${exchange}`);
+    const data = await response.json();
+    symbolSelect.innerHTML = '<option selected disabled value="">Select symbol</option>';
+    data.forEach((symbol) => {
+      const option = document.createElement("option");
+      option.value = symbol;
+      option.textContent = symbol;
+      symbolSelect.appendChild(option);
+    });
+    symbolSelect.value = symbolSelect.options[1].value;
+    symbolSelect.dispatchEvent(new Event("change"));
+  });
+
+  // This section is about populating the market data types for the selected symbol.
+  symbolSelect.addEventListener("change", async (event) => {
+    const symbol = event.target.value;
+    const response = await fetch(`/api/exchange/internal/mdts/${symbol}`);
+    const data = await response.json();
+    marketDataTypes.innerHTML = '<option selected disabled value="">Kline type</option>';
+    chartMarketDataTypes.innerHTML = '<option selected disabled value="">Chart kline type</option>';
+    data.forEach((mdt) => {
+      const option = document.createElement("option");
+      option.value = mdt;
+      option.textContent = mdt;
+      marketDataTypes.appendChild(option);
+      chartMarketDataTypes.appendChild(option.cloneNode(true));
+    });
+    marketDataTypes.value = marketDataTypes.options[1].value;
+    chartMarketDataTypes.value = chartMarketDataTypes.options[1].value;
+    chartMarketDataTypes.dispatchEvent(new Event("change"));
+  });
+
+  // This section is about populating the date range for the selected symbol and market data type.
+  chartMarketDataTypes.addEventListener("change", async (event) => {
+    const exchange = exchangeSelect.value;
+    const symbol = symbolSelect.value;
+    const marketDataType = chartMarketDataTypes.value;
+    const response = await fetch(
+      `/api/market-data/date-input?exchange=${exchange}&symbol=${symbol}&market_data_type=${marketDataType}`
+    );
+    const data = await response.json();
+    dateStartPicker.min = data.date_start;
+    dateStartPicker.max = data.date_end;
+    dateEndPicker.min = data.date_start;
+    dateEndPicker.max = data.date_end;
+    dateStartPicker.value = dateStartPicker.min;
+    dateEndPicker.value = dateEndPicker.max;
+    dateStartPicker.dispatchEvent(new Event("change"));
+  });
+
+  dateEndPicker.addEventListener("change", async (event) => {
+    try {
+      const data = {
+        exchange: exchangeSelect.value,
+        symbol: symbolSelect.value,
+        chart_market_data_type: chartMarketDataTypes.value,
+        date_start: dateStartPicker.value,
+        date_end: dateEndPicker.value,
+      };
+      await buildChart(data);
+    } catch (error) {
+      console.error("Error while building the chart:", error);
+    }
+  });
+
+  // This section is about auxiliary functions for the chart.
+  function getSecondsFromMarketDataType(marketDataType) {
+    const mapping = {
+      trade: 0,
+      "1s": 1 * 1000,
+      "1m": 60 * 1000,
+      "3m": 3 * 60 * 1000,
+      "5m": 5 * 60 * 1000,
+      "15m": 15 * 60 * 1000,
+      "30m": 30 * 60 * 1000,
+      "1h": 60 * 60 * 1000,
+      "2h": 2 * 60 * 60 * 1000,
+      "4h": 4 * 60 * 60 * 1000,
+      "6h": 6 * 60 * 60 * 1000,
+      "8h": 8 * 60 * 60 * 1000,
+      "1d": 24 * 60 * 60 * 1000,
+    };
+
+    if (!(marketDataType in mapping)) {
+      throw new Error(`Unknown market data type: ${marketDataType}`);
+    }
+
+    return mapping[marketDataType];
+  }
+
+  function parseTime(t, marketDataType) {
+    try {
+      if (!t || isNaN(t)) {
+        throw new Error(`Invalid timestamp: ${t}`);
+      }
+
+      const seconds = getSecondsFromMarketDataType(marketDataType);
+      const date = new Date(Math.floor(t / seconds) * seconds);
+
+      if (isNaN(date.getTime())) {
+        throw new Error(`Failed to parse date from timestamp: ${t}`);
+      }
+
+      return date.toISOString();
+    } catch (error) {
+      console.error(`Error in parseTime. t: ${t}, marketDataType: ${marketDataType}`, error);
+      throw error; // Re-throw to propagate to the main function
+    }
+  }
+
+  const chartSection = document.querySelector('section[name="chart-section"]');
+
+  window.addEventListener("resize", () => {
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 500);
+  });
+
+  async function buildChart(data, positions = []) {
+    try {
+      chartSection.innerHTML = "";
+
+      // Fetch market data
+      const response = await fetch(
+        `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch market data: ${response.statusText}`);
+      }
+
+      const marketData = await response.json();
+
+      // Debugging: Log the market data
+      console.log("Market Data:", marketData);
+
+      const x = marketData.map((k) => {
+        if (!k.date || isNaN(k.date)) {
+          console.error("Invalid time in marketData entry:", k);
+        }
+        return parseTime(k.date, data.chart_market_data_type);
+      });
+
+      const open = marketData.map((k) => k.open);
+      const high = marketData.map((k) => k.high);
+      const low = marketData.map((k) => k.low);
+      const close = marketData.map((k) => k.close);
+
+      const trace = {
+        x: x,
+        open: open,
+        high: high,
+        low: low,
+        close: close,
+        type: "candlestick",
+        showlegend: false,
+      };
+
+      const traces = [trace];
+
+      positions.forEach((pos) => {
+        const lineTrace = {
+          x: [
+            parseTime(pos.orders[0].date, data.chart_market_data_type),
+            parseTime(pos.orders[pos.orders.length - 1].date_update, data.chart_market_data_type),
+          ],
+          y: [pos.orders[0].price, pos.orders[pos.orders.length - 1].price],
+          mode: "lines",
+          line: {
+            color: pos.pnl && pos.pnl > 0 ? "green" : "red",
+          },
+          showlegend: false,
+        };
+        traces.push(lineTrace);
+      });
+
+      const layout = {
+        autosize: true,
+        height: 600,
+        xaxis: { title: "Date" },
+        yaxis: { title: "Price" },
+      };
+
+      var config = { responsive: true };
+
+      Plotly.newPlot(chartSection, traces, layout, config);
+    } catch (error) {
+      console.error("Error while rendering the chart:", error);
+      chartSection.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+    }
+  }
+
+  // This section is about the Start backtest button.
+  const commonParametersForm = document.querySelector('form[name="common-parameters"]');
+  const gridParametersForm = document.querySelector('form[name="grid-parameters"]');
+  const startBacktestButton = document.getElementById("start-backtest-button");
+
+  startBacktestButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(commonParametersForm);
+    const gridFormData = new FormData(gridParametersForm);
+    const requestData = {
+      symbol: formData.get("symbol"),
+      exchange: formData.get("exchange"),
+      market_data_type: formData.get("market-data-type"),
+      chart_market_data_type: formData.get("chart-market-data-type"),
+      date_start: formData.get("date-start"),
+      date_end: formData.get("date-end"),
+      deposit: formData.get("deposit"),
+      commission: formData.get("commission"),
+      price_low: gridFormData.get("price-low"),
+      price_high: gridFormData.get("price-high"),
+      grids_count: gridFormData.get("grid-count"),
+      grid_trigger: gridFormData.get("grid-trigger") || 0,
+      grid_sl: gridFormData.get("grid-sl"),
+      grid_tp: gridFormData.get("grid-tp"),
+      sell_all: true,
+    };
+    // Set button to loading state
+    startBacktestButton.disabled = true;
+    startBacktestButton.textContent = "Loading...";
+    startBacktestButton.setAttribute("aria-busy", "true");
+    try {
+      // Send request
+      const response = await fetch("/api/backtest/grid/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+      if (response.status === 403) {
+        const errorMessage = await response.text();
+        throw new Error(errorMessage);
+      } else if (response.status >= 400 && response.status < 600) {
+        throw new Error("An error occurred while processing your request.");
+      }
+      const result = await response.json();
+      const resultData = await getBacktestResultData(result.id);
+      const data = {
+        exchange: resultData.exchange,
+        symbol: resultData.symbol,
+        chart_market_data_type: resultData.chart_market_data_type,
+        date_start: new Date(resultData.date_start).toISOString().split("T")[0],
+        date_end: new Date(resultData.date_end).toISOString().split("T")[0],
+      };
+      // Hide the parameters section
+      document.getElementById("parameters-details").open = false;
+      // Build the chart
+      await buildChart(data, resultData.positions);
+      // Get the metrics data
+      const metricsData = await getMetricsData(result.id);
+      // Fill the metrics table
+      await fillMetricsTable(metricsData);
+    } catch (error) {
+      console.error("Error:", error);
+      alert(error.message);
+    } finally {
+      // Set button back to normal state
+      startBacktestButton.disabled = false;
+      startBacktestButton.textContent = "Start backtest";
+      startBacktestButton.setAttribute("aria-busy", "false");
+    }
+  });
+
+  async function getBacktestResultData(id) {
+    const response = await fetch(`/api/backtest/result/data?id=${id}`);
+    const data = await response.json();
+    return data;
+  }
+
+  // Function to fetch the metrics data
+  async function getMetricsData(id) {
+    const response = await fetch(`/api/backtest/result/metrics?id=${id}`);
+    const data = await response.json();
+    return data;
+  }
+  // Function to fill the metrics table by metrics data.
+  async function fillMetricsTable(data) {
+    const metricsTable0 = document.getElementById("metrics-table-0");
+    const metricsTable1 = document.getElementById("metrics-table-1");
+    const metricsTable0Body = metricsTable0.querySelector("tbody");
+    const metricsTable1Body = metricsTable1.querySelector("tbody");
+    metricsTable0Body.innerHTML = "";
+    metricsTable1Body.innerHTML = "";
+    const metrics0 = `
+    <tr><td>Average Loss Position</td><td>${data.average_loss_position.toFixed(2)}</td></tr>
+    <tr><td>Average Position Size</td><td>${data.average_position_size.toFixed(2)}</td></tr>
+    <tr><td>Average Profit Position</td><td>${data.average_profit_position.toFixed(2)}</td></tr>
+    <tr><td>Expected Payoff</td><td>${data.expected_payoff.toFixed(2)}</td></tr>
+    <tr><td>Profit Factor</td><td>${data.profit_factor.toFixed(2)}</td></tr>
+    <tr><td>Profit per Position (%)</td><td>${data.profit_per_position_in_percent.toFixed(2)}</td></tr>
+    <tr><td>Positions Number</td><td>${data.positions_number}</td></tr>
+    <tr><td>Profit Positions Number</td><td>${data.profit_positions_number}</td></tr>
+    <tr><td>Loss Positions Number</td><td>${data.loss_positions_number}</td></tr>
+    <tr><td>Sortino</td><td>${data.sortino.toFixed(2)}</td></tr>`;
+    const metrics1 = `
+    <tr><td>Drawdown</td><td>${data.drawdown.toFixed(2)}</td></tr>
+    <tr><td>Max Drawdown</td><td>${data.max_drawdown.toFixed(2)}</td></tr>
+    <tr><td>Max Use of Funds</td><td>${data.max_use_of_funds.toFixed(2)}</td></tr>
+    <tr><td>Start Deposit</td><td>${data.start_deposit.toFixed(2)}</td></tr>
+    <tr><td>Finish Deposit</td><td>${data.finish_deposit.toFixed(2)}</td></tr>
+    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? 'green' : 'red'}">${data.total_profit.toFixed(2)}</td></tr>
+    <tr><td>Total Profit (%)</td><td style="color: ${data.total_profit > 0 ? 'green' : 'red'}">${data.total_profit_percent.toFixed(2)}</td></tr>
+    <tr><td>Profit Positions (%)</td><td>${data.profit_positions_percent.toFixed(2)}</td></tr>
+    <tr><td>Loss Positions (%)</td><td>${data.loss_positions_percent.toFixed(2)}</td></tr>
+    <tr><td>Max Deposit</td><td>${data.max_deposit.toFixed(2)}</td></tr>`;
+    metricsTable0Body.innerHTML = metrics0;
+    metricsTable1Body.innerHTML = metrics1;
+    // Show the tables
+    metricsTable0.hidden = false;
+    metricsTable1.hidden = false;
+  }
+</script>
+{% endblock scripts %}

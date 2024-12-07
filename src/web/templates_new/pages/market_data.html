@@ -1,0 +1,184 @@
+{% extends "index.html" %} {% block content %}
+<!-- <section style="transform: scale(0.875)"> -->
+<section>
+  <form>
+    <div class="grid">
+      <div>
+        <label> Exchange </label>
+        <select name="exchange" aria-label="Select exchange" required>
+          <option selected disabled value="">Select exchange</option>
+          <!-- Here should be a data from a request -->
+        </select>
+      </div>
+      <div>
+        <label id="symbols-label"> Symbol </label>
+        <select name="symbol" aria-label="Select symbol" required>
+          <option selected disabled value="">Select symbol</option>
+          <!-- Here should be a data from a request -->
+        </select>
+      </div>
+      <div>
+        <label id="market-data-type-label"> Kline type </label>
+        <select name="market-data-type" aria-label="Kline type" required>
+          <option selected disabled value="">Kline type</option>
+          <!-- Here should be a data from a request -->
+        </select>
+      </div>
+      <div>
+        <label> Start date </label>
+        <input type="date" name="date-start" aria-label="Start date" />
+      </div>
+      <div>
+        <label> End date </label>
+        <input type="date" name="date-end" aria-label="End date" />
+      </div>
+    </div>
+  </form>
+  <div style="display: flex; justify-content: flex-end; align-items: center">
+    <small id="download-button-error" style="color: red; margin-right: 5px;"></small>
+    <button id="download-button" aria-busy="false">Download</button>
+  </div>
+</section>
+<section>
+  <div class="overflow-auto">
+    <table id="market-data-table" class="striped">
+      <thead>
+        <tr>
+          <th scope="col">Exchange</th>
+          <th scope="col">Symbol</th>
+          <th scope="col">Kline type</th>
+          <th scope="col">Start date</th>
+          <th scope="col">End date</th>
+        </tr>
+      </thead>
+      <tbody id="market-data-table-body">
+        <!-- Here should be a data from a request -->
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock content %} {% block scripts %}
+<script>
+  // This section is about loading the exchanges by using the loadExchanges() function from static/scripts/common.js
+  (async () => {
+    await loadExchanges();
+  })();
+
+  const exchangeSelect = document.querySelector('select[name="exchange"]');
+
+  // This section is about loading the symbols by get request to /api/exchange/external/symbols/{exchange} route after selecting an exchange
+  exchangeSelect.addEventListener("change", (event) => {
+    const exchange = event.target.value;
+    const symbols = document.querySelector('select[name="symbol"]');
+    const symbolsLabel = document.getElementById("symbols-label");
+    // Set the aria-busy attribute to true
+    symbolsLabel.setAttribute("aria-busy", "true");
+    // Disable select element
+    symbols.disabled = true;
+    fetch(`/api/exchange/external/symbols/${exchange}`)
+      .then((response) => response.json())
+      .then((data) => {
+        symbols.innerHTML =
+          '<option selected disabled value="">Select symbol</option>';
+        data.forEach((symbol) => {
+          const option = document.createElement("option");
+          option.value = symbol;
+          option.textContent = symbol;
+          symbols.appendChild(option);
+        });
+        // Set the aria-busy attribute to false
+        symbolsLabel.setAttribute("aria-busy", "false");
+        // Enable select element
+        symbols.disabled = false;
+      });
+  });
+
+  // This section is about loading the market data types by get request to the /api/exchange/external/mdts route on load the page
+  const marketDataTypes = document.querySelector(
+    'select[name="market-data-type"]'
+  );
+  fetch("/api/exchange/external/mdts")
+    .then((response) => response.json())
+    .then((data) => {
+      marketDataTypes.innerHTML =
+        '<option selected disabled value="">Kline type</option>';
+      data.forEach((mdt) => {
+        const option = document.createElement("option");
+        option.value = mdt;
+        option.textContent = mdt;
+        marketDataTypes.appendChild(option);
+      });
+    });
+
+  // This section is about downloading the market data by post request to the /api/market-data/download route
+  const downloadButton = document.getElementById("download-button");
+  downloadButton.addEventListener("click", async (event) => {
+    downloadButton.setAttribute("aria-busy", "true");
+    event.preventDefault();
+    const exchange = document.querySelector('select[name="exchange"]').value;
+    const symbol = document.querySelector('select[name="symbol"]').value;
+    const market_data_type = document.querySelector(
+      'select[name="market-data-type"]'
+    ).value;
+    const date_start = document.querySelector('input[name="date-start"]').value;
+    const date_end = document.querySelector('input[name="date-end"]').value;
+    try {
+      const response = await fetch("/api/market-data/download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          exchange,
+          symbol,
+          market_data_type,
+          date_start,
+          date_end,
+        }),
+      });
+      downloadButton.setAttribute("aria-busy", "false");
+      if (response.status >= 400 && response.status <= 409) {
+        const errorElement = document.getElementById("download-button-error");
+        errorElement.textContent = "No access";
+        errorElement.hidden = false;
+        throw new Error("No access");
+      }
+      await response.json();
+      await updateMarketDataTable();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  });
+
+  // This section is about loading the market data by get request to the /api/market-data/downloaded route
+  (async () => {
+    await updateMarketDataTable();
+  })();
+
+  const tableBody = document.getElementById("market-data-table-body");
+
+  async function updateMarketDataTable() {
+    const response = await fetch(
+      "/api/market-data/downloaded?page=0&per_page=20"
+    );
+    const data = await response.json();
+
+    tableBody.innerHTML = "";
+
+    data.forEach((marketData) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+      <td>${
+        marketData.exchange.charAt(0).toUpperCase() +
+        marketData.exchange.slice(1)
+      }</td>
+      <td>${marketData.symbol.toUpperCase()}</td>
+      <td>${marketData.market_data_type}</td>
+      <td>${marketData.date_start}</td>
+      <td>${marketData.date_end}</td>
+    `;
+      tableBody.appendChild(row);
+    });
+  }
+</script>
+{% endblock scripts %}

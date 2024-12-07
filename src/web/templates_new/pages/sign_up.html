@@ -1,0 +1,54 @@
+{% extends "index.html" %} {% block content %}
+<section>
+  <!-- Sign up button -->
+  <div id="sign-up-div" class="center">
+    <button style="width: 20rem">Sign up</button>
+  </div>
+  <!-- Sign up response -->
+  <article id="sign-up-response-div" hidden>
+    <header>Account Number</header>
+    <h3 id="account-number" class="center"></h3>
+    <!-- Important Note -->
+    <footer>
+      <p><strong>Important Note:</strong></p>
+      <p>
+        This is your personal account number. It acts as your unique identifier
+        and must be used for signing in.
+        <strong>Keep it secure and private</strong> — treat it like a password.
+      </p>
+      <ul>
+        <li><strong>Do not share it with anyone.</strong></li>
+        <li>
+          <strong>Store it safely</strong> in a secure location, such as a
+          password manager.
+        </li>
+        <li>
+          If you lose this account number, you may lose access to your account
+          permanently.
+        </li>
+      </ul>
+      <p>
+        We do not store additional identifying information like email addresses
+        or names to protect your privacy. This means we cannot recover your
+        account number for you. Please manage it responsibly.
+      </p>
+      <p class="center-all"><a href="/pages/sign-in">Sign in</a></p>
+    </footer>
+  </article>
+</section>
+{% endblock content %} {% block scripts %}
+<script>
+  document.getElementById("sign-up-div").addEventListener("click", async () => {
+    const response = await fetch("/api/auth/sign-up", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    document.getElementById("account-number").textContent = data.account_number;
+    document.getElementById("sign-up-div").hidden = true;
+    document.getElementById("sign-up-response-div").hidden = false;
+  });
+</script>
+{% endblock scripts %}

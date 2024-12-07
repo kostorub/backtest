@@ -1,0 +1,58 @@
+{% extends "index.html" %} {% block content %}
+<section class="center">
+  <!-- Sign in form -->
+  <article id="sign-in-div">
+    <header>Sign in</header>
+    <form id="sign-in-form">
+      <fieldset>
+        <label>
+          Account number
+          <input
+            name="account_number"
+            placeholder="Account number"
+            autocomplete="account-number"
+          />
+        </label>
+        <small id="account-number-error" class="small-error" hidden>
+          Invalid account number
+        </small>
+      </fieldset>
+
+      <input type="submit" value="Sign in" />
+    </form>
+  </article>
+  <!-- Sign in response -->
+  <div id="sign-in-response-div" hidden>
+    <h5>You successfully signed in with your account number!</h5>
+    <p>Redirecting...</p>
+  </div>
+</section>
+{% endblock content %} {% block scripts %}
+<script>
+  const signInForm = document.getElementById("sign-in-form");
+  const signInDiv = document.getElementById("sign-in-div");
+  const signInResponseDiv = document.getElementById("sign-in-response-div");
+  const accountNumberError = document.getElementById("account-number-error");
+  signInForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(signInForm);
+    const formDataObject = Object.fromEntries(formData.entries());
+    const response = await fetch("/api/auth/sign-in", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formDataObject),
+    });
+    if (response.ok) {
+      signInDiv.hidden = true;
+      signInResponseDiv.hidden = false;
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    } else {
+      accountNumberError.hidden = false;
+    }
+  });
+</script>
+{% endblock scripts %}

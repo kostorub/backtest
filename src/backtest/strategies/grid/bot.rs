@@ -38,10 +38,13 @@ impl GridBot {
             )
         }
         if kline.close <= self.current_price {
-            self.current_price = kline.close;
             if let Some(i) = check_buy_action(&mut self.triggers, kline.close) {
                 self.triggers[i].trigger_type = Side::Sell;
                 let price = self.triggers[i].price;
+                // It is a crutch. TODO: Fix it.
+                if price > kline.high || price < kline.low {
+                    return None;
+                }
                 return Some((
                     i,
                     vec![
@@ -61,19 +64,20 @@ impl GridBot {
                 ));
             }
         } else {
-            self.current_price = kline.close;
             if let Some(i) = check_sell_action(&mut self.triggers, kline.close) {
                 self.triggers[i].trigger_type = Side::Buy;
                 // Do not return anything. Let the TP & SL of the BUY order to follow the price.
                 return None;
             }
         }
+        self.current_price = kline.close;
         None
     }
 }
 
 fn check_buy_action(triggers: &Vec<GridTrigger>, last_price: f64) -> Option<usize> {
     for i in 0..(triggers.len() - 1) {
+        // TODO: There could be 2 triggers during one candle. The list should be returned.
         if triggers[i].trigger_type == Side::Buy && last_price <= triggers[i].price {
             return Some(i);
         }

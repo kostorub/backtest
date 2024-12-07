@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="pico">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.lime.min.css"
+    />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+    <script src="/static/scripts/common.js"></script>
+    <title>Backtest tool</title>
+    {% include "style.html" %}
+  </head>
+  <body>
+    <main class="container">
+      <section>
+        <nav>
+          <ul>
+            <li><strong>Back-t tool</strong></li>
+          </ul>
+          <ul>
+            <li><a href="/pages/about">About</a></li>
+            <li><a href="/pages/market-data">Market data</a></li>
+            <li>
+              <details class="dropdown">
+                <summary>Backtest</summary>
+                <ul dir="rtl">
+                  <li><a href="/pages/grid-backtest">Grid strategy</a></li>
+                </ul>
+              </details>
+            </li>
+            <li>
+              <details class="dropdown">
+                <summary>Account</summary>
+                <ul dir="rtl">
+                  {% if not signed_in_flag %}
+                  <li><a href="/pages/sign-in">Sign in</a></li>
+                  <li><a href="/pages/sign-up">Sign up</a></li>
+                  {% else %}
+                  <li><a href="/pages/sign-out">Sign out</a></li>
+                  {% endif %}
+                </ul>
+              </details>
+            </li>
+          </ul>
+        </nav>
+      </section>
+      {% block content %}{% endblock content %}
+    </main>
+    {% block scripts %}{% endblock scripts %}
+    <script>
+      // This script is used to call the `/api/auth/sign-out` endpoint when the user clicks the "Sign out" link.
+      // And then redirect to the /pages/sign-out page.
+      const signOutLink = document.querySelector('a[href="/pages/sign-out"]');
+      if (signOutLink) {
+        signOutLink.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const response = await fetch("/api/auth/sign-out", {
+            method: "POST",
+          });
+          if (response.ok) {
+            window.location.href = "/pages/sign-out";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
