@@ -1,238 +1,127 @@
 {% extends "index.html" %} {% block content %}
-<section name="parameters" style="transform: scale(0.875)">
-  <!-- <section name="parameters"> -->
-  <form name="common-parameters">
-    <div class="grid">
-      <div>
-        <label>
-          Exchange
-          <select name="exchange" aria-label="Select exchange" required>
-            <option selected disabled value="">Select exchange</option>
-            <!-- Here should be a data from a request -->
-          </select>
-        </label>
-        <label>
-          Symbol
-          <select name="symbol" aria-label="Select symbol" required>
-            <option selected disabled value="">Select symbol</option>
-            <!-- Here should be a data from a request -->
-          </select>
-        </label>
+<!-- <section name="parameters" style="transform: scale(0.875)"> -->
+<section name="parameters">
+  <details id="parameters-details" open>
+    <summary>Parameters form</summary>
+    <form name="common-parameters">
+      <div class="grid">
+        <div>
+          <label>
+            Exchange
+            <select name="exchange" aria-label="Select exchange" required>
+              <option selected disabled value="">Select exchange</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+          <label>
+            Symbol
+            <select name="symbol" aria-label="Select symbol" required>
+              <option selected disabled value="">Select symbol</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>
+            Chart klines
+            <select name="chart-market-data-type" aria-label="Market kline type for the chart" required>
+              <option selected disabled value="">Chart kline type</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+          <label>
+            Calculation klines
+            <select name="market-data-type" aria-label="Market kline type for the calculation" required>
+              <option selected disabled value="">Kline type</option>
+              <!-- Here should be a data from a request -->
+            </select>
+          </label>
+        </div>
+        <div>
+          <label for="date-start">
+            Start date
+            <input type="date" name="date-start" aria-label="Start date" />
+          </label>
+          <label for="date-end">
+            End date
+            <input type="date" name="date-end" aria-label="End date" />
+          </label>
+        </div>
+        <div>
+          <label>
+            Deposite
+            <input type="number" name="deposit" aria-label="Deposit" min="0.1" required />
+          </label>
+          <label>
+            Comission
+            <input type="number" name="commission" aria-label="Commission" required />
+          </label>
+        </div>
       </div>
-      <div>
-        <label>
-          Chart klines
-          <select name="chart-market-data-type" aria-label="Market kline type for the chart" required>
-            <option selected disabled value="">Chart kline type</option>
-            <!-- Here should be a data from a request -->
-          </select>
-        </label>
-        <label>
-          Calculation klines
-          <select name="market-data-type" aria-label="Market kline type for the calculation" required>
-            <option selected disabled value="">Kline type</option>
-            <!-- Here should be a data from a request -->
-          </select>
-        </label>
+    </form>
+    <form name="grid-parameters">
+      <div class="grid">
+        <div>
+          <label>
+            Price bottom
+            <input type="number" name="price-low" aria-label="Price bottom" required />
+          </label>
+          <label>
+            Price top
+            <input type="number" name="price-high" aria-label="Price top" required />
+          </label>
+        </div>
+        <div>
+          <label>
+            Grids count
+            <input type="number" name="grid-count" aria-label="Grids count" required />
+          </label>
+          <label>
+            Grid start price
+            <input type="number" name="grid-trigger" aria-label="Grid start price" />
+          </label>
+        </div>
+        <div>
+          <label>
+            Grid stop loss price
+            <input type="number" name="grid-sl" aria-label="Grid stop loss price" />
+          </label>
+          <label>
+            Grid take profit price
+            <input type="number" name="grid-tp" aria-label="Grid take profit price" />
+          </label>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: space-between">
+          <label> The calculation may take some time if you have a large date range with a small kline. </label>
+          <label>
+            <button id="start-backtest-button" type="submit">Start backtest</button>
+          </label>
+        </div>
       </div>
-      <div>
-        <label for="date-start">
-          Start date
-          <input type="date" name="date-start" aria-label="Start date" />
-        </label>
-        <label for="date-end">
-          End date
-          <input type="date" name="date-end" aria-label="End date" />
-        </label>
-      </div>
-      <div>
-        <label>
-          Deposite
-          <input type="number" name="deposit" aria-label="Deposit" min="0.1" required />
-        </label>
-        <label>
-          Comission
-          <input type="number" name="commission" aria-label="Commission" required />
-        </label>
-      </div>
-    </div>
-  </form>
-  <form name="grid-parameters">
-    <div class="grid">
-      <div>
-        <label>
-          Price bottom
-          <input type="number" name="price-low" aria-label="Price bottom" required />
-        </label>
-        <label>
-          Price top
-          <input type="number" name="price-high" aria-label="Price top" required />
-        </label>
-      </div>
-      <div>
-        <label>
-          Grids count
-          <input type="number" name="grid-count" aria-label="Grids count" required />
-        </label>
-        <label>
-          Grid start price
-          <input type="number" name="grid-trigger" aria-label="Grid start price" />
-        </label>
-      </div>
-      <div>
-        <label>
-          Grid stop loss price
-          <input type="number" name="grid-sl" aria-label="Grid stop loss price" />
-        </label>
-        <label>
-          Grid take profit price
-          <input type="number" name="grid-tp" aria-label="Grid take profit price" />
-        </label>
-      </div>
-      <div style="display: flex; flex-direction: column; justify-content: space-between">
-        <label> The calculation may take some time if you have a large date range with a small kline. </label>
-        <label>
-          <button id="start-backtest-button" type="submit">Start backtest</button>
-        </label>
-      </div>
-    </div>
-  </form>
-  <div style="display: flex; justify-content: flex-end; align-items: center">
-    <label style="margin-right: 8px">Parameters form</label>
-    <div id="icon-open" style="width: 32px; height: 32px" hidden>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="100%"
-        height="100%"
-        fill="currentColor"
-        class="bi bi-chevron-expand"
-        viewBox="0 0 16 16"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M3.646 9.146a.5.5 0 0 1 .708 0L8 12.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708m0-2.292a.5.5 0 0 0 .708 0L8 3.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708"
-        />
-      </svg>
-    </div>
-    <div id="icon-close" style="width: 32px; height: 32px">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="100%"
-        height="100%"
-        fill="currentColor"
-        class="bi bi-chevron-bar-contract"
-        viewBox="0 0 16 16"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M3.646 14.854a.5.5 0 0 0 .708 0L8 11.207l3.646 3.647a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 0 0 0 .708m0-13.708a.5.5 0 0 1 .708 0L8 4.793l3.646-3.647a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 0-.708M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8"
-        />
-      </svg>
-    </div>
-  </div>
+    </form>
+  </details>
 </section>
 <section name="chart-section"></section>
-<section name="metrics-section" style="transform: scale(0.875)">
+<!-- <section name="metrics-section" style="transform: scale(0.875)"> -->
+<section name="metrics-section">
   <div class="grid">
-    <table>
+    <table id="metrics-table-0" hidden>
       <thead>
         <tr>
           <th>Metric</th>
           <th>Value</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>Average Loss Position</td>
-          <td>-7.9</td>
-        </tr>
-        <tr>
-          <td>Average Position Size</td>
-          <td>100</td>
-        </tr>
-        <tr>
-          <td>Average Profit Position</td>
-          <td>23.31</td>
-        </tr>
-        <tr>
-          <td>Expected Payoff</td>
-          <td>2136.41</td>
-        </tr>
-        <tr>
-          <td>Profit Factor</td>
-          <td>44.3</td>
-        </tr>
-        <tr>
-          <td>Profit per Position (%)</td>
-          <td>4.58</td>
-        </tr>
-        <tr>
-          <td>Positions Number</td>
-          <td>16</td>
-        </tr>
-        <tr>
-          <td>Profit Positions Number</td>
-          <td>15</td>
-        </tr>
-        <tr>
-          <td>Loss Positions Number</td>
-          <td>1</td>
-        </tr>
-        <tr>
-          <td>Sortino</td>
-          <td>N/A</td>
-        </tr>
-      </tbody>
+      <tbody></tbody>
     </table>
-    <table>
+    <table id="metrics-table-1" hidden>
       <thead>
         <tr>
           <th>Metric</th>
           <th>Value</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>Drawdown</td>
-          <td>N/A</td>
-        </tr>
-        <tr>
-          <td>Max Drawdown</td>
-          <td>N/A</td>
-        </tr>
-        <tr>
-          <td>Max Use of Funds</td>
-          <td>100</td>
-        </tr>
-        <tr>
-          <td>Start Deposit</td>
-          <td>1000</td>
-        </tr>
-        <tr>
-          <td>Finish Deposit</td>
-          <td>1341.83</td>
-        </tr>
-        <tr>
-          <td>Total Profit</td>
-          <td>341.83</td>
-        </tr>
-        <tr>
-          <td>Total Profit (%)</td>
-          <td>34.18</td>
-        </tr>
-        <tr>
-          <td>Profit Positions (%)</td>
-          <td>93.75</td>
-        </tr>
-        <tr>
-          <td>Loss Positions (%)</td>
-          <td>6.25</td>
-        </tr>
-        <tr>
-          <td>Max Deposit</td>
-          <td>N/A</td>
-        </tr>
-      </tbody>
+      <tbody></tbody>
     </table>
   </div>
 </section>
@@ -364,9 +253,16 @@
     }
   }
 
+  const chartSection = document.querySelector('section[name="chart-section"]');
+
+  window.addEventListener("resize", () => {
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+    }, 500);
+  });
+
   async function buildChart(data, positions = []) {
     try {
-      const chartSection = document.querySelector('section[name="chart-section"]');
       chartSection.innerHTML = "";
 
       // Fetch market data
@@ -424,15 +320,17 @@
       });
 
       const layout = {
-        height: 800,
+        autosize: true,
+        height: 600,
         xaxis: { title: "Date" },
         yaxis: { title: "Price" },
       };
 
-      Plotly.newPlot(chartSection, traces, layout);
+      var config = { responsive: true };
+
+      Plotly.newPlot(chartSection, traces, layout, config);
     } catch (error) {
       console.error("Error while rendering the chart:", error);
-      const chartSection = document.querySelector('section[name="chart-section"]');
       chartSection.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
     }
   }
@@ -441,8 +339,6 @@
   const commonParametersForm = document.querySelector('form[name="common-parameters"]');
   const gridParametersForm = document.querySelector('form[name="grid-parameters"]');
   const startBacktestButton = document.getElementById("start-backtest-button");
-  const iconOpen = document.getElementById("icon-open");
-  const iconClose = document.getElementById("icon-close");
   startBacktestButton.addEventListener("click", async (event) => {
     event.preventDefault();
     const formData = new FormData(commonParametersForm);
@@ -464,6 +360,11 @@
       grid_tp: gridFormData.get("grid-tp"),
       sell_all: true,
     };
+    // Set button to loading state
+    startBacktestButton.disabled = true;
+    startBacktestButton.textContent = "Loading...";
+    startBacktestButton.setAttribute("aria-busy", "true");
+    // Send request
     const response = await fetch("/api/backtest/grid/run", {
       method: "POST",
       headers: {
@@ -480,13 +381,67 @@
       date_start: new Date(resultData.date_start).toISOString().split("T")[0],
       date_end: new Date(resultData.date_end).toISOString().split("T")[0],
     };
+    // Set button back to normal state
+    startBacktestButton.disabled = false;
+    startBacktestButton.textContent = "Start backtest";
+    startBacktestButton.setAttribute("aria-busy", "false");
+    // Hide the parameters section
+    document.getElementById("parameters-details").open = false;
+    // Build the chart
     await buildChart(data, resultData.positions);
+    // Get the metrics data
+    const metricsData = await getMetricsData(result.id);
+    // Fill the metrics table
+    await fillMetricsTable(metricsData);
   });
 
   async function getBacktestResultData(id) {
     const response = await fetch(`/api/backtest/result/data?id=${id}`);
     const data = await response.json();
     return data;
+  }
+
+  // Function to fetch the metrics data
+  async function getMetricsData(id) {
+    const response = await fetch(`/api/backtest/result/metrics?id=${id}`);
+    const data = await response.json();
+    return data;
+  }
+  // Function to fill the metrics table by metrics data.
+  async function fillMetricsTable(data) {
+    const metricsTable0 = document.getElementById("metrics-table-0");
+    const metricsTable1 = document.getElementById("metrics-table-1");
+    const metricsTable0Body = metricsTable0.querySelector("tbody");
+    const metricsTable1Body = metricsTable1.querySelector("tbody");
+    metricsTable0Body.innerHTML = "";
+    metricsTable1Body.innerHTML = "";
+    const metrics0 = `
+    <tr><td>Average Loss Position</td><td>${data.average_loss_position.toFixed(2)}</td></tr>
+    <tr><td>Average Position Size</td><td>${data.average_position_size.toFixed(2)}</td></tr>
+    <tr><td>Average Profit Position</td><td>${data.average_profit_position.toFixed(2)}</td></tr>
+    <tr><td>Expected Payoff</td><td>${data.expected_payoff.toFixed(2)}</td></tr>
+    <tr><td>Profit Factor</td><td>${data.profit_factor.toFixed(2)}</td></tr>
+    <tr><td>Profit per Position (%)</td><td>${data.profit_per_position_in_percent.toFixed(2)}</td></tr>
+    <tr><td>Positions Number</td><td>${data.positions_number}</td></tr>
+    <tr><td>Profit Positions Number</td><td>${data.profit_positions_number}</td></tr>
+    <tr><td>Loss Positions Number</td><td>${data.loss_positions_number}</td></tr>
+    <tr><td>Sortino</td><td>${data.sortino.toFixed(2)}</td></tr>`;
+    const metrics1 = `
+    <tr><td>Drawdown</td><td>${data.drawdown.toFixed(2)}</td></tr>
+    <tr><td>Max Drawdown</td><td>${data.max_drawdown.toFixed(2)}</td></tr>
+    <tr><td>Max Use of Funds</td><td>${data.max_use_of_funds.toFixed(2)}</td></tr>
+    <tr><td>Start Deposit</td><td>${data.start_deposit.toFixed(2)}</td></tr>
+    <tr><td>Finish Deposit</td><td>${data.finish_deposit.toFixed(2)}</td></tr>
+    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? 'green' : 'red'}">${data.total_profit.toFixed(2)}</td></tr>
+    <tr><td>Total Profit (%)</td><td style="color: ${data.total_profit > 0 ? 'green' : 'red'}">${data.total_profit_percent.toFixed(2)}</td></tr>
+    <tr><td>Profit Positions (%)</td><td>${data.profit_positions_percent.toFixed(2)}</td></tr>
+    <tr><td>Loss Positions (%)</td><td>${data.loss_positions_percent.toFixed(2)}</td></tr>
+    <tr><td>Max Deposit</td><td>${data.max_deposit.toFixed(2)}</td></tr>`;
+    metricsTable0Body.innerHTML = metrics0;
+    metricsTable1Body.innerHTML = metrics1;
+    // Show the tables
+    metricsTable0.hidden = false;
+    metricsTable1.hidden = false;
   }
 </script>
 {% endblock scripts %}
