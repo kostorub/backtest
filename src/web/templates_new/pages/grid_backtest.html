@@ -50,11 +50,11 @@
         <div>
           <label>
             Deposite
-            <input type="number" name="deposit" aria-label="Deposit" min="0.1" required />
+            <input type="number" name="deposit" aria-label="Deposit" min="0.1" value="1000.0" required />
           </label>
           <label>
             Comission
-            <input type="number" name="commission" aria-label="Commission" required />
+            <input type="number" name="commission" aria-label="Commission" value="0.0" required />
           </label>
         </div>
       </div>
@@ -74,21 +74,21 @@
         <div>
           <label>
             Grids count
-            <input type="number" name="grid-count" aria-label="Grids count" required />
+            <input type="number" name="grid-count" aria-label="Grids count" value="10" required />
           </label>
           <label>
             Grid start price
-            <input type="number" name="grid-trigger" aria-label="Grid start price" />
+            <input type="number" name="grid-trigger" aria-label="Grid start price" value="0" disabled />
           </label>
         </div>
         <div>
           <label>
             Grid stop loss price
-            <input type="number" name="grid-sl" aria-label="Grid stop loss price" />
+            <input type="number" name="grid-sl" aria-label="Grid stop loss price" disabled />
           </label>
           <label>
             Grid take profit price
-            <input type="number" name="grid-tp" aria-label="Grid take profit price" />
+            <input type="number" name="grid-tp" aria-label="Grid take profit price" disabled />
           </label>
         </div>
         <div style="display: flex; flex-direction: column; justify-content: space-between">
@@ -339,6 +339,7 @@
   const commonParametersForm = document.querySelector('form[name="common-parameters"]');
   const gridParametersForm = document.querySelector('form[name="grid-parameters"]');
   const startBacktestButton = document.getElementById("start-backtest-button");
+
   startBacktestButton.addEventListener("click", async (event) => {
     event.preventDefault();
     const formData = new FormData(commonParametersForm);
@@ -355,7 +356,7 @@
       price_low: gridFormData.get("price-low"),
       price_high: gridFormData.get("price-high"),
       grids_count: gridFormData.get("grid-count"),
-      grid_trigger: gridFormData.get("grid-trigger"),
+      grid_trigger: gridFormData.get("grid-trigger") || 0,
       grid_sl: gridFormData.get("grid-sl"),
       grid_tp: gridFormData.get("grid-tp"),
       sell_all: true,
@@ -364,35 +365,47 @@
     startBacktestButton.disabled = true;
     startBacktestButton.textContent = "Loading...";
     startBacktestButton.setAttribute("aria-busy", "true");
-    // Send request
-    const response = await fetch("/api/backtest/grid/run", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
-    const result = await response.json();
-    const resultData = await getBacktestResultData(result.id);
-    const data = {
-      exchange: resultData.exchange,
-      symbol: resultData.symbol,
-      chart_market_data_type: resultData.chart_market_data_type,
-      date_start: new Date(resultData.date_start).toISOString().split("T")[0],
-      date_end: new Date(resultData.date_end).toISOString().split("T")[0],
-    };
-    // Set button back to normal state
-    startBacktestButton.disabled = false;
-    startBacktestButton.textContent = "Start backtest";
-    startBacktestButton.setAttribute("aria-busy", "false");
-    // Hide the parameters section
-    document.getElementById("parameters-details").open = false;
-    // Build the chart
-    await buildChart(data, resultData.positions);
-    // Get the metrics data
-    const metricsData = await getMetricsData(result.id);
-    // Fill the metrics table
-    await fillMetricsTable(metricsData);
+    try {
+      // Send request
+      const response = await fetch("/api/backtest/grid/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+      if (response.status === 403) {
+        const errorMessage = await response.text();
+        throw new Error(errorMessage);
+      } else if (response.status >= 400 && response.status < 600) {
+        throw new Error("An error occurred while processing your request.");
+      }
+      const result = await response.json();
+      const resultData = await getBacktestResultData(result.id);
+      const data = {
+        exchange: resultData.exchange,
+        symbol: resultData.symbol,
+        chart_market_data_type: resultData.chart_market_data_type,
+        date_start: new Date(resultData.date_start).toISOString().split("T")[0],
+        date_end: new Date(resultData.date_end).toISOString().split("T")[0],
+      };
+      // Hide the parameters section
+      document.getElementById("parameters-details").open = false;
+      // Build the chart
+      await buildChart(data, resultData.positions);
+      // Get the metrics data
+      const metricsData = await getMetricsData(result.id);
+      // Fill the metrics table
+      await fillMetricsTable(metricsData);
+    } catch (error) {
+      console.error("Error:", error);
+      alert(error.message);
+    } finally {
+      // Set button back to normal state
+      startBacktestButton.disabled = false;
+      startBacktestButton.textContent = "Start backtest";
+      startBacktestButton.setAttribute("aria-busy", "false");
+    }
   });
 
   async function getBacktestResultData(id) {
