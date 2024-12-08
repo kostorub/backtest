@@ -14,8 +14,6 @@ use crate::backtest::settings::BacktestSettings;
 use crate::backtest::strategies::grid::bot::GridBot;
 use crate::backtest::strategies::grid::settings::{GridSettings, GridSettingsRequest};
 use crate::backtest::strategies::grid::strategy::GridStrategy;
-use crate::backtest::strategies::strategy_utils::get_klines;
-use crate::chart::chart::build_chart;
 use crate::data_handlers::kv_store;
 use crate::data_models::routes::backtest_results::BacktestResultId;
 use crate::data_models::user::User;
@@ -98,20 +96,6 @@ pub async fn run_grid(
             return Err(ErrorInternalServerError(e));
         }
     };
-    build_chart(
-        backtest_results_id.to_string(),
-        &request_settings,
-        get_klines(
-            data_path.clone(),
-            request_settings.exchange.clone(),
-            request_settings.symbol.clone(),
-            request_settings.chart_market_data_type.clone(),
-            backtest_settings.date_start,
-            backtest_settings.date_end,
-        ),
-        &positions,
-    )
-    .unwrap();
     let result = BacktestResultId {
         id: backtest_results_id,
     };

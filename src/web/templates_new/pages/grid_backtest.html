@@ -193,7 +193,7 @@
     dateStartPicker.dispatchEvent(new Event("change"));
   });
 
-  dateEndPicker.addEventListener("change", async (event) => {
+  async function dateChangeEventListener(event) {
     try {
       const data = {
         exchange: exchangeSelect.value,
@@ -206,6 +206,14 @@
     } catch (error) {
       console.error("Error while building the chart:", error);
     }
+  }
+
+  dateStartPicker.addEventListener("change", async (event) => {
+    await dateChangeEventListener(event);
+  });
+
+  dateEndPicker.addEventListener("change", async (event) => {
+    await dateChangeEventListener(event);
   });
 
   // This section is about auxiliary functions for the chart.
@@ -255,11 +263,11 @@
 
   const chartSection = document.querySelector('section[name="chart-section"]');
 
-  window.addEventListener("resize", () => {
-    setTimeout(() => {
-      window.dispatchEvent(new Event("resize"));
-    }, 500);
-  });
+  // window.addEventListener("resize", () => {
+  //   setTimeout(() => {
+  //     window.dispatchEvent(new Event("resize"));
+  //   }, 500);
+  // });
 
   async function buildChart(data, positions = []) {
     try {
@@ -445,8 +453,12 @@
     <tr><td>Max Use of Funds</td><td>${data.max_use_of_funds.toFixed(2)}</td></tr>
     <tr><td>Start Deposit</td><td>${data.start_deposit.toFixed(2)}</td></tr>
     <tr><td>Finish Deposit</td><td>${data.finish_deposit.toFixed(2)}</td></tr>
-    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? 'green' : 'red'}">${data.total_profit.toFixed(2)}</td></tr>
-    <tr><td>Total Profit (%)</td><td style="color: ${data.total_profit > 0 ? 'green' : 'red'}">${data.total_profit_percent.toFixed(2)}</td></tr>
+    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? "green" : "red"}">${data.total_profit.toFixed(
+      2
+    )}</td></tr>
+    <tr><td>Total Profit (%)</td><td style="color: ${
+      data.total_profit > 0 ? "green" : "red"
+    }">${data.total_profit_percent.toFixed(2)}</td></tr>
     <tr><td>Profit Positions (%)</td><td>${data.profit_positions_percent.toFixed(2)}</td></tr>
     <tr><td>Loss Positions (%)</td><td>${data.loss_positions_percent.toFixed(2)}</td></tr>
     <tr><td>Max Deposit</td><td>${data.max_deposit.toFixed(2)}</td></tr>`;
