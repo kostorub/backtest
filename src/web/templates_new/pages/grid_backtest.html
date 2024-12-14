@@ -139,6 +139,8 @@
   const chartMarketDataTypes = document.querySelector('select[name="chart-market-data-type"]');
   const dateStartPicker = document.querySelector('input[name="date-start"]');
   const dateEndPicker = document.querySelector('input[name="date-end"]');
+  const priceLowInput = document.querySelector('input[name="price-low"]');
+  const priceHighInput = document.querySelector('input[name="price-high"]');
 
   // This section is about populating the symbol select with the symbols for the selected exchange.
   exchangeSelect.addEventListener("change", async (event) => {
@@ -156,14 +158,35 @@
     symbolSelect.dispatchEvent(new Event("change"));
   });
 
+  function sortMarketDataTypes(data) {
+    const order = {
+      "1d": 1,
+      "8h": 2,
+      "6h": 3,
+      "4h": 4,
+      "2h": 5,
+      "1h": 6,
+      "30m": 7,
+      "15m": 8,
+      "5m": 9,
+      "3m": 10,
+      "1m": 11,
+      "1s": 12,
+      "trade": 13,
+    };
+
+    return data.sort((a, b) => order[a] - order[b]);
+  }
+
   // This section is about populating the market data types for the selected symbol.
   symbolSelect.addEventListener("change", async (event) => {
     const symbol = event.target.value;
     const response = await fetch(`/api/exchange/internal/mdts/${symbol}`);
     const data = await response.json();
+    const sortedData = sortMarketDataTypes(data);
     marketDataTypes.innerHTML = '<option selected disabled value="">Kline type</option>';
     chartMarketDataTypes.innerHTML = '<option selected disabled value="">Chart kline type</option>';
-    data.forEach((mdt) => {
+    sortedData.forEach((mdt) => {
       const option = document.createElement("option");
       option.value = mdt;
       option.textContent = mdt;
@@ -202,10 +225,35 @@
         date_start: dateStartPicker.value,
         date_end: dateEndPicker.value,
       };
-      await buildChart(data);
+      const marketData = await getMarketData(data);
+      // Set the price-low and price-high inputs to the min and max values of the selected date range
+      const minPrice = Math.min(...marketData.map((k) => k.low));
+      const maxPrice = Math.max(...marketData.map((k) => k.high));
+      priceLowInput.value = Number.isInteger(minPrice) ? `${minPrice}.0` : minPrice;
+      priceHighInput.value = Number.isInteger(maxPrice) ? `${maxPrice}.0` : maxPrice;
+      await buildChart(data, marketData);
     } catch (error) {
       console.error("Error while building the chart:", error);
     }
+  }
+
+  async function getMarketData(data) {
+    // Fetch market data
+    const response = await fetch(
+      `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch market data: ${response.statusText}`);
+    }
+
+    const marketData = await response.json();
+
+    if (!marketData || !Array.isArray(marketData) || marketData.length === 0) {
+      throw new Error("No market data available for the selected date range.");
+    }
+
+    return marketData;
   }
 
   dateStartPicker.addEventListener("change", async (event) => {
@@ -263,29 +311,9 @@
 
   const chartSection = document.querySelector('section[name="chart-section"]');
 
-  // window.addEventListener("resize", () => {
-  //   setTimeout(() => {
-  //     window.dispatchEvent(new Event("resize"));
-  //   }, 500);
-  // });
-
-  async function buildChart(data, positions = []) {
+  async function buildChart(data, marketData, positions = []) {
     try {
       chartSection.innerHTML = "";
-
-      // Fetch market data
-      const response = await fetch(
-        `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch market data: ${response.statusText}`);
-      }
-
-      const marketData = await response.json();
-
-      // Debugging: Log the market data
-      console.log("Market Data:", marketData);
 
       const x = marketData.map((k) => {
         if (!k.date || isNaN(k.date)) {
@@ -348,6 +376,7 @@
   const gridParametersForm = document.querySelector('form[name="grid-parameters"]');
   const startBacktestButton = document.getElementById("start-backtest-button");
 
+  // Start backtest button event listener
   startBacktestButton.addEventListener("click", async (event) => {
     event.preventDefault();
     const formData = new FormData(commonParametersForm);
@@ -399,8 +428,10 @@
       };
       // Hide the parameters section
       document.getElementById("parameters-details").open = false;
+      // Get the market data
+      const marketData = await getMarketData(data);
       // Build the chart
-      await buildChart(data, resultData.positions);
+      await buildChart(data, marketData, resultData.positions);
       // Get the metrics data
       const metricsData = await getMetricsData(result.id);
       // Fill the metrics table
@@ -428,6 +459,7 @@
     const data = await response.json();
     return data;
   }
+
   // Function to fill the metrics table by metrics data.
   async function fillMetricsTable(data) {
     const metricsTable0 = document.getElementById("metrics-table-0");
@@ -437,31 +469,51 @@
     metricsTable0Body.innerHTML = "";
     metricsTable1Body.innerHTML = "";
     const metrics0 = `
-    <tr><td>Average Loss Position</td><td>${data.average_loss_position.toFixed(2)}</td></tr>
-    <tr><td>Average Position Size</td><td>${data.average_position_size.toFixed(2)}</td></tr>
-    <tr><td>Average Profit Position</td><td>${data.average_profit_position.toFixed(2)}</td></tr>
-    <tr><td>Expected Payoff</td><td>${data.expected_payoff.toFixed(2)}</td></tr>
-    <tr><td>Profit Factor</td><td>${data.profit_factor.toFixed(2)}</td></tr>
-    <tr><td>Profit per Position (%)</td><td>${data.profit_per_position_in_percent.toFixed(2)}</td></tr>
-    <tr><td>Positions Number</td><td>${data.positions_number}</td></tr>
-    <tr><td>Profit Positions Number</td><td>${data.profit_positions_number}</td></tr>
-    <tr><td>Loss Positions Number</td><td>${data.loss_positions_number}</td></tr>
-    <tr><td>Sortino</td><td>${data.sortino.toFixed(2)}</td></tr>`;
+    <tr><td>Average Loss Position</td><td>${
+      data.average_loss_position ? data.average_loss_position.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Average Position Size</td><td>${
+      data.average_position_size ? data.average_position_size.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Average Profit Position</td><td>${
+      data.average_profit_position ? data.average_profit_position.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Expected Payoff</td><td>${
+      data.expected_payoff ? data.expected_payoff.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Profit Factor</td><td>${data.profit_factor ? data.profit_factor.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Profit per Position (%)</td><td>${
+      data.profit_per_position_in_percent ? data.profit_per_position_in_percent.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Positions Number</td><td>${data.positions_number ? data.positions_number : "Not available"}</td></tr>
+    <tr><td>Profit Positions Number</td><td>${
+      data.profit_positions_number ? data.profit_positions_number : "Not available"
+    }</td></tr>
+    <tr><td>Loss Positions Number</td><td>${
+      data.loss_positions_number ? data.loss_positions_number : "Not available"
+    }</td></tr>
+    <tr><td>Sortino</td><td>${data.sortino ? data.sortino.toFixed(2) : "Not available"}</td></tr>`;
     const metrics1 = `
-    <tr><td>Drawdown</td><td>${data.drawdown.toFixed(2)}</td></tr>
-    <tr><td>Max Drawdown</td><td>${data.max_drawdown.toFixed(2)}</td></tr>
-    <tr><td>Max Use of Funds</td><td>${data.max_use_of_funds.toFixed(2)}</td></tr>
-    <tr><td>Start Deposit</td><td>${data.start_deposit.toFixed(2)}</td></tr>
-    <tr><td>Finish Deposit</td><td>${data.finish_deposit.toFixed(2)}</td></tr>
-    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? "green" : "red"}">${data.total_profit.toFixed(
-      2
-    )}</td></tr>
-    <tr><td>Total Profit (%)</td><td style="color: ${
-      data.total_profit > 0 ? "green" : "red"
-    }">${data.total_profit_percent.toFixed(2)}</td></tr>
-    <tr><td>Profit Positions (%)</td><td>${data.profit_positions_percent.toFixed(2)}</td></tr>
-    <tr><td>Loss Positions (%)</td><td>${data.loss_positions_percent.toFixed(2)}</td></tr>
-    <tr><td>Max Deposit</td><td>${data.max_deposit.toFixed(2)}</td></tr>`;
+    <tr><td>Drawdown</td><td>${data.drawdown ? data.drawdown.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Max Drawdown</td><td>${data.max_drawdown ? data.max_drawdown.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Max Use of Funds</td><td>${
+      data.max_use_of_funds ? data.max_use_of_funds.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Start Deposit</td><td>${data.start_deposit ? data.start_deposit.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Finish Deposit</td><td>${data.finish_deposit ? data.finish_deposit.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? "green" : "red"}">${
+      data.total_profit ? data.total_profit.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Total Profit (%)</td><td style="color: ${data.total_profit > 0 ? "green" : "red"}">${
+      data.total_profit_percent ? data.total_profit_percent.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Profit Positions (%)</td><td>${
+      data.profit_positions_percent ? data.profit_positions_percent.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Loss Positions (%)</td><td>${
+      data.loss_positions_percent ? data.loss_positions_percent.toFixed(2) : "Not available"
+    }</td></tr>
+    <tr><td>Max Deposit</td><td>${data.max_deposit ? data.max_deposit.toFixed(2) : "Not available"}</td></tr>`;
     metricsTable0Body.innerHTML = metrics0;
     metricsTable1Body.innerHTML = metrics1;
     // Show the tables
