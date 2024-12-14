@@ -2,6 +2,8 @@
 ## Description
 The goal of this project is to make a backtesting framework for the most popular trading strategies like grid or rebalancing. Before that, I did the same with Python programming language and even used PyPy (which increased the performance in times), but the performance left much to be desired. So I decided to use the Rust programming language to benefit from performance and code safety.
 
+[The demo with a trial user access.](https://backtest.casa/)
+
 ## Finished parts
 - Download and use Binance's historical market data (including 1s & trades)
 - Iteration over the same-period chunks of klines to implement complex closely-related strategies with low-memory consumption
@@ -10,7 +12,6 @@ The goal of this project is to make a backtesting framework for the most popular
 - Simple UI built using [Pico CSS framework](https://picocss.com/) with the result chart construction in [Plotly](https://plotly.com/javascript/)
 
 ## Preview
-![image](https://github.com/kostorub/backtest/assets/11979976/745dd00f-1c3e-41f2-b75f-c0d7da28301b)
 ![image](https://github.com/user-attachments/assets/3cab4d0b-cd67-47cb-9db1-9c20f81babb3)
 
 
