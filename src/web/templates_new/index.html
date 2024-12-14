@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.lime.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.lime.min.css" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
     <!-- <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js" charset="utf-8"></script> -->
     <script src="/static/scripts/common.js"></script>
@@ -51,6 +48,11 @@
       {% block content %}{% endblock content %}
     </main>
     {% block scripts %}{% endblock scripts %}
+    <footer class="footer">
+      <div class="container">
+          &copy; 2024 <a href="https://github.com/kostorub/backtest">Backtest</a>
+    </div>
+    </footer>
     <script>
       // This script is used to call the `/api/auth/sign-out` endpoint when the user clicks the "Sign out" link.
       // And then redirect to the /pages/sign-out page.
