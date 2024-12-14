@@ -7,10 +7,12 @@ The goal of this project is to make a backtesting framework for the most popular
 - Iteration over the same-period chunks of klines to implement complex closely-related strategies with low-memory consumption
 - Launch of the Binance Grid bot trading strategy even on trades market data
 - Calculation of metrics
-- Simple UI built using the HTMX tool with the result chart construction
+- Simple UI built using [Pico CSS framework](https://picocss.com/) with the result chart construction in [Plotly](https://plotly.com/javascript/)
 
 ## Preview
 ![image](https://github.com/kostorub/backtest/assets/11979976/745dd00f-1c3e-41f2-b75f-c0d7da28301b)
+![image](https://github.com/user-attachments/assets/3cab4d0b-cd67-47cb-9db1-9c20f81babb3)
+
 
 ### Binance's historical market data
 The historical data is loaded from the [Binance Data Collection](https://data.binance.vision) source. The data is stored as in the following structure in the file system to allow easy access by the [memory mapped IO](https://docs.rs/memmap2/latest/memmap2/).  
@@ -47,7 +49,7 @@ There is only one symbol to calculate available, but core functions and the mult
     ├── routes - HTTP routes
     ├── server.rs - the server initialization and execution
     ├── tests - tests
-    └── web - the HTMX data
+    └── web - the HTML/CSS/JS data
 </pre>
 ## SQLite DB
 
