@@ -19,6 +19,17 @@ pub struct KLine {
 
 #[allow(dead_code)]
 impl KLine {
+    pub fn new(date: i64, open: f64, high: f64, low: f64, close: f64, volume: f64) -> Self {
+        Self {
+            date,
+            open,
+            high,
+            low,
+            close,
+            volume,
+        }
+    }
+
     pub fn blank() -> Self {
         Self {
             date: 0,
