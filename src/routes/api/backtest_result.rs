@@ -21,15 +21,15 @@ pub async fn chart(
         .body(chart_data))
 }
 
-pub async fn data(
-    data: web::Data<AppState>,
-    r: web::Query<BacktestResultId>,
-) -> Result<HttpResponse, Error> {
-    let result = backtest_results::get_grid_data(r.id, &data.pool)
-        .await
-        .map_err(ErrorInternalServerError)?;
-    Ok(HttpResponse::Ok().json(result))
-}
+// pub async fn data(
+//     data: web::Data<AppState>,
+//     r: web::Query<BacktestResultId>,
+// ) -> Result<HttpResponse, Error> {
+//     let result = backtest_results::get_grid_data(r.id, &data.pool)
+//         .await
+//         .map_err(ErrorInternalServerError)?;
+//     Ok(HttpResponse::Ok().json(result))
+// }
 
 pub async fn metrics(
     data: web::Data<AppState>,

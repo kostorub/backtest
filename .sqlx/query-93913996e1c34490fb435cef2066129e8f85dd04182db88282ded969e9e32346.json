@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO trailing_backtest (\n            common_id,\n            bounce_off_buy,\n            bounce_off_sell,\n            min_tp,\n            sl\n        ) VALUES (\n            ?1, ?2, ?3, ?4, ?5\n        )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "93913996e1c34490fb435cef2066129e8f85dd04182db88282ded969e9e32346"
+}

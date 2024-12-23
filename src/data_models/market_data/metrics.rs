@@ -8,6 +8,7 @@ use super::position::Position;
 #[derive(Default, Debug, Serialize)]
 pub struct Metrics {
     pub id: i64,
+    pub backtest_id: i64,
     pub positions_number: u64,
     pub profit_positions_number: u64,
     pub profit_positions_percent: f64,
@@ -83,6 +84,7 @@ impl Metrics {
 
         Metrics {
             id: 0,
+            backtest_id: 0,
             positions_number,
             profit_positions_number: profit_positions_number as u64,
             profit_positions_percent,

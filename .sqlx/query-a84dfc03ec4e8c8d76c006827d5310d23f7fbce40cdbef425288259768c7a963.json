@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO grid_backtest (\n            common_id,\n            price_low,\n            price_high,\n            grid_count,\n            grid_trigger,\n            grid_sl,\n            grid_tp,\n            sell_all\n        ) VALUES (\n            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8\n        )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "a84dfc03ec4e8c8d76c006827d5310d23f7fbce40cdbef425288259768c7a963"
+}

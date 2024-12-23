@@ -10,7 +10,7 @@ pub struct BacktestResultId {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GridData {
     pub id: i64,
-    pub metrics_id: i64,
+    pub common_id: i64,
     pub symbol: String,
     pub exchange: String,
     pub market_data_type: MarketDataType,
@@ -32,7 +32,7 @@ pub struct GridData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrailingData {
     pub id: i64,
-    pub metrics_id: i64,
+    pub common_id: i64,
     pub symbol: String,
     pub exchange: String,
     pub market_data_type: MarketDataType,

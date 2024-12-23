@@ -28,7 +28,11 @@ pub async fn run_grid(
     request_settings: web::Json<GridSettingsRequest>,
     data: web::Data<AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    if check_trial_access_by_req(req, &data).await.is_none() {
+    let extensions = req.extensions();
+    let user = extensions
+        .get::<User>()
+        .ok_or_else(|| ErrorForbidden("Unauthorized"))?;
+    if !check_trial_access_by_user(&data.pool, user).await {
         return Err(ErrorForbidden("Trial access limit reached"));
     }
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
@@ -71,11 +75,11 @@ pub async fn run_grid(
     let metrics_id = backtest_results::insert_metrics(&_metrics, &data.pool)
         .await
         .map_err(|e| ErrorInternalServerError(e))?;
-    let backtest_results_id = backtest_results::insert_grid_data(
+    let backtest_results_id = backtest_results::insert_grid_backtest(
         &backtest_settings,
         &request_settings,
         &positions,
-        metrics_id,
+        user.user_id,
         &data.pool,
     )
     .await
@@ -90,7 +94,11 @@ pub async fn run_trailing(
     request_settings: web::Json<TrailingSettingsRequest>,
     data: web::Data<AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    if check_trial_access_by_req(req, &data).await.is_none() {
+    let extensions = req.extensions();
+    let user = extensions
+        .get::<User>()
+        .ok_or_else(|| ErrorForbidden("Unauthorized"))?;
+    if !check_trial_access_by_user(&data.pool, user).await {
         return Err(ErrorForbidden("Trial access limit reached"));
     }
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
@@ -134,7 +142,7 @@ pub async fn run_trailing(
         &backtest_settings,
         &request_settings,
         &positions,
-        metrics_id,
+        user.user_id,
         &data.pool,
     )
     .await

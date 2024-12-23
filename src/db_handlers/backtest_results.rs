@@ -1,3 +1,4 @@
+use plotly::common;
 use sqlx::{Error, Pool, Sqlite};
 
 use crate::{
@@ -8,10 +9,7 @@ use crate::{
         },
     },
     data_handlers::utils::{datetime_str_to_i64, i64_to_datetime_str},
-    data_models::{
-        market_data::{metrics::Metrics, position::Position},
-        routes::backtest_results::{GridData, ResultOption, TrailingData},
-    },
+    data_models::market_data::{metrics::Metrics, position::Position},
 };
 
 pub async fn insert_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i64, Error> {
@@ -21,6 +19,7 @@ pub async fn insert_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i6
 
     let result = sqlx::query!(
         "INSERT INTO backtest_metrics (
+            backtest_id,
             positions_number,
             profit_positions_number,
             profit_positions_percent,
@@ -43,8 +42,9 @@ pub async fn insert_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i6
             drawdown,
             max_use_of_funds
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22
         )",
+        metrics.backtest_id,
         positions_number,
         profit_positions_number,
         metrics.profit_positions_percent,
@@ -73,11 +73,11 @@ pub async fn insert_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i6
     Ok(result.last_insert_rowid())
 }
 
-pub async fn insert_grid_data(
+pub async fn insert_grid_backtest(
     backtest_settings: &BacktestSettings,
     grid_settings: &GridSettingsRequest,
     positions: &Vec<Position>,
-    metrics_id: i64,
+    user_id: i64,
     pool: &Pool<Sqlite>,
 ) -> Result<i64, Error> {
     let market_data_type = backtest_settings.market_data_type.value().0;
@@ -88,8 +88,8 @@ pub async fn insert_grid_data(
     let positions = serde_json::to_string(&positions).unwrap();
 
     let result = sqlx::query!(
-        "INSERT INTO grid_data (
-            metrics_id,
+        "INSERT INTO common_backtest (
+            user_id,
             symbol,
             exchange,
             market_data_type,
@@ -98,18 +98,11 @@ pub async fn insert_grid_data(
             date_end,
             deposit,
             commission,
-            price_low,
-            price_high,
-            grid_count,
-            grid_trigger,
-            grid_sl,
-            grid_tp,
-            sell_all,
             positions
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
         )",
-        metrics_id,
+        user_id,
         backtest_settings.symbols[0],
         backtest_settings.exchange,
         market_data_type,
@@ -118,26 +111,46 @@ pub async fn insert_grid_data(
         date_end,
         backtest_settings.deposit,
         backtest_settings.commission,
+        positions
+    )
+    .execute(pool)
+    .await?;
+
+    let common_id = result.last_insert_rowid();
+
+    let result = sqlx::query!(
+        "INSERT INTO grid_backtest (
+            common_id,
+            price_low,
+            price_high,
+            grid_count,
+            grid_trigger,
+            grid_sl,
+            grid_tp,
+            sell_all
+        ) VALUES (
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8
+        )",
+        common_id,
         grid_settings.price_low,
         grid_settings.price_high,
         grids_count,
         grid_settings.grid_trigger,
         grid_settings.grid_sl,
         grid_settings.grid_tp,
-        grid_settings.sell_all,
-        positions
+        grid_settings.sell_all
     )
     .execute(pool)
     .await?;
 
-    Ok(result.last_insert_rowid())
+    Ok(common_id)
 }
 
 pub async fn insert_trailing_data(
     backtest_settings: &BacktestSettings,
     trailing_settings: &TrailingSettingsRequest,
     positions: &Vec<Position>,
-    metrics_id: i64,
+    user_id: i64,
     pool: &Pool<Sqlite>,
 ) -> Result<i64, Error> {
     let market_data_type = backtest_settings.market_data_type.value().0;
@@ -147,8 +160,8 @@ pub async fn insert_trailing_data(
     let positions = serde_json::to_string(&positions).unwrap();
 
     let result = sqlx::query!(
-        "INSERT INTO trailing_data (
-            metrics_id,
+        "INSERT INTO common_backtest (
+            user_id,
             symbol,
             exchange,
             market_data_type,
@@ -157,15 +170,11 @@ pub async fn insert_trailing_data(
             date_end,
             deposit,
             commission,
-            bounce_off_buy,
-            bounce_off_sell,
-            min_tp,
-            sl,
             positions
         ) VALUES (
-            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
         )",
-        metrics_id,
+        user_id,
         backtest_settings.symbols[0],
         backtest_settings.exchange,
         market_data_type,
@@ -174,105 +183,123 @@ pub async fn insert_trailing_data(
         date_end,
         backtest_settings.deposit,
         backtest_settings.commission,
-        trailing_settings.bounce_off_buy,
-        trailing_settings.bounce_off_sell,
-        trailing_settings.min_tp,
-        trailing_settings.sl,
         positions
     )
     .execute(pool)
     .await?;
 
-    Ok(result.last_insert_rowid())
-}
+    let common_id = result.last_insert_rowid();
 
-pub async fn get_grid_data(
-    backtest_results_id: i64,
-    pool: &Pool<Sqlite>,
-) -> Result<GridData, Error> {
-    let row = sqlx::query!("SELECT * FROM grid_data WHERE id = ?1", backtest_results_id)
-        .fetch_one(pool)
-        .await?;
-
-    let result = GridData {
-        id: row.id,
-        metrics_id: row.metrics_id,
-        symbol: row.symbol,
-        exchange: row.exchange,
-        market_data_type: row.market_data_type.into(),
-        chart_market_data_type: row.chart_market_data_type.into(),
-        date_start: row.date_start,
-        date_end: row.date_end,
-        deposit: row.deposit,
-        commission: row.commission,
-        price_low: row.price_low,
-        price_high: row.price_high,
-        grid_count: row.grid_count,
-        grid_trigger: row.grid_trigger,
-        grid_sl: row.grid_sl,
-        grid_tp: row.grid_tp,
-        sell_all: Some(row.sell_all),
-        positions: serde_json::from_str(&row.positions).unwrap(),
-    };
-
-    Ok(result)
-}
-
-pub async fn get_trailing_data(
-    backtest_results_id: i64,
-    pool: &Pool<Sqlite>,
-) -> Result<TrailingData, Error> {
-    let row = sqlx::query!(
-        "SELECT * FROM trailing_data WHERE id = ?1",
-        backtest_results_id
+    let result = sqlx::query!(
+        "INSERT INTO trailing_backtest (
+            common_id,
+            bounce_off_buy,
+            bounce_off_sell,
+            min_tp,
+            sl
+        ) VALUES (
+            ?1, ?2, ?3, ?4, ?5
+        )",
+        common_id,
+        trailing_settings.bounce_off_buy,
+        trailing_settings.bounce_off_sell,
+        trailing_settings.min_tp,
+        trailing_settings.sl
     )
-    .fetch_one(pool)
+    .execute(pool)
     .await?;
 
-    let result = TrailingData {
-        id: row.id,
-        metrics_id: row.metrics_id,
-        symbol: row.symbol,
-        exchange: row.exchange,
-        market_data_type: row.market_data_type.into(),
-        chart_market_data_type: row.chart_market_data_type.into(),
-        date_start: row.date_start,
-        date_end: row.date_end,
-        deposit: row.deposit,
-        commission: row.commission,
-        bounce_off_buy: row.bounce_off_buy,
-        bounce_off_sell: row.bounce_off_sell,
-        min_tp: row.min_tp,
-        sl: row.sl,
-        positions: serde_json::from_str(&row.positions).unwrap(),
-    };
-
-    Ok(result)
+    Ok(common_id)
 }
 
-pub async fn get_data_options(pool: &Pool<Sqlite>) -> Result<Vec<ResultOption>, Error> {
-    let results = sqlx::query!(
-        "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM grid_data ORDER BY id DESC LIMIT 10",
-    )
-    .fetch_all(pool)
-    .await?
-    .iter()
-    .map(|row| ResultOption {
-        id: row.id,
-        symbol: row.symbol.clone(),
-        exchange: row.exchange.clone(),
-        market_data_type: row.market_data_type.clone().into(),
-        date_start: i64_to_datetime_str(row.date_start),
-        date_end: i64_to_datetime_str(row.date_end),
-    })
-    .collect();
+// pub async fn get_grid_data(
+//     backtest_results_id: i64,
+//     pool: &Pool<Sqlite>,
+// ) -> Result<GridData, Error> {
+//     let row = sqlx::query!("SELECT * FROM grid_data WHERE id = ?1", backtest_results_id)
+//         .fetch_one(pool)
+//         .await?;
 
-    Ok(results)
-}
+//     let result = GridData {
+//         id: row.id,
+//         metrics_id: row.metrics_id,
+//         symbol: row.symbol,
+//         exchange: row.exchange,
+//         market_data_type: row.market_data_type.into(),
+//         chart_market_data_type: row.chart_market_data_type.into(),
+//         date_start: row.date_start,
+//         date_end: row.date_end,
+//         deposit: row.deposit,
+//         commission: row.commission,
+//         price_low: row.price_low,
+//         price_high: row.price_high,
+//         grid_count: row.grid_count,
+//         grid_trigger: row.grid_trigger,
+//         grid_sl: row.grid_sl,
+//         grid_tp: row.grid_tp,
+//         sell_all: Some(row.sell_all),
+//         positions: serde_json::from_str(&row.positions).unwrap(),
+//     };
+
+//     Ok(result)
+// }
+
+// pub async fn get_trailing_data(
+//     backtest_results_id: i64,
+//     pool: &Pool<Sqlite>,
+// ) -> Result<TrailingData, Error> {
+//     let row = sqlx::query!(
+//         "SELECT * FROM trailing_data WHERE common_id = ?1",
+//         backtest_results_id
+//     )
+//     .fetch_one(pool)
+//     .await?;
+
+//     let result = TrailingData {
+//         id: row.id,
+//         common_id: row.common_id,
+//         metrics_id: row.metrics_id,
+//         symbol: row.symbol,
+//         exchange: row.exchange,
+//         market_data_type: row.market_data_type.into(),
+//         chart_market_data_type: row.chart_market_data_type.into(),
+//         date_start: row.date_start,
+//         date_end: row.date_end,
+//         deposit: row.deposit,
+//         commission: row.commission,
+//         bounce_off_buy: row.bounce_off_buy,
+//         bounce_off_sell: row.bounce_off_sell,
+//         min_tp: row.min_tp,
+//         sl: row.sl,
+//         positions: serde_json::from_str(&row.positions).unwrap(),
+//     };
+
+//     Ok(result)
+// }
+
+// pub async fn get_data_options(pool: &Pool<Sqlite>) -> Result<Vec<ResultOption>, Error> {
+//     let results = sqlx::query!(
+//         "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM common_backtest ORDER BY id DESC LIMIT 10",
+//     )
+//     .fetch_all(pool)
+//     .await?
+//     .iter()
+//     .map(|row| ResultOption {
+//         id: row.id,
+//         symbol: row.symbol.clone(),
+//         exchange: row.exchange.clone(),
+//         market_data_type: row.market_data_type.clone().into(),
+//         date_start: i64_to_datetime_str(row.date_start),
+//         date_end: i64_to_datetime_str(row.date_end),
+//     })
+//     .collect();
+
+//     Ok(results)
+// }
 
 pub async fn get_metrics(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<Metrics, Error> {
     let row = sqlx::query!(
-        "SELECT backtest_metrics.* FROM backtest_metrics JOIN grid_data ON grid_data.metrics_id = backtest_metrics.id WHERE grid_data.id = ?1",
+        "SELECT backtest_metrics.* FROM backtest_metrics WHERE backtest_metrics.backtest_id = ?1",
         backtest_results_id
     )
     .fetch_one(pool)
@@ -280,6 +307,7 @@ pub async fn get_metrics(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Resul
 
     let result = Metrics {
         id: row.id,
+        backtest_id: row.backtest_id,
         positions_number: row.positions_number as u64,
         profit_positions_number: row.profit_positions_number as u64,
         profit_positions_percent: row.profit_positions_percent,
