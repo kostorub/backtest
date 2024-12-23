@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO trailing_data (\n            metrics_id,\n            symbol,\n            exchange,\n            market_data_type,\n            chart_market_data_type,\n            date_start,\n            date_end,\n            deposit,\n            commission,\n            bounce_off_buy,\n            bounce_off_sell,\n            min_tp,\n            sl,\n            positions\n        ) VALUES (\n            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14\n        )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 14
+    },
+    "nullable": []
+  },
+  "hash": "1575e134598b84948eb4912027c42fe19a61b2ffc6a82f43d31780306ddce1c2"
+}

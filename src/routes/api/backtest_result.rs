@@ -25,7 +25,7 @@ pub async fn data(
     data: web::Data<AppState>,
     r: web::Query<BacktestResultId>,
 ) -> Result<HttpResponse, Error> {
-    let result = backtest_results::get_data(r.id, &data.pool)
+    let result = backtest_results::get_grid_data(r.id, &data.pool)
         .await
         .map_err(ErrorInternalServerError)?;
     Ok(HttpResponse::Ok().json(result))

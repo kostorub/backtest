@@ -1,11 +1,16 @@
 use sqlx::{Error, Pool, Sqlite};
 
 use crate::{
-    backtest::{settings::BacktestSettings, strategies::grid::settings::GridSettingsRequest},
+    backtest::{
+        settings::BacktestSettings,
+        strategies::{
+            grid::settings::GridSettingsRequest, trailing::settings::TrailingSettingsRequest,
+        },
+    },
     data_handlers::utils::{datetime_str_to_i64, i64_to_datetime_str},
     data_models::{
         market_data::{metrics::Metrics, position::Position},
-        routes::backtest_results::{Data, ResultOption},
+        routes::backtest_results::{GridData, ResultOption, TrailingData},
     },
 };
 
@@ -68,7 +73,7 @@ pub async fn insert_metrics(metrics: &Metrics, pool: &Pool<Sqlite>) -> Result<i6
     Ok(result.last_insert_rowid())
 }
 
-pub async fn insert_data(
+pub async fn insert_grid_data(
     backtest_settings: &BacktestSettings,
     grid_settings: &GridSettingsRequest,
     positions: &Vec<Position>,
@@ -83,7 +88,7 @@ pub async fn insert_data(
     let positions = serde_json::to_string(&positions).unwrap();
 
     let result = sqlx::query!(
-        "INSERT INTO backtest_data (
+        "INSERT INTO grid_data (
             metrics_id,
             symbol,
             exchange,
@@ -128,15 +133,68 @@ pub async fn insert_data(
     Ok(result.last_insert_rowid())
 }
 
-pub async fn get_data(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<Data, Error> {
-    let row = sqlx::query!(
-        "SELECT * FROM backtest_data WHERE id = ?1",
-        backtest_results_id
+pub async fn insert_trailing_data(
+    backtest_settings: &BacktestSettings,
+    trailing_settings: &TrailingSettingsRequest,
+    positions: &Vec<Position>,
+    metrics_id: i64,
+    pool: &Pool<Sqlite>,
+) -> Result<i64, Error> {
+    let market_data_type = backtest_settings.market_data_type.value().0;
+    let chart_market_data_type = trailing_settings.chart_market_data_type.value().0;
+    let date_start = datetime_str_to_i64(trailing_settings.date_start.clone());
+    let date_end = datetime_str_to_i64(trailing_settings.date_end.clone());
+    let positions = serde_json::to_string(&positions).unwrap();
+
+    let result = sqlx::query!(
+        "INSERT INTO trailing_data (
+            metrics_id,
+            symbol,
+            exchange,
+            market_data_type,
+            chart_market_data_type,
+            date_start,
+            date_end,
+            deposit,
+            commission,
+            bounce_off_buy,
+            bounce_off_sell,
+            min_tp,
+            sl,
+            positions
+        ) VALUES (
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
+        )",
+        metrics_id,
+        backtest_settings.symbols[0],
+        backtest_settings.exchange,
+        market_data_type,
+        chart_market_data_type,
+        date_start,
+        date_end,
+        backtest_settings.deposit,
+        backtest_settings.commission,
+        trailing_settings.bounce_off_buy,
+        trailing_settings.bounce_off_sell,
+        trailing_settings.min_tp,
+        trailing_settings.sl,
+        positions
     )
-    .fetch_one(pool)
+    .execute(pool)
     .await?;
 
-    let result = Data {
+    Ok(result.last_insert_rowid())
+}
+
+pub async fn get_grid_data(
+    backtest_results_id: i64,
+    pool: &Pool<Sqlite>,
+) -> Result<GridData, Error> {
+    let row = sqlx::query!("SELECT * FROM grid_data WHERE id = ?1", backtest_results_id)
+        .fetch_one(pool)
+        .await?;
+
+    let result = GridData {
         id: row.id,
         metrics_id: row.metrics_id,
         symbol: row.symbol,
@@ -160,9 +218,41 @@ pub async fn get_data(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<D
     Ok(result)
 }
 
+pub async fn get_trailing_data(
+    backtest_results_id: i64,
+    pool: &Pool<Sqlite>,
+) -> Result<TrailingData, Error> {
+    let row = sqlx::query!(
+        "SELECT * FROM trailing_data WHERE id = ?1",
+        backtest_results_id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    let result = TrailingData {
+        id: row.id,
+        metrics_id: row.metrics_id,
+        symbol: row.symbol,
+        exchange: row.exchange,
+        market_data_type: row.market_data_type.into(),
+        chart_market_data_type: row.chart_market_data_type.into(),
+        date_start: row.date_start,
+        date_end: row.date_end,
+        deposit: row.deposit,
+        commission: row.commission,
+        bounce_off_buy: row.bounce_off_buy,
+        bounce_off_sell: row.bounce_off_sell,
+        min_tp: row.min_tp,
+        sl: row.sl,
+        positions: serde_json::from_str(&row.positions).unwrap(),
+    };
+
+    Ok(result)
+}
+
 pub async fn get_data_options(pool: &Pool<Sqlite>) -> Result<Vec<ResultOption>, Error> {
     let results = sqlx::query!(
-        "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM backtest_data ORDER BY id DESC LIMIT 10",
+        "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM grid_data ORDER BY id DESC LIMIT 10",
     )
     .fetch_all(pool)
     .await?
@@ -182,7 +272,7 @@ pub async fn get_data_options(pool: &Pool<Sqlite>) -> Result<Vec<ResultOption>, 
 
 pub async fn get_metrics(backtest_results_id: i64, pool: &Pool<Sqlite>) -> Result<Metrics, Error> {
     let row = sqlx::query!(
-        "SELECT backtest_metrics.* FROM backtest_metrics JOIN backtest_data ON backtest_data.metrics_id = backtest_metrics.id WHERE backtest_data.id = ?1",
+        "SELECT backtest_metrics.* FROM backtest_metrics JOIN grid_data ON grid_data.metrics_id = backtest_metrics.id WHERE grid_data.id = ?1",
         backtest_results_id
     )
     .fetch_one(pool)

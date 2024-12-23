@@ -19,11 +19,11 @@ impl TrailingBot {
         Self {
             settings: settings.clone(),
             current_low_price: 0.0,
-            order_size: settings.deposit / 2.0,
+            order_size: settings.deposit,
         }
     }
 
-    pub fn run(&mut self, kline: &KLine) -> Option<(usize, Vec<Order>)> {
+    pub fn run(&mut self, kline: &KLine) -> Option<Vec<Order>> {
         if self.current_low_price == 0.0 {
             self.current_low_price = kline.low();
             return None;
@@ -32,29 +32,26 @@ impl TrailingBot {
         {
             let buy_price = self.current_low_price * (1.0 + self.settings.bounce_off_buy / 100.0);
             let qty = self.order_size / buy_price;
-            return Some((
-                0,
-                vec![
-                    Order::new(kline.date(), buy_price, Side::Buy, OrderType::Market)
-                        .updated(kline.date())
-                        .with_price_executed(buy_price)
-                        .with_qty(qty)
-                        .filled(),
-                    Order::new(
-                        kline.date(),
-                        buy_price * (1.0 + self.settings.min_tp / 100.0),
-                        Side::Sell,
-                        OrderType::TakeProfit,
-                    )
-                    .with_qty(qty),
-                    Order::new(
-                        kline.date(),
-                        buy_price * (1.0 - self.settings.sl / 100.0),
-                        Side::Sell,
-                        OrderType::Stop,
-                    ),
-                ],
-            ));
+            return Some(vec![
+                Order::new(kline.date(), buy_price, Side::Buy, OrderType::Market)
+                    .updated(kline.date())
+                    .with_price_executed(buy_price)
+                    .with_qty(qty)
+                    .filled(),
+                Order::new(
+                    kline.date(),
+                    buy_price * (1.0 + self.settings.min_tp / 100.0),
+                    Side::Sell,
+                    OrderType::TakeProfit,
+                )
+                .with_qty(qty),
+                Order::new(
+                    kline.date(),
+                    buy_price * (1.0 - self.settings.sl / 100.0),
+                    Side::Sell,
+                    OrderType::Stop,
+                ),
+            ]);
         } else if kline.low < self.current_low_price {
             self.current_low_price = kline.low;
         }
@@ -92,19 +89,16 @@ mod test {
         let orders = bot.run(&kline);
         assert_eq!(
             orders,
-            Some((
-                0,
-                vec![
-                    Order::new(4, 90.9, Side::Buy, OrderType::Market)
-                        .updated(4)
-                        .with_price_executed(90.9)
-                        .with_qty(bot.order_size / 90.9)
-                        .filled(),
-                    Order::new(4, 91.80900000000001, Side::Sell, OrderType::TakeProfit)
-                        .with_qty(bot.order_size / 90.9),
-                    Order::new(4, 89.991, Side::Sell, OrderType::Stop)
-                ]
-            ))
+            Some(vec![
+                Order::new(4, 90.9, Side::Buy, OrderType::Market)
+                    .updated(4)
+                    .with_price_executed(90.9)
+                    .with_qty(bot.order_size / 90.9)
+                    .filled(),
+                Order::new(4, 91.80900000000001, Side::Sell, OrderType::TakeProfit)
+                    .with_qty(bot.order_size / 90.9),
+                Order::new(4, 89.991, Side::Sell, OrderType::Stop)
+            ])
         );
     }
 }

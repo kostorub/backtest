@@ -8,7 +8,7 @@ pub struct BacktestResultId {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Data {
+pub struct GridData {
     pub id: i64,
     pub metrics_id: i64,
     pub symbol: String,
@@ -26,6 +26,25 @@ pub struct Data {
     pub grid_sl: Option<f64>,
     pub grid_tp: Option<f64>,
     pub sell_all: Option<bool>,
+    pub positions: Vec<Position>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrailingData {
+    pub id: i64,
+    pub metrics_id: i64,
+    pub symbol: String,
+    pub exchange: String,
+    pub market_data_type: MarketDataType,
+    pub chart_market_data_type: MarketDataType,
+    pub date_start: i64,
+    pub date_end: i64,
+    pub deposit: f64,
+    pub commission: f64,
+    pub bounce_off_buy: f64,
+    pub bounce_off_sell: f64,
+    pub min_tp: f64,
+    pub sl: f64,
     pub positions: Vec<Position>,
 }
 

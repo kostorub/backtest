@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM backtest_data WHERE id = ?1",
+  "query": "SELECT * FROM trailing_data WHERE id = ?1",
   "describe": {
     "columns": [
       {
@@ -54,43 +54,28 @@
         "type_info": "Float"
       },
       {
-        "name": "price_low",
+        "name": "bounce_off_buy",
         "ordinal": 10,
         "type_info": "Float"
       },
       {
-        "name": "price_high",
+        "name": "bounce_off_sell",
         "ordinal": 11,
         "type_info": "Float"
       },
       {
-        "name": "grid_count",
+        "name": "min_tp",
         "ordinal": 12,
-        "type_info": "Int64"
+        "type_info": "Float"
       },
       {
-        "name": "grid_trigger",
+        "name": "sl",
         "ordinal": 13,
         "type_info": "Float"
       },
       {
-        "name": "grid_sl",
-        "ordinal": 14,
-        "type_info": "Float"
-      },
-      {
-        "name": "grid_tp",
-        "ordinal": 15,
-        "type_info": "Float"
-      },
-      {
-        "name": "sell_all",
-        "ordinal": 16,
-        "type_info": "Bool"
-      },
-      {
         "name": "positions",
-        "ordinal": 17,
+        "ordinal": 14,
         "type_info": "Text"
       }
     ],
@@ -112,11 +97,8 @@
       false,
       false,
       false,
-      true,
-      true,
-      false,
       false
     ]
   },
-  "hash": "410fefdf30da95942bea7c941148c9ade8eac8fb2ac3e69ed65b6a213e31639f"
+  "hash": "3653456bb90234bfe2d4de52e8dfcd3810c1d5c8e9c332581757fa7e77afd550"
 }

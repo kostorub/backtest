@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM backtest_data ORDER BY id DESC LIMIT 10",
+  "query": "SELECT id, symbol, exchange, market_data_type, date_start, date_end FROM grid_data ORDER BY id DESC LIMIT 10",
   "describe": {
     "columns": [
       {
@@ -46,5 +46,5 @@
       false
     ]
   },
-  "hash": "369d4714710b6ef6dad75a6b977f8f29dfaa54c0a910baf0f4bdfb4425c02009"
+  "hash": "5e6ef0392f5b472845dbc3940546a7d2468b550393bb91d3dfd6deb565e7aed8"
 }

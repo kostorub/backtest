@@ -104,7 +104,7 @@ impl Strategy for TrailingStrategy {
         }
 
         match self.bot.run(kline) {
-            Some((_, mut orders)) => {
+            Some(mut orders) => {
                 if self.current_budget < self.bot.order_size {
                     return;
                 }
