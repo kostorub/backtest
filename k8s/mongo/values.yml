@@ -1,0 +1,35 @@
+## @param replicaCount Number of MongoDB(&reg;) nodes
+## When `mongodb.architecture=replicaset`, the number of replicas is taken in account
+## When `mongodb.architecture=standalone`, the number of replicas can only be 0 or 1 (value higher then 1 will not be taken in account)
+##
+# replicaCount: 2
+replicaCount: 1
+## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## Example:
+## resources:
+##   requests:
+##     cpu: 2
+##     memory: 512Mi
+##   limits:
+##     cpu: 3
+##     memory: 1024Mi
+##
+# resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 100m
+    memory: 512Mi
+persistence:
+  ## @param persistence.enabled Enable MongoDB(&reg;) data persistence using PVC
+  ##
+  enabled: true
+  ## @param persistence.existingClaim Provide an existing `PersistentVolumeClaim` (only when `architecture=standalone`)
+  ## Requires persistence.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  ## Ignored when mongodb.architecture=replicaset
+  ##
+  # existingClaim: ""
+  existingClaim: mongo-pvc
