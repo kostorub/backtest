@@ -39,12 +39,12 @@ impl GridBot {
         }
         if kline.close <= self.current_price {
             if let Some(i) = check_buy_action(&mut self.triggers, kline.close) {
-                self.triggers[i].trigger_type = Side::Sell;
                 let price = self.triggers[i].price;
                 // It is a crutch. TODO: Fix it.
                 if price > kline.high || price < kline.low {
                     return None;
                 }
+                self.triggers[i].trigger_type = Side::Sell;
                 return Some((
                     i,
                     vec![
@@ -124,34 +124,34 @@ mod test {
             0.0, 10.0, 5, 100.0, 5.0, None, None, true,
         ));
 
-        assert_eq!(bot.run(&KLine::blank().with_close(5.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
-        assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(5.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(3.9)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(2.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(2.0)), get_orders_buy(2.0, 4.0, 10.0, 1));
-        assert_eq!(bot.run(&KLine::blank().with_close(1.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(2.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(2.0)), get_orders_buy(2.0, 4.0, 10.0, 1));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(1.9)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(2.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(2.0)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(3.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.1)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(5.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.1)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(7.9)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(8.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(8.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(7.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(8.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(8.1)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(8.0)), get_orders_buy(8.0, 10.0, 20.0 / 8.0, 4));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(8.0)), get_orders_buy(8.0, 10.0, 20.0 / 8.0, 4));
 
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
-        assert_eq!(bot.run(&KLine::blank().with_close(8.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(10.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(8.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(10.0)), None);
     }
 
     #[rustfmt::skip]
@@ -161,13 +161,13 @@ mod test {
             0.0, 10.0, 5, 100.0, 5.0, None, None, true,
         ));
 
-        assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
-        assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(3.9)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.0)), None);
 
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), None);
     }
 
     #[rustfmt::skip]
@@ -177,20 +177,43 @@ mod test {
             0.0, 10.0, 5, 100.0, 5.0, None, None, true,
         ));
 
-        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
-        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
-        assert_eq!(bot.run(&KLine::blank().with_close(5.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(5.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(5.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(6.0)), get_orders_buy(6.0, 8.0, 3.3333333333333335, 3));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(5.9)), None);
 
 
-        assert_eq!(bot.run(&KLine::blank().with_close(4.1)), None);
-        assert_eq!(bot.run(&KLine::blank().with_close(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
-        assert_eq!(bot.run(&KLine::blank().with_close(3.9)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.1)), None);
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(4.0)), get_orders_buy(4.0, 6.0, 5.0, 2));
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(3.9)), None);
+    }
+
+    #[test]
+    fn test_rejected_buy_keeps_trigger_state() {
+        let mut bot = GridBot::new(GridSettings::new(
+            0.0, 10.0, 5, 100.0, 5.0, None, None, true,
+        ));
+
+        assert_eq!(bot.run(&KLine::blank().with_ohlc(5.0)), None);
+        assert_eq!(
+            bot.run(
+                &KLine::blank()
+                    .with_close(4.0)
+                    .with_open(4.0)
+                    .with_range(4.1, 5.0)
+            ),
+            None
+        );
+        assert_eq!(bot.triggers[2].trigger_type, Side::Buy);
+        assert_eq!(
+            bot.run(&KLine::blank().with_ohlc(4.0)),
+            get_orders_buy(4.0, 6.0, 5.0, 2)
+        );
     }
 
     fn get_triggers() -> Vec<GridTrigger> {

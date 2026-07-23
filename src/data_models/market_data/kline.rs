@@ -39,6 +39,35 @@ impl KLine {
         self.close = value;
         self
     }
+
+    pub fn with_open(mut self, value: f64) -> Self {
+        self.open = value;
+        self
+    }
+
+    pub fn with_high(mut self, value: f64) -> Self {
+        self.high = value;
+        self
+    }
+
+    pub fn with_low(mut self, value: f64) -> Self {
+        self.low = value;
+        self
+    }
+
+    pub fn with_ohlc(mut self, value: f64) -> Self {
+        self.open = value;
+        self.high = value;
+        self.low = value;
+        self.close = value;
+        self
+    }
+
+    pub fn with_range(mut self, low: f64, high: f64) -> Self {
+        self.low = low;
+        self.high = high;
+        self
+    }
 }
 
 fn f64_to_i64<'de, D>(deserializer: D) -> Result<i64, D::Error>

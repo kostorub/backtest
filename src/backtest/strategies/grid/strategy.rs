@@ -185,17 +185,17 @@ mod test {
             bot
         );
         strategy.set_klines(vec![
-            KLine::blank().with_date(0).with_close(50.0),
-            KLine::blank().with_date(1).with_close(59.0),
-            KLine::blank().with_date(2).with_close(61.0),
-            KLine::blank().with_date(3).with_close(49.0),
-            KLine::blank().with_date(4).with_close(39.0),
-            KLine::blank().with_date(5).with_close(51.0),
-            KLine::blank().with_date(6).with_close(61.0),
-            KLine::blank().with_date(7).with_close(00.0),
-            KLine::blank().with_date(8).with_close(00.0),
-            KLine::blank().with_date(9).with_close(00.0),
-            KLine::blank().with_date(10).with_close(00.0),
+            KLine::blank().with_date(0).with_ohlc(50.0),
+            KLine::blank().with_date(1).with_close(59.0).with_open(59.0).with_range(50.0, 59.0),
+            KLine::blank().with_date(2).with_close(61.0).with_open(61.0).with_range(59.0, 61.0),
+            KLine::blank().with_date(3).with_close(49.0).with_open(49.0).with_range(49.0, 61.0),
+            KLine::blank().with_date(4).with_close(39.0).with_open(39.0).with_range(39.0, 49.0),
+            KLine::blank().with_date(5).with_close(51.0).with_open(51.0).with_range(39.0, 51.0),
+            KLine::blank().with_date(6).with_close(61.0).with_open(61.0).with_range(51.0, 61.0),
+            KLine::blank().with_date(7).with_close(00.0).with_open(00.0).with_range(00.0, 61.0),
+            KLine::blank().with_date(8).with_ohlc(00.0),
+            KLine::blank().with_date(9).with_ohlc(00.0),
+            KLine::blank().with_date(10).with_ohlc(00.0),
         ]);
 
         strategy.run_kline(0);
