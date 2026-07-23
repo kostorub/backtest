@@ -1,9 +1,14 @@
 use crate::{
     backtest::{settings::StrategySettings, strategies::strategy_trait::Strategy},
-    data_models::market_data::{kline::KLine, position::Position},
+    data_models::market_data::{
+        enums::{OrderType, Side},
+        kline::KLine,
+        order::Order,
+        position::{Position, PositionStatus},
+    },
 };
 
-use super::bot::PingPongLongBot;
+use super::bot::{PingPongLongBot, PingPongLongSignal};
 
 #[derive(Debug, Clone)]
 pub struct PingPongLongStrategy {
@@ -29,6 +34,60 @@ impl PingPongLongStrategy {
             current_qty: 0.0,
             current_kline_position: 0,
         }
+    }
+
+    fn open_buy(&mut self, kline: &KLine, price: f64) {
+        let order_size = self.bot.settings.order_size;
+        if self.current_budget < order_size {
+            return;
+        }
+
+        let qty = order_size / price;
+        let order = Order::new(kline.date, price, Side::Buy, OrderType::Market)
+            .updated(kline.date)
+            .with_price_executed(price)
+            .with_qty(qty)
+            .with_commission(price, qty, self.strategy_settings.commission)
+            .filled();
+        let mut position = Position::new(self.strategy_settings.symbol.clone());
+        position.orders.push(order);
+        self.update_strategy_data(-order_size, qty);
+        self.bot
+            .register_position(position.id.clone(), position.open_price());
+        self.positions_opened.push(position);
+    }
+
+    fn handle_close_signal(&mut self, position_id: String, price: f64, date: i64) {
+        let Some(position_index) = self
+            .positions_opened
+            .iter()
+            .position(|position| position.id == position_id)
+        else {
+            self.bot.remove_position(&position_id);
+            return;
+        };
+
+        let profit_percent = self.positions_opened[position_index].percent_delta(price);
+        if profit_percent <= self.bot.settings.min_profit_percent {
+            self.bot.reset_position_close_tracking(&position_id, price);
+            return;
+        }
+
+        let mut position = self.positions_opened.remove(position_index);
+        let qty = position.volume_all();
+        position.orders.push(
+            Order::new(date, price, Side::Sell, OrderType::Market)
+                .updated(date)
+                .with_price_executed(price)
+                .with_qty(qty)
+                .with_commission(price, qty, self.strategy_settings.commission)
+                .filled(),
+        );
+        position.status = PositionStatus::Closed;
+        position.calculate_pnl();
+        self.update_strategy_data(qty * price, -qty);
+        self.bot.remove_position(&position_id);
+        self.positions_closed.push(position);
     }
 }
 
@@ -93,5 +152,133 @@ impl Strategy for PingPongLongStrategy {
         self.current_kline_position = current_kline_position;
     }
 
-    fn run(&mut self, _kline: &KLine) {}
+    fn run(&mut self, kline: &KLine) {
+        let close_signals = self.bot.run_position_closes(kline.close);
+        for signal in close_signals {
+            if let PingPongLongSignal::CloseSell { position_id, price } = signal {
+                self.handle_close_signal(position_id, price, kline.date);
+            }
+        }
+
+        if let Some(PingPongLongSignal::OpenBuy { price }) = self.bot.run(kline) {
+            self.open_buy(kline, price);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        backtest::strategies::pingpong_long::{
+            bot::PingPongLongCloseState, settings::PingPongLongSettings,
+        },
+        data_models::market_data::enums::MarketDataType,
+    };
+
+    use super::*;
+
+    fn settings(min_profit_percent: f64) -> PingPongLongSettings {
+        PingPongLongSettings::new(
+            10.0,
+            10.0,
+            1.0,
+            5.0,
+            5.0,
+            1.0,
+            2.0,
+            2.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            100.0,
+            min_profit_percent,
+            false,
+            Some(1),
+        )
+    }
+
+    fn strategy_settings() -> StrategySettings {
+        StrategySettings {
+            symbol: "BTCUSDT".to_string(),
+            exchange: "binance".to_string(),
+            market_data_type: MarketDataType::KLine1m,
+            date_start: 0,
+            date_end: 10,
+            deposit: 1_000.0,
+            commission: 0.0,
+        }
+    }
+
+    fn strategy(min_profit_percent: f64) -> PingPongLongStrategy {
+        PingPongLongStrategy::new(
+            strategy_settings(),
+            PingPongLongBot::new(settings(min_profit_percent)),
+        )
+    }
+
+    fn kline(date: i64, price: f64) -> KLine {
+        KLine::blank().with_date(date).with_ohlc(price)
+    }
+
+    #[test]
+    fn test_close_signal_closes_only_when_profit_is_above_threshold() {
+        let mut strategy = strategy(1.0);
+        strategy.open_buy(&kline(0, 100.0), 100.0);
+        let position_id = strategy.positions_opened[0].id.clone();
+
+        strategy.run(&kline(1, 102.0));
+        assert_eq!(
+            strategy.bot.close_trackers.get(&position_id).unwrap().state,
+            PingPongLongCloseState::WaitingClosePullback
+        );
+
+        strategy.run(&kline(2, 100.97));
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.positions_closed.len(), 0);
+        let tracker = strategy.bot.close_trackers.get(&position_id).unwrap();
+        assert_eq!(tracker.state, PingPongLongCloseState::TrackingRise);
+        assert_eq!(tracker.position_open_price, 100.97);
+
+        strategy.run(&kline(3, 103.0));
+        strategy.run(&kline(4, 101.9));
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.positions_closed.len(), 1);
+        assert_eq!(strategy.current_budget, 1_001.9);
+        assert_eq!(strategy.current_qty, 0.0);
+        assert!(strategy.bot.close_trackers.get(&position_id).is_none());
+
+        let closed = &strategy.positions_closed[0];
+        assert_eq!(closed.status, PositionStatus::Closed);
+        assert_eq!(closed.orders.len(), 2);
+        assert_eq!(closed.orders.last().unwrap().side, Side::Sell);
+        assert!((closed.pnl.unwrap() - 1.9).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_multiple_open_positions_close_independently() {
+        let mut strategy = strategy(1.0);
+        strategy.open_buy(&kline(0, 100.0), 100.0);
+        strategy.open_buy(&kline(1, 110.0), 110.0);
+        let first_position_id = strategy.positions_opened[0].id.clone();
+        let second_position_id = strategy.positions_opened[1].id.clone();
+
+        strategy.run(&kline(2, 103.0));
+        strategy.run(&kline(3, 101.9));
+
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.positions_closed.len(), 1);
+        assert_eq!(strategy.positions_closed[0].id, first_position_id);
+        assert_eq!(strategy.positions_opened[0].id, second_position_id);
+        assert!(strategy
+            .bot
+            .close_trackers
+            .get(&first_position_id)
+            .is_none());
+        assert!(strategy
+            .bot
+            .close_trackers
+            .get(&second_position_id)
+            .is_some());
+    }
 }
