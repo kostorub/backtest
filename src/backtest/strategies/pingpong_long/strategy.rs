@@ -57,6 +57,18 @@ impl PingPongLongStrategy {
         self.positions_opened.push(position);
     }
 
+    fn net_profit_percent_after_commission(&self, position: &Position, price: f64) -> f64 {
+        let qty = position.volume_all();
+        let buy_cost = position.weighted_avg_price_buy() * qty + position.commission_buy();
+        if buy_cost == 0.0 {
+            return f64::NAN;
+        }
+
+        let sell_commission = price * qty * self.strategy_settings.commission / 100.0;
+        let pnl = price * qty - sell_commission - buy_cost;
+        pnl / buy_cost * 100.0
+    }
+
     fn handle_close_signal(&mut self, position_id: String, price: f64, date: i64) {
         let Some(position_index) = self
             .positions_opened
@@ -67,7 +79,8 @@ impl PingPongLongStrategy {
             return;
         };
 
-        let profit_percent = self.positions_opened[position_index].percent_delta(price);
+        let profit_percent =
+            self.net_profit_percent_after_commission(&self.positions_opened[position_index], price);
         if profit_percent <= self.bot.settings.min_profit_percent {
             self.bot.reset_position_close_tracking(&position_id, price);
             return;
@@ -198,7 +211,7 @@ mod tests {
         )
     }
 
-    fn strategy_settings() -> StrategySettings {
+    fn strategy_settings_with_commission(commission: f64) -> StrategySettings {
         StrategySettings {
             symbol: "BTCUSDT".to_string(),
             exchange: "binance".to_string(),
@@ -206,8 +219,12 @@ mod tests {
             date_start: 0,
             date_end: 10,
             deposit: 1_000.0,
-            commission: 0.0,
+            commission,
         }
+    }
+
+    fn strategy_settings() -> StrategySettings {
+        strategy_settings_with_commission(0.0)
     }
 
     fn strategy(min_profit_percent: f64) -> PingPongLongStrategy {
@@ -219,6 +236,107 @@ mod tests {
 
     fn kline(date: i64, price: f64) -> KLine {
         KLine::blank().with_date(date).with_ohlc(price)
+    }
+
+    #[test]
+    fn test_buy_is_skipped_when_budget_is_below_order_size() {
+        let mut strategy = strategy(0.0);
+        strategy.current_budget = 99.99;
+
+        strategy.run(&kline(0, 100.0));
+        strategy.run(&kline(1, 90.0));
+        strategy.run(&kline(2, 94.5));
+
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.current_budget, 99.99);
+        assert_eq!(strategy.current_qty, 0.0);
+        assert_eq!(
+            strategy.bot.opening_state,
+            super::super::bot::PingPongLongOpeningState::TrackingFall
+        );
+    }
+
+    #[test]
+    fn test_buy_uses_fixed_order_size() {
+        let mut strategy = strategy(0.0);
+
+        strategy.run(&kline(0, 100.0));
+        strategy.run(&kline(1, 90.0));
+        strategy.run(&kline(2, 94.5));
+
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.current_budget, 900.0);
+        assert!((strategy.current_qty - 100.0 / 94.5).abs() < 1e-10);
+
+        let buy_order = &strategy.positions_opened[0].orders[0];
+        assert_eq!(buy_order.price_executed, Some(94.5));
+        assert!((buy_order.qty.unwrap() - 100.0 / 94.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_close_threshold_uses_net_profit_after_commission() {
+        let mut strategy = PingPongLongStrategy::new(
+            strategy_settings_with_commission(1.0),
+            PingPongLongBot::new(settings(0.5)),
+        );
+        strategy.open_buy(&kline(0, 100.0), 100.0);
+        let position_id = strategy.positions_opened[0].id.clone();
+
+        strategy.run(&kline(1, 102.0));
+        strategy.run(&kline(2, 100.9));
+
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.positions_closed.len(), 0);
+        assert_eq!(
+            strategy.bot.close_trackers.get(&position_id).unwrap().state,
+            PingPongLongCloseState::TrackingRise
+        );
+    }
+
+    #[test]
+    fn test_close_succeeds_when_net_profit_after_commission_exceeds_threshold() {
+        let mut strategy = PingPongLongStrategy::new(
+            strategy_settings_with_commission(1.0),
+            PingPongLongBot::new(settings(0.5)),
+        );
+        strategy.open_buy(&kline(0, 100.0), 100.0);
+
+        strategy.run(&kline(1, 104.0));
+        strategy.run(&kline(2, 102.6));
+
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(strategy.positions_closed.len(), 1);
+        assert!((strategy.positions_closed[0].pnl.unwrap() - 0.574).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_same_candle_only_moves_opening_from_tracking_fall_to_waiting_retrace() {
+        let mut strategy = strategy(0.0);
+
+        strategy.run(&kline(0, 100.0));
+        strategy.run(&kline(1, 89.0));
+
+        assert_eq!(strategy.positions_opened.len(), 0);
+        assert_eq!(
+            strategy.bot.opening_state,
+            super::super::bot::PingPongLongOpeningState::WaitingRetrace
+        );
+        assert_eq!(strategy.bot.target_fall_price, Some(89.0));
+    }
+
+    #[test]
+    fn test_same_candle_only_moves_close_from_tracking_rise_to_waiting_pullback() {
+        let mut strategy = strategy(0.0);
+        strategy.open_buy(&kline(0, 100.0), 100.0);
+        let position_id = strategy.positions_opened[0].id.clone();
+
+        strategy.run(&kline(1, 110.0));
+
+        assert_eq!(strategy.positions_opened.len(), 1);
+        assert_eq!(strategy.positions_closed.len(), 0);
+        let tracker = strategy.bot.close_trackers.get(&position_id).unwrap();
+        assert_eq!(tracker.state, PingPongLongCloseState::WaitingClosePullback);
+        assert_eq!(tracker.rise_price, Some(110.0));
     }
 
     #[test]

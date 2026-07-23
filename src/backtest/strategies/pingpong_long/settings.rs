@@ -271,7 +271,10 @@ mod tests {
             step: 0.0,
         };
 
-        assert_eq!(range.validate(), Err("percent range step must be > 0".to_string()));
+        assert_eq!(
+            range.validate(),
+            Err("percent range step must be > 0".to_string())
+        );
     }
 
     #[test]
