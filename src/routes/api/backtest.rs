@@ -14,10 +14,15 @@ use crate::backtest::settings::BacktestSettings;
 use crate::backtest::strategies::grid::bot::GridBot;
 use crate::backtest::strategies::grid::settings::{GridSettings, GridSettingsRequest};
 use crate::backtest::strategies::grid::strategy::GridStrategy;
+use crate::backtest::strategies::pingpong_long::bot::PingPongLongBot;
+use crate::backtest::strategies::pingpong_long::settings::PingPongLongSettingsRequest;
+use crate::backtest::strategies::pingpong_long::strategy::PingPongLongStrategy;
 use crate::data_handlers::kv_store;
 use crate::data_models::routes::backtest_results::BacktestResultId;
 use crate::data_models::user::User;
-use crate::db_handlers::backtest_results::{insert_data, insert_metrics};
+use crate::db_handlers::backtest_results::{
+    insert_data, insert_metrics, insert_pingpong_long_data,
+};
 
 pub async fn run_grid(
     req: HttpRequest,
@@ -96,6 +101,85 @@ pub async fn run_grid(
             return Err(ErrorInternalServerError(e));
         }
     };
+    let result = BacktestResultId {
+        id: backtest_results_id,
+    };
+    Ok(HttpResponse::Ok().json(result))
+}
+
+pub async fn run_pingpong_long(
+    req: HttpRequest,
+    request_settings: web::Json<PingPongLongSettingsRequest>,
+    data: web::Data<AppState>,
+) -> Result<HttpResponse, Error> {
+    let request_settings = request_settings.into_inner();
+    let extensions = req.extensions();
+    let user = extensions.get::<User>().unwrap();
+    if !check_trial_access(&data.pool, user).await {
+        return Err(ErrorForbidden("Trial access limit reached"));
+    }
+
+    let data_path = PathBuf::from(data.app_settings.data_path.clone());
+    let backtest_settings = BacktestSettings {
+        symbols: vec![request_settings.symbol.to_lowercase()],
+        exchange: request_settings.exchange.clone().to_lowercase(),
+        date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d")
+            .unwrap()
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+            .and_utc()
+            .timestamp_millis() as i64,
+        date_end: NaiveDate::parse_from_str(request_settings.date_end.as_str(), "%Y-%m-%d")
+            .unwrap()
+            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+            .and_utc()
+            .timestamp_millis() as i64,
+        deposit: request_settings.deposit,
+        commission: request_settings.commission,
+        market_data_type: request_settings.market_data_type.clone(),
+    };
+    let pingpong_settings = request_settings.clone().into_settings();
+    let pingpong_bot = PingPongLongBot::new(pingpong_settings);
+    let strategies_settings = strategies_settings(backtest_settings.clone());
+    let mut strategies: Vec<PingPongLongStrategy> = strategies_settings
+        .iter()
+        .map(|s| PingPongLongStrategy::new(s.clone(), pingpong_bot.clone()))
+        .collect();
+
+    backtest::run_sequentially(
+        backtest_settings.clone(),
+        &mut strategies,
+        data_path.clone(),
+    );
+
+    let positions = get_positions_from_strategies(strategies.clone());
+    let metrics = get_metrics(
+        &positions,
+        strategies[0].strategy_settings.deposit,
+        strategies[0].current_budget,
+    );
+    let metrics_id = match insert_metrics(&metrics, &data.pool).await {
+        Ok(id) => id,
+        Err(e) => {
+            error!("Error inserting pingpong long backtest metrics: {}", e);
+            return Err(ErrorInternalServerError(e));
+        }
+    };
+    let backtest_results_id = match insert_pingpong_long_data(
+        &backtest_settings,
+        &request_settings,
+        &positions,
+        metrics_id,
+        &data.pool,
+    )
+    .await
+    {
+        Ok(id) => id,
+        Err(e) => {
+            error!("Error inserting pingpong long backtest results: {}", e);
+            return Err(ErrorInternalServerError(e));
+        }
+    };
+
     let result = BacktestResultId {
         id: backtest_results_id,
     };

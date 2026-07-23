@@ -1,7 +1,13 @@
 use sqlx::{Error, Pool, Sqlite};
 
 use crate::{
-    backtest::{settings::BacktestSettings, strategies::grid::settings::GridSettingsRequest},
+    backtest::{
+        settings::BacktestSettings,
+        strategies::{
+            grid::settings::GridSettingsRequest,
+            pingpong_long::settings::PingPongLongSettingsRequest,
+        },
+    },
     data_handlers::utils::{datetime_str_to_i64, i64_to_datetime_str},
     data_models::{
         market_data::{metrics::Metrics, position::Position},
@@ -120,6 +126,65 @@ pub async fn insert_data(
         grid_settings.grid_sl,
         grid_settings.grid_tp,
         grid_settings.sell_all,
+        positions
+    )
+    .execute(pool)
+    .await?;
+
+    Ok(result.last_insert_rowid())
+}
+
+pub async fn insert_pingpong_long_data(
+    backtest_settings: &BacktestSettings,
+    pingpong_settings: &PingPongLongSettingsRequest,
+    positions: &Vec<Position>,
+    metrics_id: i64,
+    pool: &Pool<Sqlite>,
+) -> Result<i64, Error> {
+    let market_data_type = backtest_settings.market_data_type.value().0;
+    let chart_market_data_type = pingpong_settings.chart_market_data_type.value().0;
+    let date_start = datetime_str_to_i64(pingpong_settings.date_start.clone());
+    let date_end = datetime_str_to_i64(pingpong_settings.date_end.clone());
+    let positions = serde_json::to_string(&positions).unwrap();
+
+    let result = sqlx::query!(
+        "INSERT INTO backtest_data (
+            metrics_id,
+            symbol,
+            exchange,
+            market_data_type,
+            chart_market_data_type,
+            date_start,
+            date_end,
+            deposit,
+            commission,
+            price_low,
+            price_high,
+            grid_count,
+            grid_trigger,
+            grid_sl,
+            grid_tp,
+            sell_all,
+            positions
+        ) VALUES (
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17
+        )",
+        metrics_id,
+        backtest_settings.symbols[0],
+        backtest_settings.exchange,
+        market_data_type,
+        chart_market_data_type,
+        date_start,
+        date_end,
+        backtest_settings.deposit,
+        backtest_settings.commission,
+        0.0,
+        0.0,
+        0_i64,
+        0.0,
+        Option::<f64>::None,
+        Option::<f64>::None,
+        false,
         positions
     )
     .execute(pool)

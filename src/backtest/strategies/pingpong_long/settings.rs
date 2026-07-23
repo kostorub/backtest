@@ -5,6 +5,8 @@ use serde_aux::field_attributes::{
     deserialize_number_from_string, deserialize_option_number_from_string,
 };
 
+use crate::data_models::market_data::enums::MarketDataType;
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct PercentRange {
     pub min: f64,
@@ -151,6 +153,16 @@ impl PingPongLongSettings {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PingPongLongSettingsRequest {
+    pub symbol: String,
+    pub exchange: String,
+    pub market_data_type: MarketDataType,
+    pub chart_market_data_type: MarketDataType,
+    pub date_start: String,
+    pub date_end: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub deposit: f64,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub commission: f64,
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub first_movement_min: f64,
     #[serde(deserialize_with = "deserialize_number_from_string")]
@@ -215,6 +227,7 @@ impl PingPongLongSettingsRequest {
 #[cfg(test)]
 mod tests {
     use rand::{rngs::StdRng, SeedableRng};
+    use serde_json::json;
 
     use super::*;
 
@@ -291,5 +304,44 @@ mod tests {
             let value = choose_from_range(&range, &mut rng);
             assert!(allowed.contains(&value));
         }
+    }
+
+    #[test]
+    fn test_request_deserializes_shared_and_strategy_fields() {
+        let request: PingPongLongSettingsRequest = serde_json::from_value(json!({
+            "symbol": "BTCUSDT",
+            "exchange": "Binance",
+            "market_data_type": "1m",
+            "chart_market_data_type": "1m",
+            "date_start": "2025-01-01",
+            "date_end": "2025-01-31",
+            "deposit": "1000.0",
+            "commission": "0.1",
+            "first_movement_min": "10.0",
+            "first_movement_max": "20.0",
+            "first_movement_step": "0.5",
+            "second_movement_min": "3.0",
+            "second_movement_max": "5.0",
+            "second_movement_step": "0.5",
+            "third_movement_min": "4.0",
+            "third_movement_max": "7.0",
+            "third_movement_step": "0.5",
+            "close_min": "1.0",
+            "close_max": "2.0",
+            "close_step": "0.5",
+            "order_size": "100.0",
+            "min_profit_percent": "1.0",
+            "bonus_enabled": true,
+            "random_seed": 42
+        }))
+        .unwrap();
+
+        assert_eq!(request.symbol, "BTCUSDT");
+        assert_eq!(request.exchange, "Binance");
+        assert_eq!(request.deposit, 1000.0);
+        assert_eq!(request.commission, 0.1);
+        assert_eq!(request.order_size, 100.0);
+        assert_eq!(request.random_seed, Some(42));
+        assert!(request.bonus_enabled);
     }
 }
