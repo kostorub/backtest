@@ -1,3 +1,4 @@
+use rand::Rng;
 use serde::Deserialize;
 
 use serde_aux::field_attributes::{
@@ -24,6 +25,31 @@ impl PercentRange {
         }
         Ok(())
     }
+
+    pub fn discrete_values(&self) -> Vec<f64> {
+        if self.min > self.max || self.step <= 0.0 || self.min < 0.0 || self.max < 0.0 {
+            return vec![];
+        }
+
+        let epsilon = self.step.abs() * 1e-12;
+        let span = self.max - self.min;
+        let steps = ((span + epsilon) / self.step).floor() as usize;
+
+        (0..=steps)
+            .map(|index| self.min + index as f64 * self.step)
+            .filter(|value| *value <= self.max + epsilon)
+            .collect()
+    }
+}
+
+pub fn choose_from_range(range: &PercentRange, rng: &mut impl Rng) -> f64 {
+    let values = range.discrete_values();
+    if values.is_empty() {
+        return f64::NAN;
+    }
+
+    let index = rng.gen_range(0..values.len());
+    values[index]
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -183,5 +209,84 @@ impl PingPongLongSettingsRequest {
 
     pub fn validate(&self) -> Result<(), String> {
         self.clone().into_settings().validate()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rand::{rngs::StdRng, SeedableRng};
+
+    use super::*;
+
+    #[test]
+    fn test_choose_from_range_whole_number_step() {
+        let range = PercentRange {
+            min: 10.0,
+            max: 20.0,
+            step: 1.0,
+        };
+        let mut rng = StdRng::seed_from_u64(7);
+
+        let value = choose_from_range(&range, &mut rng);
+
+        assert!(range.discrete_values().contains(&value));
+        assert!((value - value.round()).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_choose_from_range_decimal_step() {
+        let range = PercentRange {
+            min: 10.0,
+            max: 20.0,
+            step: 0.5,
+        };
+        let mut rng = StdRng::seed_from_u64(11);
+
+        let value = choose_from_range(&range, &mut rng);
+
+        assert!(range.discrete_values().contains(&value));
+        let scaled = (value - range.min) / range.step;
+        assert!((scaled - scaled.round()).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_choose_from_range_min_eq_max() {
+        let range = PercentRange {
+            min: 12.5,
+            max: 12.5,
+            step: 0.25,
+        };
+        let mut rng = StdRng::seed_from_u64(3);
+
+        let value = choose_from_range(&range, &mut rng);
+
+        assert_eq!(value, 12.5);
+    }
+
+    #[test]
+    fn test_validate_rejects_invalid_step() {
+        let range = PercentRange {
+            min: 10.0,
+            max: 20.0,
+            step: 0.0,
+        };
+
+        assert_eq!(range.validate(), Err("percent range step must be > 0".to_string()));
+    }
+
+    #[test]
+    fn test_selected_value_always_belongs_to_discrete_set() {
+        let range = PercentRange {
+            min: 2.0,
+            max: 5.0,
+            step: 0.5,
+        };
+        let allowed = range.discrete_values();
+        let mut rng = StdRng::seed_from_u64(99);
+
+        for _ in 0..100 {
+            let value = choose_from_range(&range, &mut rng);
+            assert!(allowed.contains(&value));
+        }
     }
 }
