@@ -8,7 +8,7 @@ use actix_web::{
 };
 use actix_web_lab::middleware::Next;
 use chrono::Utc;
-use log::{debug, error};
+use log::error;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -67,10 +67,18 @@ pub async fn rbac_middleware(
 
     access_map.insert(
         "GridBacktestViewer",
-        vec!["/pages/grid-backtest", "/api/backtest/result/data"],
+        vec![
+            "/pages/grid-backtest",
+            "/pages/pingpong-long-backtest",
+            "/api/backtest/result/data",
+        ],
     );
 
-    let grid_backtest_runner = vec!["/api/backtest/hodl/run", "/api/backtest/grid/run"];
+    let grid_backtest_runner = vec![
+        "/api/backtest/hodl/run",
+        "/api/backtest/grid/run",
+        "/api/backtest/pingpong-long/run",
+    ];
 
     access_map.insert("GridBacktestRunner", grid_backtest_runner.clone());
     access_map.insert("GridBacktestTrialRunner", grid_backtest_runner.clone());

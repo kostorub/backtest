@@ -1,0 +1,387 @@
+{% extends "index.html" %} {% block content %}
+<section name="parameters">
+  <details id="parameters-details" open>
+    <summary>Parameters form</summary>
+    {% include "forms/pingpong_long_backtest_form.html" %}
+  </details>
+</section>
+<section name="chart-section"></section>
+<section name="metrics-section">
+  <div class="grid">
+    <table id="metrics-table-0" hidden>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <table id="metrics-table-1" hidden>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+{% endblock content %} {% block scripts %}
+<script>
+  (async () => {
+    await loadExchanges();
+  })();
+
+  const exchangeSelect = document.querySelector('select[name="exchange"]');
+  const symbolSelect = document.querySelector('select[name="symbol"]');
+  const marketDataTypes = document.querySelector('select[name="market_data_type"]');
+  const chartMarketDataTypes = document.querySelector('select[name="chart_market_data_type"]');
+  const dateStartPicker = document.querySelector('input[name="date_start"]');
+  const dateEndPicker = document.querySelector('input[name="date_end"]');
+  const pingpongLongForm = document.getElementById("pingpong-long-backtest-data");
+  const startBacktestButton = document.getElementById("start-backtest-button");
+  const chartSection = document.querySelector('section[name="chart-section"]');
+
+  exchangeSelect.addEventListener("change", async (event) => {
+    const exchange = event.target.value;
+    const response = await fetch(`/api/exchange/internal/symbols/${exchange}`);
+    const data = await response.json();
+    symbolSelect.innerHTML = '<option selected disabled value="">Select symbol</option>';
+    data.forEach((symbol) => {
+      const option = document.createElement("option");
+      option.value = symbol;
+      option.textContent = symbol;
+      symbolSelect.appendChild(option);
+    });
+    symbolSelect.value = symbolSelect.options[1].value;
+    symbolSelect.dispatchEvent(new Event("change"));
+  });
+
+  function sortMarketDataTypes(data) {
+    const order = {
+      "1d": 1,
+      "8h": 2,
+      "6h": 3,
+      "4h": 4,
+      "2h": 5,
+      "1h": 6,
+      "30m": 7,
+      "15m": 8,
+      "5m": 9,
+      "3m": 10,
+      "1m": 11,
+      "1s": 12,
+      trade: 13,
+    };
+
+    return data.sort((a, b) => order[a] - order[b]);
+  }
+
+  symbolSelect.addEventListener("change", async (event) => {
+    const symbol = event.target.value;
+    const response = await fetch(`/api/exchange/internal/mdts/${symbol}`);
+    const data = await response.json();
+    const sortedData = sortMarketDataTypes(data);
+    marketDataTypes.innerHTML = '<option selected disabled value="">Kline type</option>';
+    chartMarketDataTypes.innerHTML = '<option selected disabled value="">Chart kline type</option>';
+    sortedData.forEach((mdt) => {
+      const option = document.createElement("option");
+      option.value = mdt;
+      option.textContent = mdt;
+      marketDataTypes.appendChild(option);
+      chartMarketDataTypes.appendChild(option.cloneNode(true));
+    });
+    marketDataTypes.value = marketDataTypes.options[1].value;
+    chartMarketDataTypes.value = chartMarketDataTypes.options[1].value;
+    chartMarketDataTypes.dispatchEvent(new Event("change"));
+  });
+
+  chartMarketDataTypes.addEventListener("change", async () => {
+    const exchange = exchangeSelect.value;
+    const symbol = symbolSelect.value;
+    const marketDataType = chartMarketDataTypes.value;
+    if (!exchange || !symbol || !marketDataType) {
+      return;
+    }
+    const response = await fetch(
+      `/api/market-data/date-input?exchange=${exchange}&symbol=${symbol}&market_data_type=${marketDataType}`
+    );
+    const data = await response.json();
+    dateStartPicker.min = data.date_start;
+    dateStartPicker.max = data.date_end;
+    dateEndPicker.min = data.date_start;
+    dateEndPicker.max = data.date_end;
+    dateStartPicker.value = dateStartPicker.min;
+    dateEndPicker.value = dateEndPicker.max;
+    dateStartPicker.dispatchEvent(new Event("change"));
+  });
+
+  dateStartPicker.addEventListener("change", async () => {
+    await dateChangeEventListener();
+  });
+
+  dateEndPicker.addEventListener("change", async () => {
+    await dateChangeEventListener();
+  });
+
+  function getSecondsFromMarketDataType(marketDataType) {
+    const mapping = {
+      trade: 0,
+      "1s": 1 * 1000,
+      "1m": 60 * 1000,
+      "3m": 3 * 60 * 1000,
+      "5m": 5 * 60 * 1000,
+      "15m": 15 * 60 * 1000,
+      "30m": 30 * 60 * 1000,
+      "1h": 60 * 60 * 1000,
+      "2h": 2 * 60 * 60 * 1000,
+      "4h": 4 * 60 * 60 * 1000,
+      "6h": 6 * 60 * 60 * 1000,
+      "8h": 8 * 60 * 60 * 1000,
+      "1d": 24 * 60 * 60 * 1000,
+    };
+
+    if (!(marketDataType in mapping)) {
+      throw new Error(`Unknown market data type: ${marketDataType}`);
+    }
+
+    return mapping[marketDataType];
+  }
+
+  function parseTime(t, marketDataType) {
+    if (!t || isNaN(t)) {
+      throw new Error(`Invalid timestamp: ${t}`);
+    }
+
+    const seconds = getSecondsFromMarketDataType(marketDataType);
+    const date = new Date(Math.floor(t / seconds) * seconds);
+
+    if (isNaN(date.getTime())) {
+      throw new Error(`Failed to parse date from timestamp: ${t}`);
+    }
+
+    return date.toISOString();
+  }
+
+  async function getMarketData(data) {
+    const response = await fetch(
+      `/api/market-data/klines?exchange=${data.exchange}&symbol=${data.symbol}&market_data_type=${data.chart_market_data_type}&date_start=${data.date_start}&date_end=${data.date_end}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch market data: ${response.statusText}`);
+    }
+
+    const marketData = await response.json();
+
+    if (!marketData || !Array.isArray(marketData) || marketData.length === 0) {
+      throw new Error("No market data available for the selected date range.");
+    }
+
+    return marketData;
+  }
+
+  async function dateChangeEventListener() {
+    try {
+      if (!exchangeSelect.value || !symbolSelect.value || !chartMarketDataTypes.value) {
+        return;
+      }
+      if (!dateStartPicker.value || !dateEndPicker.value) {
+        return;
+      }
+
+      const data = {
+        exchange: exchangeSelect.value,
+        symbol: symbolSelect.value,
+        chart_market_data_type: chartMarketDataTypes.value,
+        date_start: dateStartPicker.value,
+        date_end: dateEndPicker.value,
+      };
+      const marketData = await getMarketData(data);
+      await buildChart(data, marketData);
+    } catch (error) {
+      console.error("Error while building the chart:", error);
+    }
+  }
+
+  async function buildChart(data, marketData, positions = []) {
+    try {
+      chartSection.innerHTML = "";
+
+      const x = marketData.map((k) => parseTime(k.date, data.chart_market_data_type));
+      const open = marketData.map((k) => k.open);
+      const high = marketData.map((k) => k.high);
+      const low = marketData.map((k) => k.low);
+      const close = marketData.map((k) => k.close);
+
+      const trace = {
+        x,
+        open,
+        high,
+        low,
+        close,
+        type: "candlestick",
+        showlegend: false,
+      };
+
+      const traces = [trace];
+
+      positions.forEach((pos) => {
+        const lineTrace = {
+          x: [
+            parseTime(pos.orders[0].date, data.chart_market_data_type),
+            parseTime(pos.orders[pos.orders.length - 1].date_update, data.chart_market_data_type),
+          ],
+          y: [pos.orders[0].price, pos.orders[pos.orders.length - 1].price],
+          mode: "lines",
+          line: {
+            color: pos.pnl && pos.pnl > 0 ? "green" : "red",
+          },
+          showlegend: false,
+        };
+        traces.push(lineTrace);
+      });
+
+      const layout = {
+        autosize: true,
+        height: 600,
+        xaxis: { title: "Date" },
+        yaxis: { title: "Price" },
+      };
+
+      const config = { responsive: true };
+
+      Plotly.newPlot(chartSection, traces, layout, config);
+    } catch (error) {
+      console.error("Error while rendering the chart:", error);
+      chartSection.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+    }
+  }
+
+  async function getBacktestResultData(id) {
+    const response = await fetch(`/api/backtest/result/data?id=${id}`);
+    return await response.json();
+  }
+
+  async function getMetricsData(id) {
+    const response = await fetch(`/api/backtest/result/metrics?id=${id}`);
+    return await response.json();
+  }
+
+  async function fillMetricsTable(data) {
+    const metricsTable0 = document.getElementById("metrics-table-0");
+    const metricsTable1 = document.getElementById("metrics-table-1");
+    const metricsTable0Body = metricsTable0.querySelector("tbody");
+    const metricsTable1Body = metricsTable1.querySelector("tbody");
+    metricsTable0Body.innerHTML = "";
+    metricsTable1Body.innerHTML = "";
+
+    const metrics0 = `
+    <tr><td>Average Loss Position</td><td>${data.average_loss_position ? data.average_loss_position.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Average Position Size</td><td>${data.average_position_size ? data.average_position_size.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Average Profit Position</td><td>${data.average_profit_position ? data.average_profit_position.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Expected Payoff</td><td>${data.expected_payoff ? data.expected_payoff.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Profit Factor</td><td>${data.profit_factor ? data.profit_factor.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Profit per Position (%)</td><td>${data.profit_per_position_in_percent ? data.profit_per_position_in_percent.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Positions Number</td><td>${data.positions_number ? data.positions_number : "Not available"}</td></tr>
+    <tr><td>Profit Positions Number</td><td>${data.profit_positions_number ? data.profit_positions_number : "Not available"}</td></tr>
+    <tr><td>Loss Positions Number</td><td>${data.loss_positions_number ? data.loss_positions_number : "Not available"}</td></tr>
+    <tr><td>Sortino</td><td>${data.sortino ? data.sortino.toFixed(2) : "Not available"}</td></tr>`;
+
+    const metrics1 = `
+    <tr><td>Drawdown</td><td>${data.drawdown ? data.drawdown.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Max Drawdown</td><td>${data.max_drawdown ? data.max_drawdown.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Max Use of Funds</td><td>${data.max_use_of_funds ? data.max_use_of_funds.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Start Deposit</td><td>${data.start_deposit ? data.start_deposit.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Finish Deposit</td><td>${data.finish_deposit ? data.finish_deposit.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Total Profit</td><td style="color: ${data.total_profit > 0 ? "green" : "red"}">${data.total_profit ? data.total_profit.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Total Profit (%)</td><td style="color: ${data.total_profit > 0 ? "green" : "red"}">${data.total_profit_percent ? data.total_profit_percent.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Profit Positions (%)</td><td>${data.profit_positions_percent ? data.profit_positions_percent.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Loss Positions (%)</td><td>${data.loss_positions_percent ? data.loss_positions_percent.toFixed(2) : "Not available"}</td></tr>
+    <tr><td>Max Deposit</td><td>${data.max_deposit ? data.max_deposit.toFixed(2) : "Not available"}</td></tr>`;
+
+    metricsTable0Body.innerHTML = metrics0;
+    metricsTable1Body.innerHTML = metrics1;
+    metricsTable0.hidden = false;
+    metricsTable1.hidden = false;
+  }
+
+  startBacktestButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(pingpongLongForm);
+    const requestData = {
+      symbol: formData.get("symbol"),
+      exchange: formData.get("exchange"),
+      market_data_type: formData.get("market_data_type"),
+      chart_market_data_type: formData.get("chart_market_data_type"),
+      date_start: formData.get("date_start"),
+      date_end: formData.get("date_end"),
+      deposit: formData.get("deposit"),
+      commission: formData.get("commission"),
+      order_size: formData.get("order_size"),
+      min_profit_percent: formData.get("min_profit_percent"),
+      bonus_enabled: formData.get("bonus_enabled") === "on",
+      random_seed: formData.get("random_seed") || null,
+      first_movement_min: formData.get("first_movement_min"),
+      first_movement_max: formData.get("first_movement_max"),
+      first_movement_step: formData.get("first_movement_step"),
+      second_movement_min: formData.get("second_movement_min"),
+      second_movement_max: formData.get("second_movement_max"),
+      second_movement_step: formData.get("second_movement_step"),
+      third_movement_min: formData.get("third_movement_min"),
+      third_movement_max: formData.get("third_movement_max"),
+      third_movement_step: formData.get("third_movement_step"),
+      close_min: formData.get("close_min"),
+      close_max: formData.get("close_max"),
+      close_step: formData.get("close_step"),
+    };
+
+    startBacktestButton.disabled = true;
+    startBacktestButton.textContent = "Loading...";
+    startBacktestButton.setAttribute("aria-busy", "true");
+
+    try {
+      const response = await fetch("/api/backtest/pingpong-long/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.status === 403) {
+        const errorMessage = await response.text();
+        throw new Error(errorMessage);
+      } else if (response.status >= 400 && response.status < 600) {
+        throw new Error("An error occurred while processing your request.");
+      }
+
+      const result = await response.json();
+      const resultData = await getBacktestResultData(result.id);
+      const data = {
+        exchange: resultData.exchange,
+        symbol: resultData.symbol,
+        chart_market_data_type: resultData.chart_market_data_type,
+        date_start: new Date(resultData.date_start).toISOString().split("T")[0],
+        date_end: new Date(resultData.date_end).toISOString().split("T")[0],
+      };
+
+      document.getElementById("parameters-details").open = false;
+      const marketData = await getMarketData(data);
+      await buildChart(data, marketData, resultData.positions);
+      const metricsData = await getMetricsData(result.id);
+      await fillMetricsTable(metricsData);
+    } catch (error) {
+      console.error("Error:", error);
+      alert(error.message);
+    } finally {
+      startBacktestButton.disabled = false;
+      startBacktestButton.textContent = "Start backtest";
+      startBacktestButton.setAttribute("aria-busy", "false");
+    }
+  });
+</script>
+{% endblock scripts %}

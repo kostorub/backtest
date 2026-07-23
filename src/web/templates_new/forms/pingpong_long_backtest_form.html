@@ -1,0 +1,155 @@
+<form id="pingpong-long-backtest-data">
+  <section>
+    <h4>Market/data</h4>
+    <div class="grid">
+      <div>
+        <label>
+          Exchange
+          <select name="exchange" aria-label="Select exchange" required>
+            <option selected disabled value="">Select exchange</option>
+          </select>
+        </label>
+        <label>
+          Symbol
+          <select name="symbol" aria-label="Select symbol" required>
+            <option selected disabled value="">Select symbol</option>
+          </select>
+        </label>
+      </div>
+      <div>
+        <label>
+          Chart klines
+          <select name="chart_market_data_type" aria-label="Chart market data type" required>
+            <option selected disabled value="">Chart kline type</option>
+          </select>
+        </label>
+        <label>
+          Calculation klines
+          <select name="market_data_type" aria-label="Market data type" required>
+            <option selected disabled value="">Kline type</option>
+          </select>
+        </label>
+      </div>
+      <div>
+        <label for="date-start">
+          Start date
+          <input type="date" name="date_start" aria-label="Start date" />
+        </label>
+        <label for="date-end">
+          End date
+          <input type="date" name="date_end" aria-label="End date" />
+        </label>
+      </div>
+      <div>
+        <label>
+          Deposit
+          <input type="number" name="deposit" aria-label="Deposit" min="0.1" value="1000.0" required />
+        </label>
+        <label>
+          Commission
+          <input type="number" name="commission" aria-label="Commission" value="0.0" required />
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h4>Capital/risk</h4>
+    <div class="grid">
+      <div>
+        <label>
+          Order size
+          <input type="number" name="order_size" aria-label="Order size" min="0.1" value="100.0" required />
+        </label>
+        <label>
+          Minimum profit percent
+          <input type="number" name="min_profit_percent" aria-label="Minimum profit percent" min="0" step="0.1" value="1.0" required />
+        </label>
+      </div>
+      <div>
+        <label>
+          Bonus enabled
+          <input type="checkbox" name="bonus_enabled" aria-label="Bonus enabled" />
+        </label>
+        <label>
+          Random seed
+          <input type="number" name="random_seed" aria-label="Random seed" placeholder="Optional" />
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h4>Opening logic</h4>
+    <div class="grid">
+      <div>
+        <label>
+          First movement min
+          <input type="number" name="first_movement_min" aria-label="First movement min" min="0" step="0.01" value="5.0" required />
+        </label>
+        <label>
+          First movement max
+          <input type="number" name="first_movement_max" aria-label="First movement max" min="0" step="0.01" value="20.0" required />
+        </label>
+        <label>
+          First movement step
+          <input type="number" name="first_movement_step" aria-label="First movement step" min="0" step="0.01" value="0.5" required />
+        </label>
+      </div>
+      <div>
+        <label>
+          Second movement min
+          <input type="number" name="second_movement_min" aria-label="Second movement min" min="0" step="0.01" value="1.0" required />
+        </label>
+        <label>
+          Second movement max
+          <input type="number" name="second_movement_max" aria-label="Second movement max" min="0" step="0.01" value="8.0" required />
+        </label>
+        <label>
+          Second movement step
+          <input type="number" name="second_movement_step" aria-label="Second movement step" min="0" step="0.01" value="0.25" required />
+        </label>
+      </div>
+      <div>
+        <label>
+          Third movement min
+          <input type="number" name="third_movement_min" aria-label="Third movement min" min="0" step="0.01" value="1.0" required />
+        </label>
+        <label>
+          Third movement max
+          <input type="number" name="third_movement_max" aria-label="Third movement max" min="0" step="0.01" value="10.0" required />
+        </label>
+        <label>
+          Third movement step
+          <input type="number" name="third_movement_step" aria-label="Third movement step" min="0" step="0.01" value="0.25" required />
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h4>Closing logic</h4>
+    <div class="grid">
+      <div>
+        <label>
+          Close min
+          <input type="number" name="close_min" aria-label="Close min" min="0" step="0.01" value="0.5" required />
+        </label>
+        <label>
+          Close max
+          <input type="number" name="close_max" aria-label="Close max" min="0" step="0.01" value="5.0" required />
+        </label>
+        <label>
+          Close step
+          <input type="number" name="close_step" aria-label="Close step" min="0" step="0.01" value="0.25" required />
+        </label>
+      </div>
+      <div style="display: flex; flex-direction: column; justify-content: space-between">
+        <label>The calculation may take some time if you have a large date range with a small kline.</label>
+        <label>
+          <button id="start-backtest-button" type="submit">Start backtest</button>
+        </label>
+      </div>
+    </div>
+  </section>
+</form>
