@@ -21,3 +21,5 @@ target/
 
 # sqlite data
 db/
+
+internals/
