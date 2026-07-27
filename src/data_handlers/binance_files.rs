@@ -9,8 +9,8 @@ pub fn generate_archives_names(
     date_start: i64,
     date_end: i64,
 ) -> Vec<String> {
-    let date_start = DateTime::from_timestamp_millis(date_start as i64).unwrap();
-    let date_end = DateTime::from_timestamp_millis(date_end as i64).unwrap();
+    let date_start = DateTime::from_timestamp_micros(date_start).unwrap();
+    let date_end = DateTime::from_timestamp_micros(date_end).unwrap();
 
     let mut result = Vec::new();
 
@@ -116,8 +116,8 @@ mod tests {
         let mut result = generate_archives_names(
             "BTCUSDT".to_string(),
             MarketDataType::KLine1m,
-            1682946000000,
-            1695399134000,
+            1682946000000000,
+            1695399134000000,
         );
         assert_eq!(result.len(), 4 + 22);
         result.sort();
@@ -130,8 +130,8 @@ mod tests {
         let mut result = generate_archives_names(
             "BTCUSDT".to_string(),
             MarketDataType::KLine1m,
-            1577836800000,
-            1609459200000,
+            1577836800000000,
+            1609459200000000,
         );
         result.sort();
         assert_eq!(result.len(), 12 + 1);

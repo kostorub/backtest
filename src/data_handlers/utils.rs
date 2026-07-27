@@ -63,16 +63,20 @@ fn check_path_and_create(path: PathBuf) {
     }
 }
 
-pub fn datetime_str_to_i64(datetime_str: String) -> i64 {
-    NaiveDate::parse_from_str(datetime_str.as_str(), "%Y-%m-%d")
-        .unwrap()
+pub fn try_datetime_str_to_i64(datetime_str: &str) -> Result<i64, chrono::ParseError> {
+    let date = NaiveDate::parse_from_str(datetime_str, "%Y-%m-%d")?;
+    Ok(date
         .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
         .and_utc()
-        .timestamp_millis()
+        .timestamp_micros())
+}
+
+pub fn datetime_str_to_i64(datetime_str: String) -> i64 {
+    try_datetime_str_to_i64(&datetime_str).unwrap()
 }
 
 pub fn i64_to_datetime_str(datetime: i64) -> String {
-    let datetime = DateTime::from_timestamp(datetime / 1000, 0).unwrap();
+    let datetime = DateTime::from_timestamp_micros(datetime).unwrap();
     datetime.format("%Y-%m-%d").to_string()
 }
 
@@ -147,9 +151,9 @@ mod tests {
     #[test]
     fn test_fill_trades_by_zeros_0() {
         let trades = vec![
-            KLine::blank().with_date(60 * 1000),
-            KLine::blank().with_date(120 * 1000),
-            KLine::blank().with_date(180 * 1000),
+            KLine::blank().with_date(60 * 1_000_000),
+            KLine::blank().with_date(120 * 1_000_000),
+            KLine::blank().with_date(180 * 1_000_000),
         ];
         let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, None);
         assert_eq!(result.len(), 3);
@@ -158,40 +162,40 @@ mod tests {
     #[test]
     fn test_fill_trades_by_zeros_1() {
         let trades = vec![
-            KLine::blank().with_date(60 * 1000),
-            KLine::blank().with_date(180 * 1000),
-            KLine::blank().with_date(240 * 1000),
+            KLine::blank().with_date(60 * 1_000_000),
+            KLine::blank().with_date(180 * 1_000_000),
+            KLine::blank().with_date(240 * 1_000_000),
         ];
         let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, None);
         assert_eq!(result.len(), 4);
-        assert_eq!(result[1].date(), 120 * 1000);
+        assert_eq!(result[1].date(), 120 * 1_000_000);
     }
 
     #[test]
     fn test_fill_trades_by_zeros_2() {
         let trades = vec![
-            KLine::blank().with_date(60 * 1000),
-            KLine::blank().with_date(120 * 1000),
-            KLine::blank().with_date(300 * 1000),
+            KLine::blank().with_date(60 * 1_000_000),
+            KLine::blank().with_date(120 * 1_000_000),
+            KLine::blank().with_date(300 * 1_000_000),
         ];
         let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, None);
         assert_eq!(result.len(), 5);
-        assert_eq!(result[2].date(), 180 * 1000);
-        assert_eq!(result[3].date(), 240 * 1000);
+        assert_eq!(result[2].date(), 180 * 1_000_000);
+        assert_eq!(result[3].date(), 240 * 1_000_000);
     }
 
     #[test]
     fn test_fill_trades_by_zeros_3() {
         let trades = vec![
-            KLine::blank().with_date(300_000),
-            KLine::blank().with_date(360_000),
-            KLine::blank().with_date(480_000),
+            KLine::blank().with_date(300_000_000),
+            KLine::blank().with_date(360_000_000),
+            KLine::blank().with_date(480_000_000),
         ];
-        let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, Some(60_000));
+        let result = fill_trades_by_zeros(trades, MarketDataType::KLine1m, Some(60_000_000));
         assert_eq!(result.len(), 7);
-        assert_eq!(result[0].date(), 120_000);
-        assert_eq!(result[1].date(), 180_000);
-        assert_eq!(result[2].date(), 240_000);
-        assert_eq!(result[5].date(), 420_000);
+        assert_eq!(result[0].date(), 120_000_000);
+        assert_eq!(result[1].date(), 180_000_000);
+        assert_eq!(result[2].date(), 240_000_000);
+        assert_eq!(result[5].date(), 420_000_000);
     }
 }

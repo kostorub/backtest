@@ -9,6 +9,7 @@ pub const KLINE_SIZE: usize = 6 * 8;
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct KLine {
     #[serde(deserialize_with = "f64_to_i64")]
+    /// Binance candle-open timestamp in Unix epoch microseconds.
     pub date: i64,
     pub open: f64,
     pub high: f64,

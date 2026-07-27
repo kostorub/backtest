@@ -156,7 +156,7 @@
     }
 
     const seconds = getSecondsFromMarketDataType(marketDataType);
-    const date = new Date(Math.floor(t / seconds) * seconds);
+    const date = new Date(Math.floor((t / 1000) / seconds) * seconds);
 
     if (isNaN(date.getTime())) {
       throw new Error(`Failed to parse date from timestamp: ${t}`);
@@ -209,6 +209,12 @@
   async function buildChart(data, marketData, positions = []) {
     try {
       chartSection.innerHTML = "";
+
+      if (!marketData.length) {
+        chartSection.innerHTML =
+          '<p style="margin: 0; padding: 1rem 0; color: var(--muted-foreground, #666);">No market data available for the selected date range.</p>';
+        return;
+      }
 
       const x = marketData.map((k) => parseTime(k.date, data.chart_market_data_type));
       const open = marketData.map((k) => k.open);
@@ -365,12 +371,17 @@
         exchange: resultData.exchange,
         symbol: resultData.symbol,
         chart_market_data_type: resultData.chart_market_data_type,
-        date_start: new Date(resultData.date_start).toISOString().split("T")[0],
-        date_end: new Date(resultData.date_end).toISOString().split("T")[0],
+        date_start: new Date(resultData.date_start / 1000).toISOString().split("T")[0],
+        date_end: new Date(resultData.date_end / 1000).toISOString().split("T")[0],
       };
 
       document.getElementById("parameters-details").open = false;
       const marketData = await getMarketData(data);
+      if (!marketData.length) {
+        chartSection.innerHTML =
+          '<p style="margin: 0; padding: 1rem 0; color: var(--muted-foreground, #666);">No market data available for the selected date range.</p>';
+        return;
+      }
       await buildChart(data, marketData, resultData.positions);
       const metricsData = await getMetricsData(result.id);
       await fillMetricsTable(metricsData);

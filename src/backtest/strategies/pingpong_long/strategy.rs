@@ -7,6 +7,7 @@ use crate::{
         position::{Position, PositionStatus},
     },
 };
+use log::debug;
 
 use super::bot::{PingPongLongBot, PingPongLongSignal};
 
@@ -46,10 +47,18 @@ impl PingPongLongStrategy {
     fn open_buy(&mut self, kline: &KLine, price: f64) {
         let order_size = self.bot.settings.order_size;
         if self.current_budget < order_size {
+            debug!(
+                "PingPongLong open_buy skipped: budget={} order_size={}",
+                self.current_budget, order_size
+            );
             return;
         }
 
         let qty = order_size / price;
+        debug!(
+            "PingPongLong opening buy: date={} price={} qty={} budget_before={}",
+            kline.date, price, qty, self.current_budget
+        );
         let order = Order::new(kline.date, price, Side::Buy, OrderType::Market)
             .updated(kline.date)
             .with_price_executed(price)
@@ -110,6 +119,15 @@ impl PingPongLongStrategy {
         self.update_strategy_data(qty * price, -qty);
         self.bot.remove_position(&position_id);
         self.positions_closed.push(position.clone());
+        debug!(
+            "PingPongLong closed position: id={} date={} price={} pnl={:?} opened={} closed={}",
+            position_id,
+            date,
+            price,
+            position.pnl,
+            self.positions_opened.len(),
+            self.positions_closed.len()
+        );
         position
     }
 
@@ -272,6 +290,15 @@ impl Strategy for PingPongLongStrategy {
     }
 
     fn run(&mut self, kline: &KLine) {
+        debug!(
+            "PingPongLong strategy run: date={} close={} opened_positions={} closed_positions={} budget={} qty={}",
+            kline.date,
+            kline.close,
+            self.positions_opened.len(),
+            self.positions_closed.len(),
+            self.current_budget,
+            self.current_qty
+        );
         let close_signals = self.bot.run_position_closes(kline.close);
         for signal in close_signals {
             if let PingPongLongSignal::CloseSell { position_id, price } = signal {

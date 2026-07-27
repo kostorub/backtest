@@ -12,7 +12,7 @@ pub struct MarketTrade {
     pub price: f64,
     pub qty: f64,
     pub base_qty: f64,
-    pub timestamp: i64, // Time in unix time format
+    pub timestamp: i64, // Binance time in Unix epoch microseconds
                         // pub is_buyer_maker: bool, // Was the buyer the maker
 }
 

@@ -1,10 +1,9 @@
 use std::path::PathBuf;
 
-use actix_web::error::{ErrorForbidden, ErrorInternalServerError};
+use actix_web::error::{ErrorBadRequest, ErrorForbidden, ErrorInternalServerError};
 use actix_web::{web, HttpMessage, HttpResponse, Result};
 use actix_web::{Error, HttpRequest};
-use chrono::{NaiveDate, NaiveTime};
-use log::error;
+use log::{error, info};
 
 use crate::app_state::AppState;
 use crate::backtest::backtest::{
@@ -17,7 +16,8 @@ use crate::backtest::strategies::grid::strategy::GridStrategy;
 use crate::backtest::strategies::pingpong_long::bot::PingPongLongBot;
 use crate::backtest::strategies::pingpong_long::settings::PingPongLongSettingsRequest;
 use crate::backtest::strategies::pingpong_long::strategy::PingPongLongStrategy;
-use crate::data_handlers::kv_store;
+use crate::backtest::strategies::strategy_trait::Strategy;
+use crate::data_handlers::{kv_store, utils::try_datetime_str_to_i64};
 use crate::data_models::routes::backtest_results::BacktestResultId;
 use crate::data_models::user::User;
 use crate::db_handlers::backtest_results::{
@@ -34,20 +34,28 @@ pub async fn run_grid(
     if !check_trial_access(&data.pool, user).await {
         return Err(ErrorForbidden("Trial access limit reached"));
     }
+
+    info!(
+        "Starting grid backtest: exchange={}, symbol={}, market_data_type={:?}, chart_market_data_type={:?}, date_start={}, date_end={}, price_low={}, price_high={}, grids_count={}",
+        request_settings.exchange,
+        request_settings.symbol,
+        request_settings.market_data_type,
+        request_settings.chart_market_data_type,
+        request_settings.date_start,
+        request_settings.date_end,
+        request_settings.price_low,
+        request_settings.price_high,
+        request_settings.grids_count
+    );
+
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
     let backtest_settings = BacktestSettings {
         symbols: vec![request_settings.symbol.to_lowercase()],
         exchange: request_settings.exchange.clone().to_lowercase(),
-        date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d")
-            .unwrap()
-            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
-            .and_utc()
-            .timestamp_millis() as i64,
-        date_end: NaiveDate::parse_from_str(request_settings.date_end.as_str(), "%Y-%m-%d")
-            .unwrap()
-            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
-            .and_utc()
-            .timestamp_millis() as i64,
+        date_start: try_datetime_str_to_i64(&request_settings.date_start)
+            .map_err(|_| ErrorBadRequest("date_start must use YYYY-MM-DD format"))?,
+        date_end: try_datetime_str_to_i64(&request_settings.date_end)
+            .map_err(|_| ErrorBadRequest("date_end must use YYYY-MM-DD format"))?,
         deposit: request_settings.deposit,
         commission: request_settings.commission,
         market_data_type: request_settings.market_data_type.clone(),
@@ -74,6 +82,12 @@ pub async fn run_grid(
         data_path.clone(),
     );
     let positions = get_positions_from_strategies(strategies.clone());
+    info!(
+        "Grid backtest execution completed: closed_positions={}, open_positions={}, finish_budget={}",
+        positions.len(),
+        strategies[0].positions_opened().len(),
+        strategies[0].current_budget
+    );
     let _metrics = get_metrics(
         &positions,
         strategies[0].strategy_settings.deposit,
@@ -104,6 +118,10 @@ pub async fn run_grid(
     let result = BacktestResultId {
         id: backtest_results_id,
     };
+    info!(
+        "Grid backtest finished with result id={}",
+        backtest_results_id
+    );
     Ok(HttpResponse::Ok().json(result))
 }
 
@@ -119,20 +137,26 @@ pub async fn run_pingpong_long(
         return Err(ErrorForbidden("Trial access limit reached"));
     }
 
+    info!(
+        "Starting pingpong long backtest: exchange={}, symbol={}, market_data_type={:?}, chart_market_data_type={:?}, date_start={}, date_end={}, deposit={}, order_size={}",
+        request_settings.exchange,
+        request_settings.symbol,
+        request_settings.market_data_type,
+        request_settings.chart_market_data_type,
+        request_settings.date_start,
+        request_settings.date_end,
+        request_settings.deposit,
+        request_settings.order_size
+    );
+
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
     let backtest_settings = BacktestSettings {
         symbols: vec![request_settings.symbol.to_lowercase()],
         exchange: request_settings.exchange.clone().to_lowercase(),
-        date_start: NaiveDate::parse_from_str(request_settings.date_start.as_str(), "%Y-%m-%d")
-            .unwrap()
-            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
-            .and_utc()
-            .timestamp_millis() as i64,
-        date_end: NaiveDate::parse_from_str(request_settings.date_end.as_str(), "%Y-%m-%d")
-            .unwrap()
-            .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
-            .and_utc()
-            .timestamp_millis() as i64,
+        date_start: try_datetime_str_to_i64(&request_settings.date_start)
+            .map_err(|_| ErrorBadRequest("date_start must use YYYY-MM-DD format"))?,
+        date_end: try_datetime_str_to_i64(&request_settings.date_end)
+            .map_err(|_| ErrorBadRequest("date_end must use YYYY-MM-DD format"))?,
         deposit: request_settings.deposit,
         commission: request_settings.commission,
         market_data_type: request_settings.market_data_type.clone(),
@@ -152,6 +176,12 @@ pub async fn run_pingpong_long(
     );
 
     let positions = get_positions_from_strategies(strategies.clone());
+    info!(
+        "Pingpong long backtest execution completed: closed_positions={}, open_positions={}, finish_budget={}",
+        positions.len(),
+        strategies[0].positions_opened().len(),
+        strategies[0].current_budget
+    );
     let metrics = get_metrics(
         &positions,
         strategies[0].strategy_settings.deposit,
@@ -183,6 +213,10 @@ pub async fn run_pingpong_long(
     let result = BacktestResultId {
         id: backtest_results_id,
     };
+    info!(
+        "Pingpong long backtest finished with result id={}",
+        backtest_results_id
+    );
     Ok(HttpResponse::Ok().json(result))
 }
 

@@ -60,31 +60,31 @@ pub enum MarketDataType {
 }
 
 impl MarketDataType {
-    /// Returns the string representation of the MarketDataType and the value in milliseconds
+    /// Returns the string representation of the MarketDataType and its interval in microseconds.
     pub fn value(&self) -> (String, i64) {
         match *self {
             MarketDataType::Trade => ("trade".into(), 0),
-            MarketDataType::KLine1s => ("1s".into(), 1000),
-            MarketDataType::KLine1m => ("1m".into(), 60 * 1000),
-            MarketDataType::KLine3m => ("3m".into(), 3 * 60 * 1000),
-            MarketDataType::KLine5m => ("5m".into(), 5 * 60 * 1000),
-            MarketDataType::KLine15m => ("15m".into(), 15 * 60 * 1000),
-            MarketDataType::KLine30m => ("30m".into(), 30 * 60 * 1000),
-            MarketDataType::KLine1h => ("1h".into(), 60 * 60 * 1000),
-            MarketDataType::KLine2h => ("2h".into(), 2 * 60 * 60 * 1000),
-            MarketDataType::KLine4h => ("4h".into(), 4 * 60 * 60 * 1000),
-            MarketDataType::KLine6h => ("6h".into(), 6 * 60 * 60 * 1000),
-            MarketDataType::KLine8h => ("8h".into(), 8 * 60 * 60 * 1000),
-            MarketDataType::KLine1d => ("1d".into(), 24 * 60 * 60 * 1000),
+            MarketDataType::KLine1s => ("1s".into(), 1_000_000),
+            MarketDataType::KLine1m => ("1m".into(), 60 * 1_000_000),
+            MarketDataType::KLine3m => ("3m".into(), 3 * 60 * 1_000_000),
+            MarketDataType::KLine5m => ("5m".into(), 5 * 60 * 1_000_000),
+            MarketDataType::KLine15m => ("15m".into(), 15 * 60 * 1_000_000),
+            MarketDataType::KLine30m => ("30m".into(), 30 * 60 * 1_000_000),
+            MarketDataType::KLine1h => ("1h".into(), 60 * 60 * 1_000_000),
+            MarketDataType::KLine2h => ("2h".into(), 2 * 60 * 60 * 1_000_000),
+            MarketDataType::KLine4h => ("4h".into(), 4 * 60 * 60 * 1_000_000),
+            MarketDataType::KLine6h => ("6h".into(), 6 * 60 * 60 * 1_000_000),
+            MarketDataType::KLine8h => ("8h".into(), 8 * 60 * 60 * 1_000_000),
+            MarketDataType::KLine1d => ("1d".into(), 24 * 60 * 60 * 1_000_000),
         }
     }
 
-    /// Returns the recommended period for the MarketDataType in milliseconds
+    /// Returns the recommended period for the MarketDataType in microseconds.
     /// If the return value is None, the recommended period is all the data available
     pub fn period(&self) -> Option<i64> {
         match *self {
-            MarketDataType::KLine1s => Some(60 * 60 * 24 * 30 * 1000),
-            _ => None,
+            MarketDataType::Trade => None,
+            _ => Some(60 * 60 * 24 * 30 * 1_000_000),
         }
     }
 }

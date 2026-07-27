@@ -296,7 +296,7 @@
       }
 
       const seconds = getSecondsFromMarketDataType(marketDataType);
-      const date = new Date(Math.floor(t / seconds) * seconds);
+      const date = new Date(Math.floor((t / 1000) / seconds) * seconds);
 
       if (isNaN(date.getTime())) {
         throw new Error(`Failed to parse date from timestamp: ${t}`);
@@ -314,6 +314,16 @@
   async function buildChart(data, marketData, positions = []) {
     try {
       chartSection.innerHTML = "";
+
+      console.log("Grid chart build started", {
+        exchange: data.exchange,
+        symbol: data.symbol,
+        chart_market_data_type: data.chart_market_data_type,
+        marketDataCount: marketData.length,
+        positionsCount: positions.length,
+        date_start: data.date_start,
+        date_end: data.date_end,
+      });
 
       const x = marketData.map((k) => {
         if (!k.date || isNaN(k.date)) {
@@ -340,12 +350,26 @@
       const traces = [trace];
 
       positions.forEach((pos) => {
+        if (!pos?.orders?.length) {
+          console.warn("Skipping position without orders:", pos);
+          return;
+        }
+
+        const firstOrder = pos.orders[0];
+        const lastOrder = pos.orders[pos.orders.length - 1];
+        const endDate = lastOrder.date_update ?? lastOrder.date;
+
+        if (!firstOrder?.date || !endDate) {
+          console.warn("Skipping position with invalid order dates:", pos);
+          return;
+        }
+
         const lineTrace = {
           x: [
-            parseTime(pos.orders[0].date, data.chart_market_data_type),
-            parseTime(pos.orders[pos.orders.length - 1].date_update, data.chart_market_data_type),
+            parseTime(firstOrder.date, data.chart_market_data_type),
+            parseTime(endDate, data.chart_market_data_type),
           ],
-          y: [pos.orders[0].price, pos.orders[pos.orders.length - 1].price],
+          y: [firstOrder.price, lastOrder.price],
           mode: "lines",
           line: {
             color: pos.pnl && pos.pnl > 0 ? "green" : "red",
@@ -365,6 +389,10 @@
       var config = { responsive: true };
 
       Plotly.newPlot(chartSection, traces, layout, config);
+      console.log("Grid chart rendered", {
+        traces: traces.length,
+        xPoints: x.length,
+      });
     } catch (error) {
       console.error("Error while rendering the chart:", error);
       chartSection.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
@@ -404,6 +432,7 @@
     startBacktestButton.setAttribute("aria-busy", "true");
     try {
       // Send request
+      console.log("Grid backtest request", requestData);
       const response = await fetch("/api/backtest/grid/run", {
         method: "POST",
         headers: {
@@ -418,18 +447,21 @@
         throw new Error("An error occurred while processing your request.");
       }
       const result = await response.json();
+      console.log("Grid backtest response", result);
       const resultData = await getBacktestResultData(result.id);
+      console.log("Grid backtest result data", resultData);
       const data = {
         exchange: resultData.exchange,
         symbol: resultData.symbol,
         chart_market_data_type: resultData.chart_market_data_type,
-        date_start: new Date(resultData.date_start).toISOString().split("T")[0],
-        date_end: new Date(resultData.date_end).toISOString().split("T")[0],
+        date_start: new Date(resultData.date_start / 1000).toISOString().split("T")[0],
+        date_end: new Date(resultData.date_end / 1000).toISOString().split("T")[0],
       };
       // Hide the parameters section
       document.getElementById("parameters-details").open = false;
       // Get the market data
       const marketData = await getMarketData(data);
+      console.log("Grid market data fetched", marketData.length);
       // Build the chart
       await buildChart(data, marketData, resultData.positions);
       // Get the metrics data

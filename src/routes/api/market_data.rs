@@ -1,13 +1,17 @@
 use std::path::PathBuf;
 
-use actix_web::{error::ErrorInternalServerError, web, Error, HttpResponse};
+use actix_web::{
+    error::{ErrorBadRequest, ErrorInternalServerError},
+    web, Error, HttpResponse,
+};
+use log::info;
 
 use crate::{
     app_state::AppState,
     backtest::strategies::strategy_utils,
     data_handlers::{
         pipeline,
-        utils::{datetime_str_to_i64, i64_to_datetime_str},
+        utils::{i64_to_datetime_str, try_datetime_str_to_i64},
     },
     data_models::market_data::{
         kline::KLine,
@@ -34,6 +38,21 @@ pub async fn download_market_data(
     r: web::Json<MarketDataFront>,
 ) -> Result<HttpResponse, Error> {
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
+    let date_start = try_datetime_str_to_i64(&r.date_start)
+        .map_err(|_| ErrorBadRequest("date_start must use YYYY-MM-DD format"))?;
+    let date_end = try_datetime_str_to_i64(&r.date_end)
+        .map_err(|_| ErrorBadRequest("date_end must use YYYY-MM-DD format"))?;
+
+    info!(
+        "Downloading market data: exchange={}, symbol={}, market_data_type={:?}, date_start={} ({}), date_end={} ({})",
+        r.exchange,
+        r.symbol,
+        r.market_data_type,
+        r.date_start,
+        date_start,
+        r.date_end,
+        date_end
+    );
 
     pipeline::pipeline::<KLine>(
         data_path.clone(),
@@ -41,8 +60,8 @@ pub async fn download_market_data(
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
         r.market_data_type.clone(),
-        datetime_str_to_i64(r.date_start.clone()),
-        datetime_str_to_i64(r.date_end.clone()),
+        date_start,
+        date_end,
     )
     .await;
 
@@ -51,8 +70,8 @@ pub async fn download_market_data(
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
         r.market_data_type.clone(),
-        datetime_str_to_i64(r.date_start.clone()),
-        datetime_str_to_i64(r.date_end.clone()),
+        date_start,
+        date_end,
     )
     .await
     .map_err(ErrorInternalServerError)?;
@@ -94,14 +113,36 @@ pub async fn klines(
     data: web::Data<AppState>,
     r: web::Query<MarketDataFront>,
 ) -> Result<HttpResponse, Error> {
+    let date_start = try_datetime_str_to_i64(&r.date_start)
+        .map_err(|_| ErrorBadRequest("date_start must use YYYY-MM-DD format"))?;
+    let date_end = try_datetime_str_to_i64(&r.date_end)
+        .map_err(|_| ErrorBadRequest("date_end must use YYYY-MM-DD format"))?;
+    info!(
+        "Fetching klines: exchange={}, symbol={}, market_data_type={:?}, date_start={} ({}), date_end={} ({})",
+        r.exchange,
+        r.symbol,
+        r.market_data_type,
+        r.date_start,
+        date_start,
+        r.date_end,
+        date_end
+    );
     let data_path = PathBuf::from(data.app_settings.data_path.clone());
     let klines = strategy_utils::get_klines(
         data_path,
         r.exchange.to_lowercase(),
         r.symbol.to_lowercase(),
         r.market_data_type.clone(),
-        datetime_str_to_i64(r.date_start.clone()),
-        datetime_str_to_i64(r.date_end.clone()),
+        date_start,
+        date_end,
+    );
+
+    info!(
+        "Fetched {} klines for exchange={}, symbol={}, market_data_type={:?}",
+        klines.len(),
+        r.exchange,
+        r.symbol,
+        r.market_data_type
     );
 
     Ok(HttpResponse::Ok().json(klines))

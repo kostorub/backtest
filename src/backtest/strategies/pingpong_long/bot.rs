@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::debug;
 use rand::{rngs::StdRng, SeedableRng};
 
 use crate::data_models::market_data::kline::KLine;
@@ -52,6 +53,26 @@ impl PingPongLongBot {
             None => StdRng::from_entropy(),
         };
 
+        debug!(
+            "PingPongLongBot settings: first={:.4}-{:.4} step {:.4}, second={:.4}-{:.4} step {:.4}, third={:.4}-{:.4} step {:.4}, close={:.4}-{:.4} step {:.4}, order_size={}, min_profit_percent={}, bonus_enabled={}, random_seed={:?}",
+            settings.first_movement_min,
+            settings.first_movement_max,
+            settings.first_movement_step,
+            settings.second_movement_min,
+            settings.second_movement_max,
+            settings.second_movement_step,
+            settings.third_movement_min,
+            settings.third_movement_max,
+            settings.third_movement_step,
+            settings.close_min,
+            settings.close_max,
+            settings.close_step,
+            settings.order_size,
+            settings.min_profit_percent,
+            settings.bonus_enabled,
+            settings.random_seed
+        );
+
         Self {
             settings,
             rng,
@@ -70,6 +91,10 @@ impl PingPongLongBot {
         if self.initial_price.is_none() {
             self.initial_price = Some(price);
             self.price_movement = Some(self.choose_price_movement());
+            debug!(
+                "PingPongLong opening initialized at date={} price={} threshold={:?}",
+                kline.date, price, self.price_movement
+            );
             return None;
         }
 
@@ -83,15 +108,27 @@ impl PingPongLongBot {
         let initial_price = self.initial_price.unwrap();
 
         if price > initial_price {
+            debug!(
+                "PingPongLong tracking fall reset: price {} > initial_price {}",
+                price, initial_price
+            );
             self.initial_price = Some(price);
             return None;
         }
 
-        if price < initial_price
-            && percent_change(initial_price, initial_price - price) >= self.price_movement.unwrap()
-        {
+        let change = percent_change(initial_price, initial_price - price);
+        let threshold = self.price_movement.unwrap();
+        if price < initial_price && change >= threshold {
+            debug!(
+                "PingPongLong fall threshold hit: initial_price={}, price={}, change={:.4}%, threshold={:.4}%",
+                initial_price, price, change, threshold
+            );
             self.target_fall_price = Some(price);
             self.rebound_movement = Some(self.choose_rebound_movement());
+            debug!(
+                "PingPongLong waiting retrace: target_fall_price={}, rebound_threshold={:?}",
+                price, self.rebound_movement
+            );
             self.opening_state = PingPongLongOpeningState::WaitingRetrace;
         }
 
@@ -102,14 +139,21 @@ impl PingPongLongBot {
         let target_fall_price = self.target_fall_price.unwrap();
 
         if price < target_fall_price {
+            debug!(
+                "PingPongLong retrace lowered target: price {} < target_fall_price {}",
+                price, target_fall_price
+            );
             self.target_fall_price = Some(price);
             return None;
         }
 
-        if price > target_fall_price
-            && percent_change(target_fall_price, price - target_fall_price)
-                >= self.rebound_movement.unwrap()
-        {
+        let change = percent_change(target_fall_price, price - target_fall_price);
+        let threshold = self.rebound_movement.unwrap();
+        if price > target_fall_price && change >= threshold {
+            debug!(
+                "PingPongLong open buy signal: target_fall_price={}, price={}, rebound_change={:.4}%, threshold={:.4}%",
+                target_fall_price, price, change, threshold
+            );
             self.reset_opener(price);
             return Some(PingPongLongSignal::OpenBuy { price });
         }
@@ -126,6 +170,10 @@ impl PingPongLongBot {
     }
 
     pub fn register_position(&mut self, position_id: String, open_price: f64) {
+        debug!(
+            "PingPongLong register position: id={}, open_price={}",
+            position_id, open_price
+        );
         let tracker = PingPongLongPositionCloseTracker {
             state: PingPongLongCloseState::TrackingRise,
             position_open_price: open_price,
@@ -137,6 +185,7 @@ impl PingPongLongBot {
     }
 
     pub fn remove_position(&mut self, position_id: &str) {
+        debug!("PingPongLong remove position tracker: id={}", position_id);
         self.close_trackers.remove(position_id);
     }
 
@@ -157,6 +206,10 @@ impl PingPongLongBot {
 
         for position_id in position_ids {
             if self.track_position_close(&position_id, price) {
+                debug!(
+                    "PingPongLong close signal: position_id={}, price={}",
+                    position_id, price
+                );
                 signals.push(PingPongLongSignal::CloseSell { position_id, price });
             }
         }

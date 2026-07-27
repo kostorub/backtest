@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use log::info;
+
 use crate::data_models::market_data::{metrics::Metrics, position::Position};
 
 use super::{
@@ -12,6 +14,15 @@ pub fn run_sequentially<S: Strategy>(
     strategies: &mut Vec<S>,
     data_path: PathBuf,
 ) {
+    info!(
+        "Starting backtest: exchange={}, market_data_type={}, date_start={}, date_end={}, symbols={:?}",
+        backtest_settings.exchange,
+        backtest_settings.market_data_type.value().0,
+        backtest_settings.date_start,
+        backtest_settings.date_end,
+        backtest_settings.symbols
+    );
+
     let mut time_range = vec![(backtest_settings.date_start, backtest_settings.date_end)];
     if let Some(recomended_period) = backtest_settings.market_data_type.period() {
         time_range = generate_time_range(
@@ -22,17 +33,38 @@ pub fn run_sequentially<S: Strategy>(
     }
 
     for range in time_range {
+        info!("Processing backtest range: {}..{}", range.0, range.1);
+        let mut loaded_candles = 0;
         for strategy in strategies.iter_mut() {
             let klines = get_klines(
                 data_path.clone(),
                 backtest_settings.exchange.clone(),
                 strategy.strategy_settings().symbol.clone(),
                 strategy.strategy_settings().market_data_type.clone(),
-                backtest_settings.date_start,
-                backtest_settings.date_end,
+                range.0,
+                range.1,
             );
+            info!(
+                "Loaded {} klines for symbol={} market_data_type={} in range {}..{}",
+                klines.len(),
+                strategy.strategy_settings().symbol,
+                strategy.strategy_settings().market_data_type.value().0,
+                range.0,
+                range.1
+            );
+            loaded_candles += klines.len();
             strategy.set_klines(klines);
+            // Klines are replaced for every range, so their cursor is relative
+            // to the newly loaded slice rather than the previous one.
+            strategy.set_current_kline_position(0);
         }
+        info!(
+            "Backtest range ready: range={}..{}, strategies={}, loaded_candles={}",
+            range.0,
+            range.1,
+            strategies.len(),
+            loaded_candles
+        );
         for timestamp in generate_time_period(
             range.0,
             range.1,
@@ -44,11 +76,23 @@ pub fn run_sequentially<S: Strategy>(
         }
     }
     for strategy in strategies {
-        strategy.close_all_positions(
-            strategy.klines().last().unwrap().date,
-            strategy.klines().last().unwrap().close,
-        )
+        if let Some(last_kline) = strategy.klines().last() {
+            strategy.close_all_positions(last_kline.date, last_kline.close);
+        } else {
+            info!(
+                "Skipping close_all_positions because no klines were loaded for symbol={}",
+                strategy.strategy_settings().symbol
+            );
+        }
+        info!(
+            "Backtest strategy completed: symbol={}, closed_positions={}, open_positions={}",
+            strategy.strategy_settings().symbol,
+            strategy.positions_closed().len(),
+            strategy.positions_opened().len()
+        );
     }
+
+    info!("Backtest finished");
 }
 
 pub fn strategies_settings(backtest_settings: BacktestSettings) -> Vec<StrategySettings> {
@@ -88,6 +132,6 @@ pub fn generate_time_range(date_start: i64, date_end: i64, period: i64) -> Vec<(
         .step_by(period as usize)
         .collect::<Vec<i64>>()
         .iter()
-        .map(|&start| (start, start + period))
+        .map(|&start| (start, (start + period).min(date_end)))
         .collect()
 }

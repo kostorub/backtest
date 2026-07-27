@@ -8,7 +8,7 @@ use crate::{
             pingpong_long::settings::PingPongLongSettingsRequest,
         },
     },
-    data_handlers::utils::{datetime_str_to_i64, i64_to_datetime_str},
+    data_handlers::utils::i64_to_datetime_str,
     data_models::{
         market_data::{metrics::Metrics, position::Position},
         routes::backtest_results::{Data, ResultOption},
@@ -83,8 +83,6 @@ pub async fn insert_data(
 ) -> Result<i64, Error> {
     let market_data_type = backtest_settings.market_data_type.value().0;
     let chart_market_data_type = grid_settings.chart_market_data_type.value().0;
-    let date_start = datetime_str_to_i64(grid_settings.date_start.clone());
-    let date_end = datetime_str_to_i64(grid_settings.date_end.clone());
     let grids_count = grid_settings.grids_count;
     let positions = serde_json::to_string(&positions).unwrap();
 
@@ -115,8 +113,8 @@ pub async fn insert_data(
         backtest_settings.exchange,
         market_data_type,
         chart_market_data_type,
-        date_start,
-        date_end,
+        backtest_settings.date_start,
+        backtest_settings.date_end,
         backtest_settings.deposit,
         backtest_settings.commission,
         grid_settings.price_low,
@@ -143,8 +141,6 @@ pub async fn insert_pingpong_long_data(
 ) -> Result<i64, Error> {
     let market_data_type = backtest_settings.market_data_type.value().0;
     let chart_market_data_type = pingpong_settings.chart_market_data_type.value().0;
-    let date_start = datetime_str_to_i64(pingpong_settings.date_start.clone());
-    let date_end = datetime_str_to_i64(pingpong_settings.date_end.clone());
     let positions = serde_json::to_string(&positions).unwrap();
 
     let result = sqlx::query!(
@@ -174,8 +170,8 @@ pub async fn insert_pingpong_long_data(
         backtest_settings.exchange,
         market_data_type,
         chart_market_data_type,
-        date_start,
-        date_end,
+        backtest_settings.date_start,
+        backtest_settings.date_end,
         backtest_settings.deposit,
         backtest_settings.commission,
         0.0,

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use log::debug;
-use log::info;
+use log::{info, warn};
 use memmap2::Mmap;
 use std::ffi::OsStr;
 use std::fs::File;
@@ -57,9 +57,27 @@ pub fn get_values_from_file<T: ToFromBytes + KLineTrait>(
 ) -> io::Result<Vec<T>> {
     let first_value = get_first_value_from_file::<T>(file_path.clone())?;
     let last_value = get_last_value_from_file::<T>(file_path.clone())?;
+    let file_size = std::fs::metadata(&file_path)?.len();
+    info!(
+        "Candle file range: path={:?}, records={}, first_timestamp={}, last_timestamp={}, requested_start={}, requested_end={}, interval_us={}",
+        file_path,
+        file_size / T::size() as u64,
+        first_value.date(),
+        last_value.date(),
+        date_start,
+        date_end,
+        mdt.value().1
+    );
 
     // If the requested date range is outside the range of the file, return an empty vector
     if date_start > last_value.date() || date_end < first_value.date() {
+        warn!(
+            "Requested candle range does not overlap file range: requested={}..{}, file={}..{}",
+            date_start,
+            date_end,
+            first_value.date(),
+            last_value.date()
+        );
         return Ok(Vec::new());
     }
 
@@ -74,6 +92,11 @@ pub fn get_values_from_file<T: ToFromBytes + KLineTrait>(
     if date_end < last_value.date() {
         len = len - ((last_value.date() - date_end) / mdt.value().1) as usize;
     }
+
+    info!(
+        "Reading candle file slice: offset_records={}, records_to_scan={}",
+        offset, len
+    );
 
     let mut result = Vec::new();
 
